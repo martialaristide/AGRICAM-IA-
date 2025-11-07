@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; color: string; }> = ({ title, value, icon, color }) => (
@@ -13,6 +12,14 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; 
     </div>
 );
 
+const DiagnosticItem: React.FC<{label: string, value: string, color: string}> = ({label, value, color}) => (
+    <div className="flex justify-between items-center text-sm">
+        <span className="text-text-secondary">{label}</span>
+        <span className={`font-bold ${color}`}>{value}</span>
+    </div>
+);
+
+
 const ImageAnalysisCard: React.FC<{
     source: 'Drone' | 'Satellite';
     parcel: string;
@@ -20,39 +27,37 @@ const ImageAnalysisCard: React.FC<{
     imageUrl: string;
     crop: string;
     cropConfidence: number;
-    growthRate: number;
+    diagnostics: { waterStress: number, nitrogenDeficiency: number };
     disease?: { name: string; severity: 'Faible' | 'Moyenne' | 'Élevée'; confidence: number; }
-}> = ({ source, parcel, date, imageUrl, crop, cropConfidence, growthRate, disease }) => (
-    <div className="bg-card-bg rounded-xl shadow-sm p-5">
+}> = ({ source, parcel, date, imageUrl, crop, cropConfidence, diagnostics, disease }) => (
+    <div className="bg-card-bg rounded-xl shadow-sm p-5 flex flex-col">
         <div className="relative">
             <img src={imageUrl} alt={`Analyse de ${parcel}`} className="rounded-lg w-full h-48 object-cover" />
             <span className={`absolute top-3 left-3 text-xs font-bold text-white px-3 py-1 rounded-full ${source === 'Drone' ? 'bg-yellow-500' : 'bg-blue-500'}`}>{source}</span>
         </div>
         <h3 className="font-poppins font-bold text-lg mt-4 text-text-primary">{parcel}</h3>
         <p className="text-sm text-text-secondary">{date}</p>
-
-        <div className="mt-4 bg-gray-50 p-3 rounded-lg flex justify-around">
-            <div className="text-center">
-                <p className="text-xs text-text-secondary">Reconnaissance</p>
-                <p className="font-bold text-text-primary">{crop}</p>
-                <p className="text-xs text-green-600">{cropConfidence}% confiance</p>
-            </div>
-            <div className="text-center">
-                <p className="text-xs text-text-secondary">Croissance</p>
-                <p className="font-bold text-blue-600">{growthRate}x</p>
-                <p className="text-xs text-text-secondary">taux de croissance</p>
-            </div>
+        
+        <div className="mt-4 bg-gray-50 p-3 rounded-lg text-center">
+             <p className="text-xs text-text-secondary">Reconnaissance</p>
+             <p className="font-bold text-text-primary">{crop} <span className="text-green-600">({cropConfidence}% confiance)</span></p>
         </div>
 
         {disease && (
             <div className="mt-3 bg-red-50 p-3 rounded-lg">
-                <p className="font-bold text-red-700">Maladies détectées</p>
+                <p className="font-bold text-red-700">Maladie détectée</p>
                 <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-red-600">{disease.name}</span>
-                    <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">{disease.severity} {disease.confidence}%</span>
+                    <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">{disease.severity} ({disease.confidence}%)</span>
                 </div>
             </div>
         )}
+
+         <div className="mt-3 bg-blue-50 p-4 rounded-lg space-y-2 flex-grow">
+            <h4 className="font-poppins font-semibold text-text-primary text-sm">Diagnostic IA</h4>
+            <DiagnosticItem label="Stress hydrique" value={`${diagnostics.waterStress}%`} color={diagnostics.waterStress > 50 ? "text-orange-600" : "text-green-600"} />
+            <DiagnosticItem label="Carence en azote" value={`${diagnostics.nitrogenDeficiency}%`} color={diagnostics.nitrogenDeficiency > 40 ? "text-yellow-600" : "text-green-600"} />
+        </div>
 
         <div className="flex gap-2 mt-4">
             <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg text-sm w-full hover:bg-blue-600 transition">Réanalyser</button>
@@ -60,6 +65,39 @@ const ImageAnalysisCard: React.FC<{
         </div>
     </div>
 );
+
+const AnalysisChart: React.FC = () => {
+    const data = [
+        { month: 'Jan', precision: 88 },
+        { month: 'Fév', precision: 91 },
+        { month: 'Mar', precision: 90 },
+        { month: 'Avr', precision: 94 },
+        { month: 'Mai', precision: 95 },
+        { month: 'Juin', precision: 94 },
+    ];
+    const maxPrecision = 100;
+
+    return (
+        <div className="bg-card-bg p-6 rounded-xl shadow-sm">
+            <h2 className="font-poppins font-bold text-lg mb-4 text-text-primary">Évolution de la précision de l'IA</h2>
+            <div className="w-full h-64 flex items-end justify-around space-x-2">
+                {data.map(item => (
+                    <div key={item.month} className="flex flex-col items-center h-full w-full">
+                        <div className="w-full h-full flex items-end">
+                            <div 
+                                className="bg-primary hover:bg-primary-light transition-colors w-full rounded-t-md" 
+                                style={{ height: `${(item.precision / maxPrecision) * 100}%` }}
+                                title={`${item.precision}%`}
+                            >
+                            </div>
+                        </div>
+                        <span className="text-xs text-text-secondary mt-2">{item.month}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 
 const ImageAIAnalysis: React.FC = () => {
@@ -83,7 +121,7 @@ const ImageAIAnalysis: React.FC = () => {
             imageUrl="https://picsum.photos/seed/drone1/600/400"
             crop="Blé"
             cropConfidence={96}
-            growthRate={1.2}
+            diagnostics={{ waterStress: 25, nitrogenDeficiency: 15 }}
             disease={{ name: "Rouille brune", severity: "Faible", confidence: 78 }}
           />
           <ImageAnalysisCard 
@@ -93,25 +131,13 @@ const ImageAIAnalysis: React.FC = () => {
             imageUrl="https://picsum.photos/seed/satellite1/600/400"
             crop="Maïs"
             cropConfidence={96}
-            growthRate={1.8}
+            diagnostics={{ waterStress: 55, nitrogenDeficiency: 30 }}
           />
       </div>
 
-       <div className="bg-gradient-to-r from-primary to-secondary p-6 rounded-xl text-white">
-            <h2 className="text-xl font-bold font-poppins text-left">Moteur d'analyse IA</h2>
-            <p className="font-roboto mt-1 mb-4 text-left">Intelligence artificielle avancée pour la reconnaissance des cultures et la détection précoce des maladies.</p>
-            <div className="flex flex-wrap gap-4 items-center justify-between">
-                <div className="flex gap-2 flex-wrap">
-                    <button className="bg-white/20 text-white font-semibold py-2 px-4 rounded-full text-sm hover:bg-white/30 transition">Vision par ordinateur</button>
-                    <button className="bg-white/20 text-white font-semibold py-2 px-4 rounded-full text-sm hover:bg-white/30 transition">Deep Learning</button>
-                    <button className="bg-white/20 text-white font-semibold py-2 px-4 rounded-full text-sm hover:bg-white/30 transition">Analyse spectrale</button>
-                </div>
-                 <div className="flex gap-2">
-                    <button className="bg-white text-primary font-bold py-2 px-4 rounded-full shadow-lg hover:bg-gray-100 transition-colors text-sm">Importer images</button>
-                    <button className="bg-white text-primary font-bold py-2 px-4 rounded-full shadow-lg hover:bg-gray-100 transition-colors text-sm">Analyse batch</button>
-                </div>
-            </div>
-        </div>
+       <div className="mt-6">
+         <AnalysisChart />
+       </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -10,6 +9,10 @@ import AutomatedIrrigation from './components/AutomatedIrrigation';
 import AIRecommendations from './components/AIRecommendations';
 import Marketplace from './components/Marketplace';
 import Login from './components/Login';
+import Alerts from './components/Alerts';
+import Settings from './components/Settings';
+import Analytics from './components/Analytics';
+
 
 // A simple type for page names
 export type Page = 
@@ -48,6 +51,12 @@ const App: React.FC = () => {
         return <AIRecommendations />;
       case 'Marketplace':
         return <Marketplace />;
+      case 'Analytics':
+        return <Analytics />;
+      case 'Alertes':
+        return <Alerts />;
+      case 'Paramètres':
+        return <Settings />;
       default:
         return <div className="p-8 text-2xl font-poppins text-text-primary">Contenu pour {activePage}</div>;
     }
