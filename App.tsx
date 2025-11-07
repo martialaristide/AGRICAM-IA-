@@ -9,6 +9,7 @@ import ImageAIAnalysis from './components/ImageAIAnalysis';
 import AutomatedIrrigation from './components/AutomatedIrrigation';
 import AIRecommendations from './components/AIRecommendations';
 import Marketplace from './components/Marketplace';
+import Login from './components/Login';
 
 // A simple type for page names
 export type Page = 
@@ -27,6 +28,7 @@ export type Page =
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('Tableau de bord');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const renderContent = () => {
     switch (activePage) {
@@ -51,9 +53,17 @@ const App: React.FC = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="bg-background font-roboto text-text-primary min-h-screen flex">
-      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar 
+        activePage={activePage} 
+        setActivePage={setActivePage} 
+        onLogout={() => setIsAuthenticated(false)} 
+      />
       <main className="flex-1 ml-64 p-6 overflow-y-auto">
         {renderContent()}
       </main>

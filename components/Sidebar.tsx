@@ -3,12 +3,13 @@ import React from 'react';
 import { Page } from '../App';
 import {
   DashboardIcon, ParcelsIcon, SensorIcon, DroneIcon, SatelliteIcon, AnalysisIcon,
-  IrrigationIcon, RecommendationIcon, MarketplaceIcon, AnalyticsIcon, AlertIcon, SettingsIcon,
+  IrrigationIcon, RecommendationIcon, MarketplaceIcon, AnalyticsIcon, AlertIcon, SettingsIcon, LogoutIcon,
 } from './icons';
 
 interface SidebarProps {
   activePage: Page;
   setActivePage: (page: Page) => void;
+  onLogout: () => void;
 }
 
 const navItems: { name: Page; icon: React.FC<{ className?: string }> }[] = [
@@ -26,7 +27,7 @@ const navItems: { name: Page; icon: React.FC<{ className?: string }> }[] = [
   { name: 'Paramètres', icon: SettingsIcon },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, onLogout }) => {
   return (
     <aside className="fixed top-0 left-0 w-64 h-full bg-card-bg shadow-lg flex flex-col z-10">
       <div className="flex items-center justify-center h-20 border-b border-border-color">
@@ -40,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) => {
           </div>
         </div>
       </div>
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul>
           {navItems.map((item) => (
             <li key={item.name} className="mb-2">
@@ -59,6 +60,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) => {
           ))}
         </ul>
       </nav>
+      <div className="p-4 border-t border-border-color">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-sm font-medium text-text-secondary hover:bg-red-50 hover:text-red-600"
+        >
+          <LogoutIcon className="w-5 h-5 mr-4" />
+          <span>Déconnexion</span>
+        </button>
+      </div>
     </aside>
   );
 };
