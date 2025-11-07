@@ -1,0 +1,5 @@
+{
+  "name": "AGRICAM IA",
+  "description": "An admin interface for a precision agriculture platform in Africa, providing tools to monitor, plan, and optimize farming activities using IoT and AI.",
+  "requestFramePermissions": []
+}
