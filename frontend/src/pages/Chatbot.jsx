@@ -327,41 +327,121 @@ const Chatbot = () => {
                     </div>
                   </div>
                 )}
+                {isAnalyzing && (
+                  <div className="flex justify-start">
+                    <div className="bg-violet-100 rounded-2xl rounded-bl-md px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Camera className="h-5 w-5 animate-pulse text-violet-600" />
+                        <span className="text-sm text-violet-700">Analyse de l'image en cours...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
             {/* Input Area */}
             <div className="p-4 border-t bg-slate-50">
+              {/* File Upload Preview */}
+              {previewImage && (
+                <div className="mb-3 relative">
+                  <img src={previewImage} alt="Preview" className="h-20 rounded-lg" />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute top-1 right-1 h-6 w-6 p-0"
+                    onClick={() => setPreviewImage(null)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              )}
               <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isAnalyzing}
+                  title="Uploader une image pour analyse"
+                >
+                  <Upload className="h-5 w-5" />
+                </Button>
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Posez votre question agricole..."
+                  placeholder="Posez votre question ou uploadez une image..."
                   className="flex-1"
-                  disabled={isLoading}
+                  disabled={isLoading || isAnalyzing}
                   data-testid="chatbot-input"
                 />
                 <Button
                   onClick={() => sendMessage()}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={!inputMessage.trim() || isLoading || isAnalyzing}
                   className="bg-emerald-600 hover:bg-emerald-700"
                   data-testid="chatbot-send-btn"
                 >
-                  {isLoading ? (
+                  {isLoading || isAnalyzing ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <Send className="h-5 w-5" />
                   )}
                 </Button>
               </div>
+              <p className="text-xs text-slate-400 mt-2">
+                📷 Tip: Uploadez une photo de vos plantes pour détecter les maladies
+              </p>
             </div>
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Upload Section */}
+          <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Camera className="h-5 w-5 text-violet-600" />
+                Diagnostic par Image
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-violet-700 mb-3">
+                Uploadez une photo de vos plantes pour:
+              </p>
+              <ul className="text-sm text-slate-600 space-y-1">
+                <li className="flex items-center gap-2">
+                  <Bug className="h-4 w-4 text-rose-500" />
+                  Détecter les maladies
+                </li>
+                <li className="flex items-center gap-2">
+                  <Leaf className="h-4 w-4 text-emerald-500" />
+                  Identifier les cultures
+                </li>
+                <li className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4 text-blue-500" />
+                  Trouver des fournisseurs
+                </li>
+              </ul>
+              <Button 
+                className="w-full mt-4 bg-violet-600 hover:bg-violet-700"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAnalyzing}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Uploader une image
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Quick Questions */}
           <Card>
             <CardHeader className="pb-3">
