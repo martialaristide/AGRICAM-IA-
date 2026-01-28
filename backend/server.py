@@ -155,6 +155,20 @@ SUBSCRIPTION_PACKAGES = {
 }
 
 # =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+def clean_doc(doc: dict) -> dict:
+    """Remove MongoDB _id from document"""
+    if doc and "_id" in doc:
+        del doc["_id"]
+    return doc
+
+def prepare_for_insert(doc: dict) -> dict:
+    """Create a copy of document for insertion (prevents _id mutation)"""
+    return {k: v for k, v in doc.items()}
+
+# =============================================================================
 # AUTH HELPERS
 # =============================================================================
 
