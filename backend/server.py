@@ -1708,7 +1708,7 @@ async def create_sensor(data: SensorCreate, user = Depends(require_roles([UserRo
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": user["id"]
     }
-    await db.sensors.insert_one(sensor)
+    await db.sensors.insert_one(prepare_for_insert(sensor))
     
     # Notify farmer
     await db.alerts.insert_one({
