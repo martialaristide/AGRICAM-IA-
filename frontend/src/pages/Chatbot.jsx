@@ -20,9 +20,15 @@ import {
   MessageSquare,
   History,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  Image as ImageIcon,
+  FileText,
+  Camera,
+  ShoppingBag
 } from "lucide-react";
 import api from "../services/api";
+import { analyzeFile } from "../services/api";
 import { toast } from "sonner";
 
 const QUICK_QUESTIONS = [
