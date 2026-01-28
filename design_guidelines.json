@@ -1,0 +1,109 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Anti-AI Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ]
+  },
+  "project": {
+    "name": "AGRICAM IA",
+    "type": "Precision Agriculture Dashboard",
+    "target_audience": "French Farmers, Agronomists, Drone Operators",
+    "language": "fr"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Manrope, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl font-bold tracking-tight",
+      "h2": "text-3xl font-semibold tracking-tight",
+      "h3": "text-2xl font-semibold",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm text-muted-foreground"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');"
+    ]
+  },
+  "colors": {
+    "base": {
+      "background": "bg-slate-50",
+      "foreground": "text-slate-900",
+      "card": "bg-white",
+      "sidebar": "bg-slate-900 text-slate-50"
+    },
+    "gradients": {
+      "dashboard": "bg-gradient-to-r from-emerald-600 to-teal-500",
+      "drones": "bg-gradient-to-r from-blue-600 to-indigo-500",
+      "ai_analysis": "bg-gradient-to-r from-violet-600 to-fuchsia-500",
+      "sensors": "bg-gradient-to-r from-amber-500 to-orange-400",
+      "irrigation": "bg-gradient-to-r from-cyan-500 to-blue-500",
+      "marketplace": "bg-gradient-to-r from-lime-500 to-green-600"
+    },
+    "status": {
+      "urgent": "bg-red-100 text-red-700 border-red-200",
+      "high": "bg-orange-100 text-orange-700 border-orange-200",
+      "medium": "bg-yellow-100 text-yellow-700 border-yellow-200",
+      "active": "bg-emerald-100 text-emerald-700 border-emerald-200",
+      "error": "bg-rose-100 text-rose-700 border-rose-200",
+      "offline": "bg-slate-100 text-slate-600 border-slate-200"
+    }
+  },
+  "layout": {
+    "structure": "Sidebar Layout (Left Fixed Sidebar + Scrollable Main Content)",
+    "sidebar_width": "w-64",
+    "container_padding": "p-6 md:p-8 lg:p-10",
+    "grid_system": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  },
+  "components": {
+    "StatCard": {
+      "description": "A clean white card displaying a key metric.",
+      "structure": "Card > CardHeader (Title + Icon) > CardContent (Value + Trend)",
+      "style": "bg-white shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200"
+    },
+    "ModuleHeader": {
+      "description": "A vibrant gradient header for each section.",
+      "structure": "div (Gradient BG) > h1 (White Text) + Breadcrumbs (White/80 Text)",
+      "style": "rounded-xl p-8 mb-8 shadow-lg text-white relative overflow-hidden"
+    },
+    "StatusBadge": {
+      "description": "Pill-shaped badge for status indication.",
+      "style": "px-3 py-1 rounded-full text-xs font-medium border"
+    }
+  },
+  "assets": {
+    "images": {
+      "drone_hero": "https://images.unsplash.com/photo-1761583780469-2f206ec7b270?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "sensor_detail": "https://images.pexels.com/photos/35686439/pexels-photo-35686439.jpeg",
+      "satellite_view": "https://images.pexels.com/photos/31949547/pexels-photo-31949547.jpeg",
+      "farmer_tablet": "https://images.pexels.com/photos/8715867/pexels-photo-8715867.jpeg",
+      "corn_field": "https://images.unsplash.com/photo-1655048411845-02f99d6a68ae?crop=entropy&cs=srgb&fm=jpg&q=85"
+    },
+    "icons": "Lucide React (default)"
+  },
+  "instructions_to_main_agent": [
+    "Implement the Sidebar Layout as the root structure.",
+    "Use the 'ModuleHeader' component at the top of every page with the correct gradient.",
+    "Ensure all text in the Sidebar is legible against the dark background (slate-900).",
+    "Use 'Manrope' for all headings to give a modern tech feel.",
+    "Do not use generic blue for everything; strictly follow the module-specific gradients.",
+    "For charts, use Recharts with colors matching the module's theme.",
+    "Ensure the interface is in French as requested."
+  ],
+  "universal_guidelines": [
+    "Avoid 'AI Slop' - no generic centered layouts.",
+    "Use 2-3x more spacing than typical (p-8 instead of p-4).",
+    "Add micro-interactions (hover states, transitions) to all interactive elements.",
+    "Use 'sonner' for toasts.",
+    "All interactive elements must have 'data-testid'."
+  ]
+}
