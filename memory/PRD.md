@@ -3,18 +3,20 @@
 ## Metadata
 - **Developer**: Barra Martial Aristide
 - **Company**: African AI Solutions
-- **Version**: 2.0.0
+- **Version**: 3.0.0
 - **Last Updated**: 2025-01-28
 
 ## Original Problem Statement
 Plateforme d'agriculture de précision intelligente complète combinant IoT, drones, satellites, IA et marketplace pour le marché africain francophone.
 
 ## Architecture
-- **Frontend**: React 18 + Tailwind CSS + Shadcn UI
+- **Frontend**: React 18 + Tailwind CSS + Shadcn UI + Mapbox GL JS
 - **Backend**: FastAPI + Python 3.11
 - **Database**: MongoDB
 - **Authentication**: JWT avec bcrypt
-- **AI/ML**: Emergent LLM (GPT-5.2, Gemini)
+- **AI/ML**: Emergent LLM (GPT-4o-mini via Emergent Key)
+- **Payments**: Stripe (emergent integration)
+- **Maps**: Mapbox GL JS
 
 ## User Personas & Roles
 1. **Admin** - Gestion complète de la plateforme, validation utilisateurs, paramétrage
@@ -28,21 +30,24 @@ Plateforme d'agriculture de précision intelligente complète combinant IoT, dro
 
 ### Authentification & Autorisation
 - ✅ JWT avec tokens sécurisés
-- ✅ Inscription multi-rôles
+- ✅ Inscription multi-rôles avec CNI/passeport
 - ✅ Dashboards personnalisés par rôle
 - ✅ Navigation role-based
-- ✅ Comptes de démo pré-configurés
+- ✅ Comptes de démo pré-configurés (admin, farmer, supplier, bank)
 
 ### Module Parcelles
 - ✅ Gestion 3+ parcelles avec géolocalisation
+- ✅ Carte interactive Mapbox (vue carte/liste)
 - ✅ Analyse sol complète (NPK, pH, humidité, température)
 - ✅ Statuts visuels (Excellent/Bon/Attention)
-- ✅ Types de culture définis
+- ✅ Création de parcelles avec formulaire
+- ✅ Dessin de polygones sur la carte
 
 ### Module Capteurs IoT
 - ✅ 5 types de capteurs (Humidité, Température, pH, NPK, Camera)
 - ✅ Statuts en temps réel (Actif/Erreur/Inactif)
 - ✅ Historique des données
+- ✅ Import CSV/Excel pour données capteurs
 - ✅ Export CSV
 
 ### Module Drones
@@ -60,7 +65,7 @@ Plateforme d'agriculture de précision intelligente complète combinant IoT, dro
 - ✅ Reconnaissance cultures (Blé 94%, Maïs 96%)
 - ✅ Détection maladies avec solutions
 - ✅ Prédiction rendement
-- ✅ Intégration GPT-5.2 / Gemini
+- ✅ Intégration GPT-4o-mini via Emergent LLM Key
 
 ### Module Irrigation
 - ✅ Systèmes automatisés
@@ -86,8 +91,22 @@ Plateforme d'agriculture de précision intelligente complète combinant IoT, dro
 
 ### Module Alertes
 - ✅ Priorités (Critique/Warning/Info)
-- ✅ Multi-canaux (in-app, SMS, email)
+- ✅ Multi-canaux (in-app prévu SMS, email)
 - ✅ Historique
+
+### Module Chatbot AgriBot IA 🆕
+- ✅ Chatbot IA agricole propulsé par GPT-4o-mini
+- ✅ Base de connaissances agricoles africaines
+- ✅ Questions rapides prédéfinies
+- ✅ Historique des conversations
+- ✅ Contexte utilisateur (parcelles)
+
+### Module Apprentissage 🆕
+- ✅ 3 modules de formation
+- ✅ Quiz de validation avec scoring
+- ✅ Suivi de progression
+- ✅ Certificats après validation (70% requis)
+- ✅ Filtres par catégorie et difficulté
 
 ### Administration
 - ✅ Gestion utilisateurs
@@ -95,46 +114,67 @@ Plateforme d'agriculture de précision intelligente complète combinant IoT, dro
 - ✅ Gestion abonnements
 - ✅ Statistiques plateforme
 
-## Système d'Abonnement
+## Système d'Abonnement avec Stripe 🆕
 | Plan | Prix | Features |
 |------|------|----------|
 | Freemium | 0 XAF | 1 parcelle, alertes basiques, consultation marketplace |
 | Basic | 5,000 XAF/mois | 3 parcelles, météo avancée, support email |
 | Premium | 15,000 XAF/mois | Illimité, IoT, drones, IA avancée, support 24/7 |
 
+- ✅ Intégration Stripe checkout
+- ✅ Plans mensuel, trimestriel (-10%), annuel (-20%)
+- ✅ Polling du statut de paiement
+- ✅ Mise à jour automatique de l'abonnement
+
 ## Intégrations Externes
 - ✅ OpenWeatherMap (météo avec fallback)
-- ✅ Emergent LLM Key (GPT-5.2, Gemini Nano Banana)
-- ⏳ Stripe/Mobile Money (paiements)
+- ✅ Emergent LLM Key (GPT-4o-mini pour chatbot)
+- ✅ Stripe (paiements abonnements)
+- ✅ Mapbox GL JS (cartes interactives)
+- ⏳ Twilio SMS (nécessite clés API utilisateur)
 
 ## Tests Effectués
-- Backend: 22/22 endpoints (100%)
+- Backend: 27/28 endpoints (96%)
 - Frontend: 100% fonctionnel
 - Authentification: 100%
 - Role-based access: 100%
+- Chatbot IA: 100%
+- Stripe Payments: 100%
 
 ## P0/P1/P2 Features Remaining
 
-### P0 (Implémenté)
+### P0 (Implémenté) ✅
 - ✅ Authentification JWT multi-rôles
 - ✅ Dashboards personnalisés
 - ✅ Tous les modules de base
+- ✅ Chatbot IA
+- ✅ Module apprentissage
+- ✅ Stripe payments
 
 ### P1 (À faire)
-- ⏳ Intégration paiement Stripe/Mobile Money
-- ⏳ Notifications push réelles
-- ⏳ Mode hors ligne (PWA)
-- ⏳ Cartes interactives (Mapbox)
+- ⏳ Notifications SMS via Twilio (nécessite clés API)
+- ⏳ Mode hors ligne (PWA) 
+- ⏳ Token Mapbox production (actuellement demo token)
 
 ### P2 (Nice to have)
 - ⏳ Application mobile native
 - ⏳ Reconstruction 3D robots
 - ⏳ Intégration DJI SDK réelle
 - ⏳ Multi-langue (EN, langues locales)
+- ⏳ Empreinte digitale biométrique
+- ⏳ Vérification CNI/passeport automatique
+
+## Comptes de Test
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Admin | admin@agricam-ia.com | admin123 |
+| Agriculteur | agriculteur@demo.com | farmer123 |
+| Fournisseur | fournisseur@demo.com | supplier123 |
+| Banque | banque@demo.com | bank123 |
 
 ## Next Action Items
-1. Intégrer Stripe pour paiements abonnements
-2. Ajouter cartes interactives Mapbox pour parcelles
-3. Implémenter notifications SMS via Twilio
-4. Ajouter graphiques Recharts pour Analytics
-5. Générer contrats PDF automatiques
+1. Configurer Twilio avec les clés API utilisateur pour SMS
+2. Obtenir un token Mapbox de production
+3. Implémenter le mode PWA/offline
+4. Ajouter l'analyse d'images réelle avec upload
+5. Améliorer la vérification biométrique
