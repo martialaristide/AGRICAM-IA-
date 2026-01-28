@@ -1653,6 +1653,1553 @@ async def get_mapbox_config():
     }
 
 # =============================================================================
+# API ROUTES - SENSOR MANAGEMENT (CRUD by Admin, visible by Farmer)
+# =============================================================================
+
+class SensorCreate(BaseModel):
+    name: str
+    type: SensorType
+    parcel_id: str
+    unit: str = "%"
+    threshold_min: Optional[float] = None
+    threshold_max: Optional[float] = None
+
+class SensorUpdate(BaseModel):
+    name: Optional[str] = None
+    status: Optional[SensorStatus] = None
+    threshold_min: Optional[float] = None
+    threshold_max: Optional[float] = None
+
+@api_router.post("/sensors")
+async def create_sensor(data: SensorCreate, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin creates a new sensor"""
+    parcel = await db.parcels.find_one({"id": data.parcel_id}, {"_id": 0})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    sensor = {
+        "id": str(uuid.uuid4()),
+        "name": data.name,
+        "type": data.type.value,
+        "parcel_id": data.parcel_id,
+        "parcel_name": parcel.get("name", ""),
+        "user_id": parcel.get("user_id", ""),
+        "value": 0,
+        "unit": data.unit,
+        "status": "actif",
+        "battery_level": 100,
+        "threshold_min": data.threshold_min,
+        "threshold_max": data.threshold_max,
+        "last_update": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user["id"]
+    }
+    await db.sensors.insert_one(sensor)
+    
+    # Notify farmer
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": parcel.get("user_id"),
+        "type": "sensor",
+        "title": "Nouveau capteur ajouté",
+        "message": f"L'administrateur a ajouté le capteur '{data.name}' sur {parcel.get('name', '')}",
+        "priority": "info",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return sensor
+
+@api_router.put("/sensors/{sensor_id}")
+async def update_sensor(sensor_id: str, data: SensorUpdate, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin updates a sensor"""
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    if "status" in update_data:
+        update_data["status"] = update_data["status"].value if hasattr(update_data["status"], 'value') else update_data["status"]
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = user["id"]
+    
+    result = await db.sensors.update_one({"id": sensor_id}, {"$set": update_data})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Capteur non trouvé")
+    
+    sensor = await db.sensors.find_one({"id": sensor_id}, {"_id": 0})
+    
+    # Notify farmer
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": sensor.get("user_id"),
+        "type": "sensor",
+        "title": "Capteur modifié",
+        "message": f"Le capteur '{sensor.get('name')}' a été mis à jour par l'administrateur",
+        "priority": "info",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return sensor
+
+@api_router.delete("/sensors/{sensor_id}")
+async def delete_sensor(sensor_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin deletes a sensor"""
+    sensor = await db.sensors.find_one({"id": sensor_id}, {"_id": 0})
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Capteur non trouvé")
+    
+    await db.sensors.delete_one({"id": sensor_id})
+    
+    # Notify farmer
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": sensor.get("user_id"),
+        "type": "sensor",
+        "title": "Capteur supprimé",
+        "message": f"Le capteur '{sensor.get('name')}' a été supprimé de la plateforme",
+        "priority": "warning",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Capteur supprimé"}
+
+@api_router.get("/sensors/user/{user_id}")
+async def get_user_sensors(user_id: str, user = Depends(get_current_user)):
+    """Get all sensors for a specific user's parcels"""
+    if user["role"] != "admin" and user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    sensors = await db.sensors.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    return sensors
+
+# =============================================================================
+# API ROUTES - IoT DATA IMPORT/EXPORT & AI ANALYSIS
+# =============================================================================
+
+@api_router.post("/iot/import")
+async def import_iot_data(
+    file: UploadFile = File(...),
+    user = Depends(get_current_user)
+):
+    """Import IoT sensor data from CSV/Excel and analyze with AI"""
+    if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez CSV ou Excel.")
+    
+    try:
+        import pandas as pd
+        content = await file.read()
+        
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        else:
+            df = pd.read_excel(io.BytesIO(content))
+        
+        records_imported = 0
+        ai_insights = []
+        
+        for _, row in df.iterrows():
+            record = {
+                "id": str(uuid.uuid4()),
+                "sensor_id": str(row.get('sensor_id', row.get('capteur_id', ''))),
+                "sensor_name": str(row.get('sensor_name', row.get('nom_capteur', ''))),
+                "value": float(row.get('value', row.get('valeur', 0))),
+                "unit": str(row.get('unit', row.get('unite', ''))),
+                "timestamp": str(row.get('timestamp', row.get('date', datetime.now(timezone.utc).isoformat()))),
+                "user_id": user["id"],
+                "imported_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.sensor_history.insert_one(record)
+            records_imported += 1
+        
+        # AI Analysis of imported data
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            data_summary = df.describe().to_string() if len(df) > 0 else "Aucune donnée"
+            
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"iot-analysis-{uuid.uuid4()}",
+                system_message="Tu es un expert IoT agricole. Analyse les données des capteurs et fournis des insights."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            analysis = await chat.send_message(UserMessage(
+                text=f"Analyse ces données IoT agricoles et fournis 3 recommandations clés:\n{data_summary}"
+            ))
+            
+            ai_insights = analysis
+            
+        except Exception as e:
+            ai_insights = f"Analyse automatique non disponible: {str(e)}"
+        
+        return {
+            "success": True,
+            "records_imported": records_imported,
+            "columns_detected": list(df.columns),
+            "ai_analysis": ai_insights
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur d'import: {str(e)}")
+
+@api_router.get("/iot/export")
+async def export_iot_data(
+    format: str = "csv",
+    sensor_id: Optional[str] = None,
+    user = Depends(get_current_user)
+):
+    """Export IoT data as CSV, Excel or JSON"""
+    query = {"user_id": user["id"]} if user["role"] != "admin" else {}
+    if sensor_id:
+        query["sensor_id"] = sensor_id
+    
+    data = await db.sensor_history.find(query, {"_id": 0}).sort("timestamp", -1).to_list(10000)
+    
+    if format == "json":
+        return data
+    
+    output = io.StringIO()
+    if data:
+        writer = csv.DictWriter(output, fieldnames=data[0].keys())
+        writer.writeheader()
+        writer.writerows(data)
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=iot_data_{datetime.now().strftime('%Y%m%d')}.csv"}
+    )
+
+@api_router.post("/iot/analyze")
+async def analyze_iot_data(
+    sensor_ids: List[str] = [],
+    analysis_type: str = "general",
+    user = Depends(get_current_user)
+):
+    """AI analysis of IoT data"""
+    query = {"user_id": user["id"]} if user["role"] != "admin" else {}
+    if sensor_ids:
+        query["sensor_id"] = {"$in": sensor_ids}
+    
+    data = await db.sensor_history.find(query, {"_id": 0}).sort("timestamp", -1).to_list(1000)
+    
+    if not data:
+        return {"analysis": "Aucune donnée disponible pour l'analyse", "recommendations": []}
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        import pandas as pd
+        
+        df = pd.DataFrame(data)
+        stats = df.describe().to_string() if len(df) > 0 else "Pas de statistiques"
+        
+        prompts = {
+            "general": "Fournis une analyse générale des données IoT avec tendances et anomalies.",
+            "anomaly": "Détecte les anomalies et valeurs hors normes dans ces données.",
+            "prediction": "Prédit les tendances futures basées sur ces données historiques.",
+            "optimization": "Propose des optimisations pour améliorer la production agricole."
+        }
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"iot-ai-{uuid.uuid4()}",
+            system_message="Tu es un expert en analyse de données IoT agricoles. Réponds en français avec des recommandations pratiques."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"{prompts.get(analysis_type, prompts['general'])}\n\nDonnées:\n{stats}"
+        ))
+        
+        return {
+            "analysis_type": analysis_type,
+            "data_points": len(data),
+            "analysis": response,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {"analysis": f"Erreur d'analyse: {str(e)}", "recommendations": []}
+
+# =============================================================================
+# API ROUTES - INTELLIGENT IRRIGATION SYSTEM
+# =============================================================================
+
+class IrrigationConfig(BaseModel):
+    name: str
+    parcel_id: str
+    is_automatic: bool = True
+    schedule_start: Optional[str] = None  # HH:MM
+    schedule_end: Optional[str] = None
+    humidity_threshold_min: float = 30
+    humidity_threshold_max: float = 70
+    flow_rate_liters_per_hour: float = 100
+
+@api_router.post("/irrigation/systems")
+async def create_irrigation_system(data: IrrigationConfig, user = Depends(get_current_user)):
+    """Create and configure an irrigation system"""
+    parcel = await db.parcels.find_one({"id": data.parcel_id}, {"_id": 0})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    system = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "parcel_id": data.parcel_id,
+        "parcel_name": parcel.get("name", ""),
+        "name": data.name,
+        "status": "actif",
+        "is_automatic": data.is_automatic,
+        "schedule_start": data.schedule_start,
+        "schedule_end": data.schedule_end,
+        "humidity_threshold_min": data.humidity_threshold_min,
+        "humidity_threshold_max": data.humidity_threshold_max,
+        "flow_rate_liters_per_hour": data.flow_rate_liters_per_hour,
+        "efficiency_percent": 87,
+        "water_used_today_liters": 0,
+        "zones": [],
+        "last_activation": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.irrigation_systems.insert_one(system)
+    return system
+
+@api_router.put("/irrigation/systems/{system_id}/config")
+async def configure_irrigation(system_id: str, data: IrrigationConfig, user = Depends(get_current_user)):
+    """Update irrigation system configuration"""
+    update_data = data.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.irrigation_systems.update_one({"id": system_id}, {"$set": update_data})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Système non trouvé")
+    
+    return await db.irrigation_systems.find_one({"id": system_id}, {"_id": 0})
+
+@api_router.post("/irrigation/systems/{system_id}/zones")
+async def add_irrigation_zone(system_id: str, name: str, area_hectares: float = 1, user = Depends(get_current_user)):
+    """Add a zone to irrigation system"""
+    zone = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "area_hectares": area_hectares,
+        "is_active": True,
+        "water_used_liters": 0
+    }
+    await db.irrigation_systems.update_one({"id": system_id}, {"$push": {"zones": zone}})
+    return zone
+
+@api_router.post("/irrigation/ai-optimize")
+async def ai_irrigation_optimization(user = Depends(get_current_user)):
+    """AI-powered irrigation optimization"""
+    parcels = await db.parcels.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    sensors = await db.sensors.find({"user_id": user["id"], "type": "humidity"}, {"_id": 0}).to_list(100)
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        context = f"Parcelles: {json.dumps(parcels, default=str)[:1000]}\nCapteurs humidité: {json.dumps(sensors, default=str)[:500]}"
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"irrigation-ai-{uuid.uuid4()}",
+            system_message="Tu es un expert en irrigation agricole intelligente. Optimise les systèmes d'irrigation."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"Analyse ces données et fournis un plan d'irrigation optimisé pour les prochaines 24h:\n{context}"
+        ))
+        
+        # Create AI recommendations
+        recommendations = []
+        for parcel in parcels:
+            humidity = parcel.get("humidity", 50)
+            if humidity < 40:
+                rec = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user["id"],
+                    "parcel_id": parcel["id"],
+                    "parcel_name": parcel.get("name", ""),
+                    "type": "irrigation",
+                    "priority": "urgent" if humidity < 30 else "elevee",
+                    "title": f"Irrigation requise - {parcel.get('name', '')}",
+                    "message": f"Humidité à {humidity}%. Irrigation recommandée immédiatement.",
+                    "confidence_percent": 92,
+                    "deadline_hours": 2 if humidity < 30 else 6,
+                    "ai_source": "gpt-4o-mini",
+                    "status": "pending",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.recommendations.insert_one(rec)
+                recommendations.append(rec)
+                
+                # Create alert
+                await db.alerts.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user["id"],
+                    "type": "irrigation",
+                    "title": f"Alerte irrigation - {parcel.get('name', '')}",
+                    "message": f"Humidité critique ({humidity}%). Action requise.",
+                    "priority": "critique" if humidity < 30 else "warning",
+                    "parcel_name": parcel.get("name", ""),
+                    "is_read": False,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+        
+        return {
+            "ai_analysis": response,
+            "recommendations_created": len(recommendations),
+            "recommendations": recommendations
+        }
+        
+    except Exception as e:
+        return {"error": str(e), "recommendations": []}
+
+# =============================================================================
+# API ROUTES - AI PREDICTIVE (Weather, Satellite)
+# =============================================================================
+
+@api_router.get("/ai/weather-prediction/{location}")
+async def ai_weather_prediction(location: str, user = Depends(get_current_user)):
+    """AI-powered weather prediction using satellite data"""
+    # Get current weather
+    weather_data = await get_weather(location)
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"weather-ai-{uuid.uuid4()}",
+            system_message="Tu es un météorologue expert pour l'agriculture. Utilise les données pour prédire la météo agricole."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"""Données météo actuelles pour {location}:
+            - Température: {weather_data.get('temperature', 'N/A')}°C
+            - Humidité: {weather_data.get('humidity', 'N/A')}%
+            - Pression: {weather_data.get('pressure', 'N/A')} hPa
+            - Vent: {weather_data.get('wind_speed', 'N/A')} km/h
+            
+            Fournis:
+            1. Prévision pour les 7 prochains jours
+            2. Impact sur les cultures
+            3. Recommandations agricoles
+            """
+        ))
+        
+        return {
+            "location": location,
+            "current_weather": weather_data,
+            "ai_prediction": response,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {"location": location, "current_weather": weather_data, "error": str(e)}
+
+@api_router.get("/ai/satellite-analysis/{parcel_id}")
+async def ai_satellite_analysis(parcel_id: str, user = Depends(get_current_user)):
+    """AI analysis of satellite imagery for a parcel"""
+    parcel = await db.parcels.find_one({"id": parcel_id}, {"_id": 0})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    # Simulated satellite data
+    satellite_data = {
+        "ndvi": 0.72,
+        "temperature_surface": parcel.get("temperature", 25) + 2,
+        "humidity_atmosphere": parcel.get("humidity", 60) - 5,
+        "wind_speed": 12.5,
+        "pressure": 1013,
+        "pollution_index": 35,
+        "nitrogen_estimation": parcel.get("soil_analysis", {}).get("nitrogen", 50),
+        "phosphorus_estimation": parcel.get("soil_analysis", {}).get("phosphorus", 50),
+        "potassium_estimation": parcel.get("soil_analysis", {}).get("potassium", 50),
+        "capture_date": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"satellite-ai-{uuid.uuid4()}",
+            system_message="Tu es un expert en télédétection agricole et analyse d'images satellites."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"""Analyse ces données satellite pour la parcelle '{parcel.get('name', '')}' ({parcel.get('crop_type', '')}):
+            {json.dumps(satellite_data, indent=2)}
+            
+            Fournis:
+            1. État de santé végétale (NDVI)
+            2. Zones de stress potentielles
+            3. Estimation de rendement
+            4. Recommandations
+            """
+        ))
+        
+        return {
+            "parcel": parcel,
+            "satellite_data": satellite_data,
+            "ai_analysis": response,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {"parcel": parcel, "satellite_data": satellite_data, "error": str(e)}
+
+# =============================================================================
+# API ROUTES - RECOMMENDATIONS AUTO-UPDATE
+# =============================================================================
+
+@api_router.post("/recommendations/auto-generate")
+async def auto_generate_recommendations(user = Depends(get_current_user)):
+    """Auto-generate AI recommendations based on current data"""
+    parcels = await db.parcels.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    sensors = await db.sensors.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    
+    recommendations = []
+    
+    for parcel in parcels:
+        humidity = parcel.get("humidity", 50)
+        temp = parcel.get("temperature", 25)
+        nitrogen = parcel.get("soil_analysis", {}).get("nitrogen", 50)
+        
+        # Irrigation recommendation
+        if humidity < 45:
+            rec = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "parcel_id": parcel["id"],
+                "parcel_name": parcel.get("name", ""),
+                "type": "irrigation",
+                "priority": "urgent" if humidity < 30 else "elevee",
+                "title": "Irrigation requise",
+                "message": f"Humidité du sol ({humidity}%) inférieure au seuil optimal. Irrigation recommandée.",
+                "confidence_percent": 94,
+                "deadline_hours": 2 if humidity < 30 else 24,
+                "ai_source": "system",
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.recommendations.update_one(
+                {"parcel_id": parcel["id"], "type": "irrigation", "status": "pending"},
+                {"$set": rec},
+                upsert=True
+            )
+            recommendations.append(rec)
+        
+        # Fertilization recommendation
+        if nitrogen < 40:
+            rec = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "parcel_id": parcel["id"],
+                "parcel_name": parcel.get("name", ""),
+                "type": "fertilisation",
+                "priority": "moyenne",
+                "title": "Fertilisation azotée recommandée",
+                "message": f"Niveau d'azote ({nitrogen}%) insuffisant. Apport recommandé: 40-60 kg/ha.",
+                "confidence_percent": 85,
+                "deadline_hours": 48,
+                "ai_source": "system",
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.recommendations.update_one(
+                {"parcel_id": parcel["id"], "type": "fertilisation", "status": "pending"},
+                {"$set": rec},
+                upsert=True
+            )
+            recommendations.append(rec)
+    
+    # Calculate stats
+    total = len(recommendations)
+    high_priority = len([r for r in recommendations if r["priority"] in ["urgent", "elevee"]])
+    avg_confidence = sum(r["confidence_percent"] for r in recommendations) / max(total, 1)
+    
+    return {
+        "total_recommendations": total,
+        "high_priority": high_priority,
+        "average_confidence": round(avg_confidence, 1),
+        "average_deadline_hours": 24,
+        "recommendations": recommendations
+    }
+
+# =============================================================================
+# API ROUTES - MARKETPLACE COMPLETE (Products, Chat, Payments, Contracts)
+# =============================================================================
+
+class ProductCreate(BaseModel):
+    title: str
+    category: str
+    quantity: float
+    unit: str
+    price_per_unit: float
+    location: str
+    description: str
+    quality_grade: str = "A"
+    certifications: List[str] = []
+    is_bio: bool = False
+    tonnage_available: Optional[float] = None
+    logistics_available: bool = False
+
+@api_router.post("/marketplace/products/create")
+async def create_product(data: ProductCreate, user = Depends(get_current_user)):
+    """Create a marketplace product with full details"""
+    product = {
+        "id": str(uuid.uuid4()),
+        "seller_id": user["id"],
+        "seller_name": user["full_name"],
+        "seller_phone": user.get("phone", ""),
+        "title": data.title,
+        "category": data.category,
+        "quantity": data.quantity,
+        "unit": data.unit,
+        "price_per_unit": data.price_per_unit,
+        "currency": "XAF",
+        "location": data.location,
+        "description": data.description,
+        "quality_grade": data.quality_grade,
+        "tonnage_available": data.tonnage_available or data.quantity,
+        "certifications": data.certifications,
+        "is_bio": data.is_bio,
+        "is_premium": "Premium" in data.certifications,
+        "logistics_available": data.logistics_available,
+        "status": "disponible",
+        "views": 0,
+        "inquiries": 0,
+        "available_date": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.marketplace_products.insert_one(product)
+    return product
+
+@api_router.get("/marketplace/products/{product_id}")
+async def get_product(product_id: str):
+    """Get product details"""
+    product = await db.marketplace_products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Increment views
+    await db.marketplace_products.update_one({"id": product_id}, {"$inc": {"views": 1}})
+    
+    return product
+
+@api_router.put("/marketplace/products/{product_id}")
+async def update_product(product_id: str, data: ProductCreate, user = Depends(get_current_user)):
+    """Update a marketplace product"""
+    result = await db.marketplace_products.update_one(
+        {"id": product_id, "seller_id": user["id"]},
+        {"$set": {**data.model_dump(), "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    return await db.marketplace_products.find_one({"id": product_id}, {"_id": 0})
+
+@api_router.delete("/marketplace/products/{product_id}")
+async def delete_product(product_id: str, user = Depends(get_current_user)):
+    """Delete a marketplace product"""
+    result = await db.marketplace_products.delete_one({"id": product_id, "seller_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    return {"message": "Produit supprimé"}
+
+@api_router.get("/marketplace/my-products")
+async def get_my_products(user = Depends(get_current_user)):
+    """Get current user's products"""
+    products = await db.marketplace_products.find({"seller_id": user["id"]}, {"_id": 0}).to_list(100)
+    return products
+
+@api_router.get("/marketplace/inputs")
+async def get_inputs(category: Optional[str] = None):
+    """Get available agricultural inputs (fertilizers, seeds, etc.)"""
+    query = {"category": {"$in": ["fertilizers", "seeds", "pesticides", "equipment"]}}
+    if category:
+        query["category"] = category
+    inputs = await db.marketplace_products.find(query, {"_id": 0}).to_list(100)
+    return inputs
+
+@api_router.get("/marketplace/services")
+async def get_services():
+    """Get available agricultural services"""
+    services = await db.marketplace_products.find(
+        {"category": {"$in": ["services", "logistics", "consulting"]}},
+        {"_id": 0}
+    ).to_list(100)
+    return services
+
+# Chat System
+class ChatMessageCreate(BaseModel):
+    receiver_id: str
+    product_id: Optional[str] = None
+    message: str
+
+@api_router.post("/marketplace/chat/send")
+async def send_chat_message(data: ChatMessageCreate, user = Depends(get_current_user)):
+    """Send a chat message to buyer/seller"""
+    message = {
+        "id": str(uuid.uuid4()),
+        "sender_id": user["id"],
+        "sender_name": user["full_name"],
+        "receiver_id": data.receiver_id,
+        "product_id": data.product_id,
+        "message": data.message,
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.chat_messages.insert_one(message)
+    
+    # Notify receiver
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": data.receiver_id,
+        "type": "message",
+        "title": f"Nouveau message de {user['full_name']}",
+        "message": data.message[:100],
+        "priority": "info",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return message
+
+@api_router.get("/marketplace/chat/conversations")
+async def get_conversations(user = Depends(get_current_user)):
+    """Get all chat conversations"""
+    messages = await db.chat_messages.find(
+        {"$or": [{"sender_id": user["id"]}, {"receiver_id": user["id"]}]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Group by conversation partner
+    conversations = {}
+    for msg in messages:
+        partner_id = msg["receiver_id"] if msg["sender_id"] == user["id"] else msg["sender_id"]
+        if partner_id not in conversations:
+            conversations[partner_id] = {
+                "partner_id": partner_id,
+                "partner_name": msg.get("sender_name") if msg["sender_id"] != user["id"] else "...",
+                "last_message": msg["message"],
+                "last_message_time": msg["created_at"],
+                "unread_count": 0,
+                "messages": []
+            }
+        conversations[partner_id]["messages"].append(msg)
+        if msg["receiver_id"] == user["id"] and not msg["is_read"]:
+            conversations[partner_id]["unread_count"] += 1
+    
+    return list(conversations.values())
+
+@api_router.get("/marketplace/chat/{partner_id}")
+async def get_chat_history(partner_id: str, user = Depends(get_current_user)):
+    """Get chat history with a specific partner"""
+    messages = await db.chat_messages.find(
+        {"$or": [
+            {"sender_id": user["id"], "receiver_id": partner_id},
+            {"sender_id": partner_id, "receiver_id": user["id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(1000)
+    
+    # Mark as read
+    await db.chat_messages.update_many(
+        {"sender_id": partner_id, "receiver_id": user["id"], "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    
+    return messages
+
+# Smart Contracts
+class ContractCreate(BaseModel):
+    buyer_id: str
+    product_id: str
+    quantity: float
+    total_price: float
+    delivery_date: str
+    delivery_address: str
+    logistics_provider: Optional[str] = None
+    payment_terms: str = "50% advance, 50% on delivery"
+
+@api_router.post("/marketplace/contracts")
+async def create_smart_contract(data: ContractCreate, user = Depends(get_current_user)):
+    """Create a smart contract between buyer and seller"""
+    product = await db.marketplace_products.find_one({"id": data.product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    contract = {
+        "id": str(uuid.uuid4()),
+        "contract_number": f"AGR-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}",
+        "seller_id": user["id"],
+        "seller_name": user["full_name"],
+        "buyer_id": data.buyer_id,
+        "product_id": data.product_id,
+        "product_title": product.get("title", ""),
+        "quantity": data.quantity,
+        "unit": product.get("unit", ""),
+        "price_per_unit": product.get("price_per_unit", 0),
+        "total_price": data.total_price,
+        "currency": "XAF",
+        "delivery_date": data.delivery_date,
+        "delivery_address": data.delivery_address,
+        "logistics_provider": data.logistics_provider,
+        "payment_terms": data.payment_terms,
+        "status": "pending_buyer_signature",
+        "seller_signature": True,
+        "buyer_signature": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.contracts.insert_one(contract)
+    
+    # Notify buyer
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": data.buyer_id,
+        "type": "contract",
+        "title": "Nouveau contrat à signer",
+        "message": f"Contrat {contract['contract_number']} de {user['full_name']} pour {product.get('title', '')}",
+        "priority": "elevee",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return contract
+
+@api_router.get("/marketplace/contracts")
+async def get_contracts(user = Depends(get_current_user)):
+    """Get user's contracts"""
+    contracts = await db.contracts.find(
+        {"$or": [{"seller_id": user["id"]}, {"buyer_id": user["id"]}]},
+        {"_id": 0}
+    ).to_list(100)
+    return contracts
+
+@api_router.put("/marketplace/contracts/{contract_id}/sign")
+async def sign_contract(contract_id: str, user = Depends(get_current_user)):
+    """Buyer signs the contract"""
+    contract = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contrat non trouvé")
+    
+    if contract["buyer_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.contracts.update_one(
+        {"id": contract_id},
+        {"$set": {"buyer_signature": True, "status": "active", "signed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Notify seller
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": contract["seller_id"],
+        "type": "contract",
+        "title": "Contrat signé",
+        "message": f"Le contrat {contract['contract_number']} a été signé par l'acheteur",
+        "priority": "info",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Contrat signé avec succès"}
+
+# =============================================================================
+# API ROUTES - FINANCIAL (Loans, Subsidies, Documents)
+# =============================================================================
+
+class SubsidyRequest(BaseModel):
+    program_name: str
+    amount_requested: float
+    purpose: str
+    parcel_ids: List[str] = []
+
+@api_router.post("/financial/subsidies")
+async def request_subsidy(data: SubsidyRequest, user = Depends(get_current_user)):
+    """Request a government subsidy"""
+    subsidy = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_name": user["full_name"],
+        "program_name": data.program_name,
+        "amount_requested": data.amount_requested,
+        "purpose": data.purpose,
+        "parcel_ids": data.parcel_ids,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.subsidies.insert_one(subsidy)
+    return subsidy
+
+@api_router.get("/financial/subsidies")
+async def get_subsidies(user = Depends(get_current_user)):
+    """Get user's subsidy requests"""
+    query = {} if user["role"] in ["admin", "financial"] else {"user_id": user["id"]}
+    subsidies = await db.subsidies.find(query, {"_id": 0}).to_list(100)
+    return subsidies
+
+@api_router.post("/financial/documents/upload")
+async def upload_financial_document(
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    loan_id: Optional[str] = Form(None),
+    user = Depends(get_current_user)
+):
+    """Upload a financial document"""
+    content = await file.read()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "filename": file.filename,
+        "document_type": document_type,
+        "loan_id": loan_id,
+        "size_bytes": len(content),
+        "content_base64": base64.b64encode(content).decode('utf-8')[:1000] + "...",  # Truncate for demo
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.financial_documents.insert_one(doc)
+    return {"id": doc["id"], "filename": file.filename, "uploaded": True}
+
+@api_router.get("/financial/documents")
+async def get_financial_documents(user = Depends(get_current_user)):
+    """Get user's financial documents"""
+    docs = await db.financial_documents.find(
+        {"user_id": user["id"]},
+        {"_id": 0, "content_base64": 0}
+    ).to_list(100)
+    return docs
+
+# =============================================================================
+# API ROUTES - DRONES (Config, Video, Control)
+# =============================================================================
+
+class DroneCreate(BaseModel):
+    name: str
+    model: str
+    serial_number: str
+    connection_type: str = "wifi"  # wifi, bluetooth, 4g
+    camera_resolution: str = "4K"
+    max_flight_time_minutes: int = 30
+
+@api_router.post("/drones")
+async def create_drone(data: DroneCreate, user = Depends(get_current_user)):
+    """Register a new drone"""
+    drone = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "name": data.name,
+        "model": data.model,
+        "serial_number": data.serial_number,
+        "connection_type": data.connection_type,
+        "camera_resolution": data.camera_resolution,
+        "max_flight_time_minutes": data.max_flight_time_minutes,
+        "status": "inactive",
+        "battery_level": 100,
+        "is_connected": False,
+        "last_location": None,
+        "total_flight_hours": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.drones.insert_one(drone)
+    return drone
+
+@api_router.get("/drones")
+async def get_drones(user = Depends(get_current_user)):
+    """Get user's drones"""
+    query = {} if user["role"] == "admin" else {"user_id": user["id"]}
+    drones = await db.drones.find(query, {"_id": 0}).to_list(100)
+    return drones
+
+@api_router.put("/drones/{drone_id}/connect")
+async def connect_drone(drone_id: str, user = Depends(get_current_user)):
+    """Connect to a drone"""
+    await db.drones.update_one(
+        {"id": drone_id},
+        {"$set": {"is_connected": True, "status": "ready", "connected_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Drone connecté", "status": "ready"}
+
+@api_router.put("/drones/{drone_id}/disconnect")
+async def disconnect_drone(drone_id: str, user = Depends(get_current_user)):
+    """Disconnect from a drone"""
+    await db.drones.update_one(
+        {"id": drone_id},
+        {"$set": {"is_connected": False, "status": "inactive"}}
+    )
+    return {"message": "Drone déconnecté"}
+
+@api_router.post("/drones/{drone_id}/mission")
+async def create_drone_mission(
+    drone_id: str,
+    parcel_id: str,
+    mission_type: str = "surveillance",
+    user = Depends(get_current_user)
+):
+    """Create a drone mission"""
+    drone = await db.drones.find_one({"id": drone_id}, {"_id": 0})
+    parcel = await db.parcels.find_one({"id": parcel_id}, {"_id": 0})
+    
+    if not drone or not parcel:
+        raise HTTPException(status_code=404, detail="Drone ou parcelle non trouvée")
+    
+    mission = {
+        "id": str(uuid.uuid4()),
+        "drone_id": drone_id,
+        "drone_name": drone.get("name", ""),
+        "parcel_id": parcel_id,
+        "parcel_name": parcel.get("name", ""),
+        "mission_type": mission_type,
+        "status": "planifie",
+        "progress_percent": 0,
+        "start_time": None,
+        "end_time": None,
+        "images_captured": 0,
+        "coverage_hectares": parcel.get("area_hectares", 0),
+        "user_id": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.drone_missions.insert_one(mission)
+    return mission
+
+@api_router.get("/drones/{drone_id}/video-feed")
+async def get_drone_video_feed(drone_id: str):
+    """Get drone video feed URL (simulated)"""
+    return {
+        "drone_id": drone_id,
+        "video_url": f"wss://stream.agricam-ia.com/drone/{drone_id}",
+        "status": "streaming",
+        "resolution": "1080p",
+        "fps": 30
+    }
+
+# =============================================================================
+# API ROUTES - AGRICULTURAL ROBOTS
+# =============================================================================
+
+class RobotCreate(BaseModel):
+    name: str
+    model: str
+    robot_type: str  # surveillance, harvesting, spraying, seeding
+    serial_number: str
+    max_operation_hours: int = 8
+
+@api_router.post("/robots")
+async def create_robot(data: RobotCreate, user = Depends(get_current_user)):
+    """Register an agricultural robot"""
+    robot = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "name": data.name,
+        "model": data.model,
+        "robot_type": data.robot_type,
+        "serial_number": data.serial_number,
+        "max_operation_hours": data.max_operation_hours,
+        "status": "inactive",
+        "battery_level": 100,
+        "is_connected": False,
+        "current_task": None,
+        "total_operation_hours": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.robots.insert_one(robot)
+    return robot
+
+@api_router.get("/robots")
+async def get_robots(user = Depends(get_current_user)):
+    """Get user's robots"""
+    query = {} if user["role"] == "admin" else {"user_id": user["id"]}
+    robots = await db.robots.find(query, {"_id": 0}).to_list(100)
+    return robots
+
+@api_router.put("/robots/{robot_id}/task")
+async def assign_robot_task(
+    robot_id: str,
+    task_type: str,
+    parcel_id: str,
+    user = Depends(get_current_user)
+):
+    """Assign a task to a robot"""
+    await db.robots.update_one(
+        {"id": robot_id},
+        {"$set": {
+            "status": "working",
+            "current_task": {
+                "type": task_type,
+                "parcel_id": parcel_id,
+                "started_at": datetime.now(timezone.utc).isoformat()
+            }
+        }}
+    )
+    return {"message": f"Tâche '{task_type}' assignée au robot"}
+
+# =============================================================================
+# API ROUTES - ALERTS (Satellite, Weather, AI)
+# =============================================================================
+
+@api_router.post("/alerts/generate-ai")
+async def generate_ai_alerts(user = Depends(get_current_user)):
+    """Generate AI-powered alerts based on all data sources"""
+    parcels = await db.parcels.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    sensors = await db.sensors.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    
+    alerts_generated = []
+    
+    for parcel in parcels:
+        # Check humidity
+        humidity = parcel.get("humidity", 50)
+        if humidity < 35:
+            alert = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "type": "irrigation",
+                "title": f"Alerte sécheresse - {parcel.get('name', '')}",
+                "message": f"Humidité critique ({humidity}%). Irrigation urgente requise.",
+                "priority": "critique",
+                "parcel_name": parcel.get("name", ""),
+                "source": "satellite_ai",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.alerts.insert_one(alert)
+            alerts_generated.append(alert)
+        
+        # Check status
+        if parcel.get("status") == "attention":
+            alert = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "type": "health",
+                "title": f"Parcelle nécessite attention - {parcel.get('name', '')}",
+                "message": "Analyse satellite détecte des zones de stress. Inspection recommandée.",
+                "priority": "warning",
+                "parcel_name": parcel.get("name", ""),
+                "source": "satellite_ai",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.alerts.insert_one(alert)
+            alerts_generated.append(alert)
+    
+    # Check sensor errors
+    for sensor in sensors:
+        if sensor.get("status") == "erreur":
+            alert = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "type": "sensor",
+                "title": f"Capteur en erreur - {sensor.get('name', '')}",
+                "message": f"Le capteur {sensor.get('name', '')} sur {sensor.get('parcel_name', '')} nécessite une maintenance.",
+                "priority": "warning",
+                "parcel_name": sensor.get("parcel_name", ""),
+                "source": "system",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.alerts.insert_one(alert)
+            alerts_generated.append(alert)
+    
+    return {"alerts_generated": len(alerts_generated), "alerts": alerts_generated}
+
+# =============================================================================
+# API ROUTES - AGRIBOT ENHANCED (File Analysis, Disease Detection)
+# =============================================================================
+
+@api_router.post("/chatbot/analyze-file")
+async def chatbot_analyze_file(
+    file: UploadFile = File(...),
+    question: str = Form("Analyse ce fichier"),
+    user = Depends(get_current_user)
+):
+    """AgriBot analyzes uploaded files (images, documents)"""
+    content = await file.read()
+    
+    analysis_result = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "filename": file.filename,
+        "file_type": file.content_type,
+        "question": question,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        if file.content_type.startswith('image/'):
+            # Image analysis
+            image_base64 = base64.b64encode(content).decode('utf-8')
+            
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"agribot-file-{uuid.uuid4()}",
+                system_message="""Tu es AgriBot, expert en analyse d'images agricoles.
+                Analyse les images pour:
+                1. Identifier les cultures et leur état
+                2. Détecter les maladies (mildiou, rouille, oïdium, etc.)
+                3. Recommander des traitements écologiques
+                4. Suggérer des fournisseurs de la plateforme AGRICAM IA
+                Réponds toujours en français avec des conseils pratiques."""
+            ).with_model("gemini", "gemini-2.0-flash")
+            
+            image_content = ImageContent(image_base64=image_base64)
+            response = await chat.send_message(UserMessage(
+                text=question,
+                file_contents=[image_content]
+            ))
+            
+            analysis_result["analysis"] = response
+            analysis_result["type"] = "image_analysis"
+            
+        else:
+            # Document analysis
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"agribot-doc-{uuid.uuid4()}",
+                system_message="Tu es AgriBot. Analyse ce document agricole et fournis des insights."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # For text files
+            try:
+                text_content = content.decode('utf-8')[:5000]
+            except:
+                text_content = "Document binaire - analyse limitée"
+            
+            response = await chat.send_message(UserMessage(
+                text=f"{question}\n\nContenu:\n{text_content}"
+            ))
+            
+            analysis_result["analysis"] = response
+            analysis_result["type"] = "document_analysis"
+        
+        # Save analysis
+        await db.chatbot_file_analyses.insert_one(analysis_result)
+        
+        return analysis_result
+        
+    except Exception as e:
+        analysis_result["analysis"] = f"Erreur d'analyse: {str(e)}"
+        analysis_result["type"] = "error"
+        return analysis_result
+
+@api_router.get("/chatbot/suppliers/{category}")
+async def get_recommended_suppliers(category: str):
+    """Get recommended suppliers for a category"""
+    suppliers = await db.users.find(
+        {"role": "supplier"},
+        {"_id": 0, "password_hash": 0}
+    ).to_list(100)
+    
+    # Get their products
+    for supplier in suppliers:
+        products = await db.marketplace_products.find(
+            {"seller_id": supplier["id"]},
+            {"_id": 0}
+        ).to_list(10)
+        supplier["products"] = products
+    
+    return suppliers
+
+# =============================================================================
+# API ROUTES - LEARNING (Courses, E-books, Institutions)
+# =============================================================================
+
+class CourseCreate(BaseModel):
+    title: str
+    description: str
+    category: str
+    difficulty: str
+    duration_minutes: int
+    content: str
+    video_url: Optional[str] = None
+    price: float = 0
+    is_free: bool = True
+
+@api_router.post("/learning/courses")
+async def create_course(data: CourseCreate, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin creates a new course"""
+    course = {
+        "id": str(uuid.uuid4()),
+        "created_by": user["id"],
+        **data.model_dump(),
+        "students_count": 0,
+        "rating": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.courses.insert_one(course)
+    return course
+
+@api_router.get("/learning/courses")
+async def get_courses(category: Optional[str] = None, is_free: Optional[bool] = None):
+    """Get all courses"""
+    query = {}
+    if category:
+        query["category"] = category
+    if is_free is not None:
+        query["is_free"] = is_free
+    courses = await db.courses.find(query, {"_id": 0}).to_list(100)
+    return courses + LEARNING_MODULES  # Combine with built-in modules
+
+class EbookCreate(BaseModel):
+    title: str
+    author: str
+    description: str
+    category: str
+    price: float = 0
+    is_free: bool = True
+    file_url: Optional[str] = None
+
+@api_router.post("/learning/ebooks")
+async def create_ebook(data: EbookCreate, user = Depends(get_current_user)):
+    """Create an e-book"""
+    ebook = {
+        "id": str(uuid.uuid4()),
+        "created_by": user["id"],
+        **data.model_dump(),
+        "downloads": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.ebooks.insert_one(ebook)
+    return ebook
+
+@api_router.get("/learning/ebooks")
+async def get_ebooks(is_free: Optional[bool] = None):
+    """Get all e-books"""
+    query = {}
+    if is_free is not None:
+        query["is_free"] = is_free
+    ebooks = await db.ebooks.find(query, {"_id": 0}).to_list(100)
+    return ebooks
+
+@api_router.post("/learning/institutions/register")
+async def register_institution(
+    institution_name: str,
+    contact_email: str,
+    description: str,
+    user = Depends(get_current_user)
+):
+    """Register a training institution"""
+    institution = {
+        "id": str(uuid.uuid4()),
+        "name": institution_name,
+        "contact_email": contact_email,
+        "description": description,
+        "registered_by": user["id"],
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.training_institutions.insert_one(institution)
+    return institution
+
+@api_router.get("/learning/institutions")
+async def get_institutions():
+    """Get all registered training institutions"""
+    institutions = await db.training_institutions.find(
+        {"status": "approved"},
+        {"_id": 0}
+    ).to_list(100)
+    return institutions
+
+# =============================================================================
+# API ROUTES - ANALYTICS & REPORTING
+# =============================================================================
+
+@api_router.get("/analytics/metrics")
+async def get_analytics_metrics(user = Depends(get_current_user)):
+    """Get comprehensive analytics metrics"""
+    user_filter = {"user_id": user["id"]} if user["role"] != "admin" else {}
+    
+    # Parcels metrics
+    parcels = await db.parcels.find(user_filter, {"_id": 0}).to_list(100)
+    total_area = sum(p.get("area_hectares", 0) for p in parcels)
+    avg_humidity = sum(p.get("humidity", 0) for p in parcels) / max(len(parcels), 1)
+    avg_temp = sum(p.get("temperature", 0) for p in parcels) / max(len(parcels), 1)
+    
+    # Sensor metrics
+    sensors = await db.sensors.find({}, {"_id": 0}).to_list(100)
+    active_sensors = len([s for s in sensors if s.get("status") == "actif"])
+    
+    # Production estimate
+    estimated_yield = total_area * 7.5  # tonnes per hectare estimate
+    
+    # Financial metrics
+    orders = await db.orders.find(user_filter, {"_id": 0}).to_list(100)
+    total_revenue = sum(o.get("total_price", 0) for o in orders if o.get("status") == "delivered")
+    
+    return {
+        "parcels": {
+            "count": len(parcels),
+            "total_area_hectares": round(total_area, 2),
+            "average_humidity": round(avg_humidity, 1),
+            "average_temperature": round(avg_temp, 1)
+        },
+        "sensors": {
+            "total": len(sensors),
+            "active": active_sensors,
+            "error": len([s for s in sensors if s.get("status") == "erreur"])
+        },
+        "production": {
+            "estimated_yield_tonnes": round(estimated_yield, 1),
+            "yield_per_hectare": 7.5
+        },
+        "financial": {
+            "total_revenue_xaf": total_revenue,
+            "orders_count": len(orders)
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.post("/analytics/report")
+async def generate_analytics_report(
+    report_type: str = "general",
+    format: str = "json",
+    user = Depends(get_current_user)
+):
+    """Generate analytics report with AI analysis"""
+    metrics = await get_analytics_metrics(user)
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"analytics-{uuid.uuid4()}",
+            system_message="Tu es un analyste agricole expert. Génère des rapports détaillés avec recommandations."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"Génère un rapport d'analyse {report_type} basé sur ces métriques:\n{json.dumps(metrics, indent=2)}"
+        ))
+        
+        metrics["ai_analysis"] = response
+        
+    except Exception as e:
+        metrics["ai_analysis"] = f"Analyse non disponible: {str(e)}"
+    
+    if format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Métrique", "Valeur"])
+        for key, value in metrics.items():
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    writer.writerow([f"{key}.{k}", v])
+            else:
+                writer.writerow([key, value])
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=rapport_{report_type}.csv"}
+        )
+    
+    return metrics
+
+# =============================================================================
+# API ROUTES - NEWS & ARTICLES (AI Generated)
+# =============================================================================
+
+@api_router.get("/news/agriculture")
+async def get_agriculture_news():
+    """Get AI-generated agriculture news and articles"""
+    news = await db.news_articles.find({}, {"_id": 0}).sort("created_at", -1).to_list(20)
+    
+    if not news:
+        # Generate default articles
+        default_articles = [
+            {
+                "id": str(uuid.uuid4()),
+                "title": "L'agriculture de précision révolutionne l'Afrique",
+                "summary": "Les technologies IoT et IA transforment les pratiques agricoles sur le continent africain.",
+                "category": "innovation",
+                "source": "AGRICAM IA",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Prévisions météo favorables pour la saison des pluies",
+                "summary": "Les modèles climatiques prévoient une pluviométrie normale à excédentaire.",
+                "category": "meteo",
+                "source": "AGRICAM IA",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Nouvelles subventions pour l'agriculture durable",
+                "summary": "Le gouvernement annonce de nouvelles aides pour les agriculteurs engagés dans la transition écologique.",
+                "category": "finance",
+                "source": "AGRICAM IA",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        ]
+        await db.news_articles.insert_many(default_articles)
+        return default_articles
+    
+    return news
+
+@api_router.post("/news/generate")
+async def generate_news_article(topic: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Generate an AI news article"""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"news-{uuid.uuid4()}",
+            system_message="Tu es un journaliste agricole. Écris des articles informatifs en français."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        response = await chat.send_message(UserMessage(
+            text=f"Écris un article court (200 mots) sur: {topic}. Format: titre, résumé, contenu."
+        ))
+        
+        article = {
+            "id": str(uuid.uuid4()),
+            "title": topic,
+            "content": response,
+            "category": "ai_generated",
+            "source": "AGRICAM IA",
+            "generated_by": user["id"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.news_articles.insert_one(article)
+        
+        return article
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+# =============================================================================
+# API ROUTES - CURRENCY CONVERSION
+# =============================================================================
+
+CURRENCY_RATES = {
+    "XAF": 1,
+    "EUR": 0.00152,
+    "USD": 0.00166,
+    "GBP": 0.00131,
+    "NGN": 2.54
+}
+
+@api_router.get("/currency/convert")
+async def convert_currency(amount: float, from_currency: str = "XAF", to_currency: str = "EUR"):
+    """Convert currency"""
+    if from_currency not in CURRENCY_RATES or to_currency not in CURRENCY_RATES:
+        raise HTTPException(status_code=400, detail="Devise non supportée")
+    
+    # Convert to XAF first, then to target
+    xaf_amount = amount / CURRENCY_RATES[from_currency]
+    result = xaf_amount * CURRENCY_RATES[to_currency]
+    
+    return {
+        "original_amount": amount,
+        "original_currency": from_currency,
+        "converted_amount": round(result, 2),
+        "target_currency": to_currency,
+        "rate": CURRENCY_RATES[to_currency] / CURRENCY_RATES[from_currency]
+    }
+
+# =============================================================================
 # SEED DATA
 # =============================================================================
 
