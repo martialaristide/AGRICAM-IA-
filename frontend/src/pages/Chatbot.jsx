@@ -68,14 +68,17 @@ const Chatbot = () => {
     {
       id: 1,
       type: "bot",
-      text: "Bonjour! Je suis **AgriBot**, votre assistant agricole expert développé par African AI Solutions. 🌾\n\nJe peux vous aider avec:\n- Conseils sur les cultures (maïs, blé, cacao, etc.)\n- Diagnostic de maladies\n- Irrigation et fertilisation\n- Calendrier agricole\n\nComment puis-je vous aider aujourd'hui?",
+      text: "Bonjour! Je suis **AgriBot**, votre assistant agricole expert développé par African AI Solutions. 🌾\n\nJe peux vous aider avec:\n- Conseils sur les cultures (maïs, blé, cacao, etc.)\n- **Diagnostic de maladies** (uploadez une photo!)\n- Irrigation et fertilisation\n- Recommandations de fournisseurs\n- Protection de l'environnement\n\n📷 **Nouveau:** Uploadez une image de vos plantes pour détecter les maladies!\n\nComment puis-je vous aider aujourd'hui?",
       timestamp: new Date().toISOString()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [history, setHistory] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -95,6 +98,67 @@ const Chatbot = () => {
       setHistory(response.data);
     } catch (error) {
       console.error("Error fetching history:", error);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Show preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setPreviewImage(e.target.result);
+      reader.readAsDataURL(file);
+    }
+
+    const userMessage = {
+      id: Date.now(),
+      type: "user",
+      text: `📎 Fichier uploadé: ${file.name}`,
+      isFile: true,
+      fileName: file.name,
+      fileType: file.type,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsAnalyzing(true);
+
+    try {
+      const question = file.type.startsWith('image/') 
+        ? "Analyse cette image de culture. Identifie la plante, détecte les maladies potentielles, recommande des traitements écologiques et suggère des fournisseurs de la plateforme AGRICAM IA."
+        : "Analyse ce document agricole et fournis des insights utiles.";
+
+      const response = await analyzeFile(file, question);
+
+      const botMessage = {
+        id: Date.now() + 1,
+        type: "bot",
+        text: response.data.analysis || "Analyse terminée",
+        isAnalysis: true,
+        analysisType: response.data.type,
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+      setPreviewImage(null);
+      toast.success("Analyse terminée!");
+    } catch (error) {
+      console.error("Error analyzing file:", error);
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: "bot",
+        text: "Désolé, je n'ai pas pu analyser ce fichier. Essayez avec une image JPEG ou PNG.",
+        isError: true,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      toast.error("Erreur d'analyse");
+    } finally {
+      setIsAnalyzing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
