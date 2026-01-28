@@ -133,4 +133,35 @@ export const exportSensorsCSV = () => api.get("/export/sensors", { responseType:
 // Seed Database
 export const seedDatabase = () => api.post("/seed");
 
+// Chatbot
+export const sendChatMessage = (message, context) => api.post("/chatbot/message", { message, context });
+export const getChatHistory = () => api.get("/chatbot/history");
+
+// Learning
+export const getLearningModules = (category, difficulty) => api.get("/learning/modules", { params: { category, difficulty } });
+export const getLearningModule = (moduleId) => api.get(`/learning/modules/${moduleId}`);
+export const updateLearningProgress = (moduleId, completed, quizScore) => 
+  api.post(`/learning/progress/${moduleId}`, null, { params: { completed, quiz_score: quizScore } });
+export const getMyLearningProgress = () => api.get("/learning/my-progress");
+
+// Payments
+export const createCheckoutSession = (packageId) => api.post(`/payments/create-checkout?package_id=${packageId}`);
+export const getPaymentStatus = (sessionId) => api.get(`/payments/status/${sessionId}`);
+
+// Import Data
+export const importSensorsData = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/import/sensors-data", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const importParcelsData = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/import/parcels", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+
 export default api;
