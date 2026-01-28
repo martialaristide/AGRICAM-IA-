@@ -136,6 +136,14 @@ export const seedDatabase = () => api.post("/seed");
 // Chatbot
 export const sendChatMessage = (message, context) => api.post("/chatbot/message", { message, context });
 export const getChatHistory = () => api.get("/chatbot/history");
+export const analyzeFile = (file, question) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("question", question || "Analyse ce fichier");
+  return api.post("/chatbot/analyze-file", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
 
 // Learning
 export const getLearningModules = (category, difficulty) => api.get("/learning/modules", { params: { category, difficulty } });
@@ -143,6 +151,8 @@ export const getLearningModule = (moduleId) => api.get(`/learning/modules/${modu
 export const updateLearningProgress = (moduleId, completed, quizScore) => 
   api.post(`/learning/progress/${moduleId}`, null, { params: { completed, quiz_score: quizScore } });
 export const getMyLearningProgress = () => api.get("/learning/my-progress");
+export const getEbooks = (isFree) => api.get("/learning/ebooks", { params: { is_free: isFree } });
+export const getCourses = (category, isFree) => api.get("/learning/courses", { params: { category, is_free: isFree } });
 
 // Payments
 export const createCheckoutSession = (packageId) => api.post(`/payments/create-checkout?package_id=${packageId}`);
@@ -152,7 +162,7 @@ export const getPaymentStatus = (sessionId) => api.get(`/payments/status/${sessi
 export const importSensorsData = (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  return api.post("/import/sensors-data", formData, {
+  return api.post("/iot/import", formData, {
     headers: { "Content-Type": "multipart/form-data" }
   });
 };
@@ -163,5 +173,78 @@ export const importParcelsData = (file) => {
     headers: { "Content-Type": "multipart/form-data" }
   });
 };
+export const exportIoTData = (format) => api.get(`/iot/export?format=${format}`);
+export const analyzeIoTData = (sensorIds, analysisType) => api.post("/iot/analyze", { sensor_ids: sensorIds, analysis_type: analysisType });
+
+// Sensors CRUD
+export const createSensor = (data) => api.post("/sensors", data);
+export const updateSensor = (sensorId, data) => api.put(`/sensors/${sensorId}`, data);
+export const deleteSensor = (sensorId) => api.delete(`/sensors/${sensorId}`);
+
+// Drones
+export const getDrones = () => api.get("/drones");
+export const createDrone = (data) => api.post("/drones", data);
+export const connectDrone = (droneId) => api.put(`/drones/${droneId}/connect`);
+export const disconnectDrone = (droneId) => api.put(`/drones/${droneId}/disconnect`);
+export const createDroneMission = (droneId, parcelId, missionType) => 
+  api.post(`/drones/${droneId}/mission`, null, { params: { parcel_id: parcelId, mission_type: missionType } });
+
+// Robots
+export const getRobots = () => api.get("/robots");
+export const createRobot = (data) => api.post("/robots", data);
+export const assignRobotTask = (robotId, taskType, parcelId) => 
+  api.put(`/robots/${robotId}/task`, null, { params: { task_type: taskType, parcel_id: parcelId } });
+
+// Irrigation
+export const createIrrigationSystem = (data) => api.post("/irrigation/systems", data);
+export const configureIrrigation = (systemId, data) => api.put(`/irrigation/systems/${systemId}/config`, data);
+export const addIrrigationZone = (systemId, name, area) => 
+  api.post(`/irrigation/systems/${systemId}/zones`, null, { params: { name, area_hectares: area } });
+export const aiIrrigationOptimize = () => api.post("/irrigation/ai-optimize");
+
+// AI Features
+export const aiWeatherPrediction = (location) => api.get(`/ai/weather-prediction/${location}`);
+export const aiSatelliteAnalysis = (parcelId) => api.get(`/ai/satellite-analysis/${parcelId}`);
+export const autoGenerateRecommendations = () => api.post("/recommendations/auto-generate");
+export const generateAiAlerts = () => api.post("/alerts/generate-ai");
+
+// Marketplace Enhanced
+export const createProduct = (data) => api.post("/marketplace/products/create", data);
+export const getMyProducts = () => api.get("/marketplace/my-products");
+export const getInputs = (category) => api.get("/marketplace/inputs", { params: { category } });
+export const getServices = () => api.get("/marketplace/services");
+export const sendChatMessageToUser = (receiverId, productId, message) => 
+  api.post("/marketplace/chat/send", { receiver_id: receiverId, product_id: productId, message });
+export const getConversations = () => api.get("/marketplace/chat/conversations");
+export const getChatWithUser = (partnerId) => api.get(`/marketplace/chat/${partnerId}`);
+export const createContract = (data) => api.post("/marketplace/contracts", data);
+export const getContracts = () => api.get("/marketplace/contracts");
+export const signContract = (contractId) => api.put(`/marketplace/contracts/${contractId}/sign`);
+
+// Financial
+export const requestSubsidy = (data) => api.post("/financial/subsidies", data);
+export const getSubsidies = () => api.get("/financial/subsidies");
+export const uploadFinancialDocument = (file, documentType, loanId) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("document_type", documentType);
+  if (loanId) formData.append("loan_id", loanId);
+  return api.post("/financial/documents/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const getFinancialDocuments = () => api.get("/financial/documents");
+
+// Analytics
+export const getAnalyticsMetrics = () => api.get("/analytics/metrics");
+export const generateAnalyticsReport = (reportType, format) => 
+  api.post("/analytics/report", null, { params: { report_type: reportType, format } });
+
+// News
+export const getAgricultureNews = () => api.get("/news/agriculture");
+
+// Currency
+export const convertCurrency = (amount, fromCurrency, toCurrency) => 
+  api.get("/currency/convert", { params: { amount, from_currency: fromCurrency, to_currency: toCurrency } });
 
 export default api;
