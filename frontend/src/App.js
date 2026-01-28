@@ -18,6 +18,8 @@ import Analytics from "./pages/Analytics";
 import Alertes from "./pages/Alertes";
 import Parametres from "./pages/Parametres";
 import Financial from "./pages/Financial";
+import Chatbot from "./pages/Chatbot";
+import Apprentissage from "./pages/Apprentissage";
 import { Toaster } from "./components/ui/sonner";
 
 // Auth Context
@@ -183,6 +185,8 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="alertes" element={<Alertes />} />
             <Route path="financial" element={<Financial />} />
+            <Route path="chatbot" element={<Chatbot />} />
+            <Route path="apprentissage" element={<Apprentissage />} />
             <Route path="parametres" element={<Parametres />} />
           </Route>
         </Routes>
