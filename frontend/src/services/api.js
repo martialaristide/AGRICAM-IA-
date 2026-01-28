@@ -10,6 +10,60 @@ const api = axios.create({
   },
 });
 
+// Add token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("agricam_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("agricam_token");
+      localStorage.removeItem("agricam_user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth
+export const login = (data) => api.post("/auth/login", data);
+export const register = (data) => api.post("/auth/register", data);
+export const getMe = () => api.get("/auth/me");
+
+// Admin
+export const getAdminDashboard = () => api.get("/admin/dashboard");
+export const getAdminUsers = (role) => api.get("/admin/users", { params: { role } });
+export const verifyUser = (userId) => api.put(`/admin/users/${userId}/verify`);
+export const updateSubscription = (userId, type) => api.put(`/admin/users/${userId}/subscription?subscription_type=${type}`);
+export const deleteUser = (userId) => api.delete(`/admin/users/${userId}`);
+
+// Weather
+export const getWeather = (location) => api.get(`/weather/${location}`);
+
+// AI Analysis
+export const analyzeCrop = (parcelId, imageBase64) => {
+  const formData = new FormData();
+  formData.append("parcel_id", parcelId);
+  if (imageBase64) formData.append("image_base64", imageBase64);
+  return api.post("/ai/analyze-crop", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const generateRecommendations = (parcelId) => api.post(`/ai/generate-recommendations?parcel_id=${parcelId}`);
+export const predictYield = (parcelId) => api.post(`/ai/predict-yield?parcel_id=${parcelId}`);
+
 // Dashboard
 export const getDashboardStats = () => api.get("/dashboard/stats");
 
@@ -18,12 +72,14 @@ export const getParcels = () => api.get("/parcels");
 export const getParcel = (id) => api.get(`/parcels/${id}`);
 export const createParcel = (data) => api.post("/parcels", data);
 export const updateParcel = (id, data) => api.put(`/parcels/${id}`, data);
+export const deleteParcel = (id) => api.delete(`/parcels/${id}`);
 
 // Sensors
 export const getSensors = () => api.get("/sensors");
 export const getSensorsStats = () => api.get("/sensors/stats");
 export const createSensor = (data) => api.post("/sensors", data);
-export const updateSensorValue = (id, value) => api.put(`/sensors/${id}/value?value=${value}`);
+export const addSensorData = (id, data) => api.post(`/sensors/${id}/data`, data);
+export const getSensorHistory = (id, limit = 100) => api.get(`/sensors/${id}/history`, { params: { limit } });
 
 // Drone Missions
 export const getDroneMissions = () => api.get("/drone-missions");
@@ -39,29 +95,40 @@ export const createAerialImage = (data) => api.post("/aerial-images", data);
 // Image Analysis
 export const getImageAnalyses = () => api.get("/image-analysis");
 export const getImageAnalysisStats = () => api.get("/image-analysis/stats");
-export const analyzeImage = (imageId) => api.post(`/image-analysis/${imageId}/analyze`);
 
 // Irrigation
 export const getIrrigationSystems = () => api.get("/irrigation");
 export const getIrrigationStats = () => api.get("/irrigation/stats");
-export const createIrrigationSystem = (data) => api.post("/irrigation", data);
 export const controlIrrigation = (id, action) => api.put(`/irrigation/${id}/control?action=${action}`);
 
 // Recommendations
 export const getRecommendations = () => api.get("/recommendations");
 export const getRecommendationsStats = () => api.get("/recommendations/stats");
-export const createRecommendation = (data) => api.post("/recommendations", data);
 export const updateRecommendationStatus = (id, action) => api.put(`/recommendations/${id}/action?action=${action}`);
 
 // Marketplace
 export const getMarketplaceProducts = (params) => api.get("/marketplace/products", { params });
 export const createMarketplaceProduct = (data) => api.post("/marketplace/products", data);
-export const updateProductStatus = (id, status) => api.put(`/marketplace/products/${id}/status?status=${status}`);
+export const createOrder = (productId, quantity, address, paymentMethod) => 
+  api.post("/marketplace/orders", null, { params: { product_id: productId, quantity, delivery_address: address, payment_method: paymentMethod } });
+export const getOrders = () => api.get("/marketplace/orders");
+export const updateOrderStatus = (orderId, status) => api.put(`/marketplace/orders/${orderId}/status?status=${status}`);
+
+// Financial
+export const requestLoan = (amount, purpose, duration, institutionId, parcelId) =>
+  api.post("/financial/loans", null, { params: { amount, purpose, duration_months: duration, institution_id: institutionId, parcel_id: parcelId } });
+export const getLoans = () => api.get("/financial/loans");
+export const decideLoan = (loanId, approved, notes) => 
+  api.put(`/financial/loans/${loanId}/decision`, null, { params: { approved, notes } });
 
 // Alerts
 export const getAlerts = (unreadOnly = false) => api.get("/alerts", { params: { unread_only: unreadOnly } });
 export const createAlert = (data) => api.post("/alerts", data);
 export const markAlertRead = (id) => api.put(`/alerts/${id}/read`);
+
+// Export
+export const exportParcelsCSV = () => api.get("/export/parcels", { responseType: "blob" });
+export const exportSensorsCSV = () => api.get("/export/sensors", { responseType: "blob" });
 
 // Seed Database
 export const seedDatabase = () => api.post("/seed");
