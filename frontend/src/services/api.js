@@ -185,7 +185,7 @@ export const getDrones = () => api.get("/drones");
 export const createDrone = (data) => api.post("/drones", data);
 export const connectDrone = (droneId) => api.put(`/drones/${droneId}/connect`);
 export const disconnectDrone = (droneId) => api.put(`/drones/${droneId}/disconnect`);
-export const createDroneMission = (droneId, parcelId, missionType) => 
+export const createDroneMissionWithParams = (droneId, parcelId, missionType) => 
   api.post(`/drones/${droneId}/mission`, null, { params: { parcel_id: parcelId, mission_type: missionType } });
 
 // Robots
