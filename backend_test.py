@@ -228,7 +228,8 @@ class AgricamAPITester:
         if self.failed_tests:
             print("\n❌ FAILED TESTS:")
             for test in self.failed_tests:
-                print(f"   • {test['name']}: {test.get('error', f'Status {test.get(\"actual\", \"unknown\")}')}")
+                error_msg = test.get('error', f"Status {test.get('actual', 'unknown')}")
+                print(f"   • {test['name']}: {error_msg}")
         
         print("\n🎯 ENDPOINT COVERAGE:")
         for name, result in self.results.items():
