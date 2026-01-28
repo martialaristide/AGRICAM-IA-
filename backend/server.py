@@ -345,7 +345,7 @@ async def register(data: UserCreate):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.users.insert_one(user_doc)
+    await db.users.insert_one(prepare_for_insert(user_doc))
     token = create_token(user_id, data.role.value, data.email)
     
     return TokenResponse(
@@ -983,7 +983,7 @@ async def import_sensors_data(
                     "import_date": datetime.now(timezone.utc).isoformat()
                 }
                 
-                await db.sensor_history.insert_one(sensor_data)
+                await db.sensor_history.insert_one(prepare_for_insert(sensor_data))
                 records_imported += 1
                 
             except Exception as e:
@@ -1041,7 +1041,7 @@ async def import_parcels(
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             
-            await db.parcels.insert_one(parcel)
+            await db.parcels.insert_one(prepare_for_insert(parcel))
             records_imported += 1
         
         return {"success": True, "records_imported": records_imported}
@@ -1129,7 +1129,7 @@ async def upload_and_analyze_image(
             analysis_result["source"] = "fallback"
         
         # Save analysis
-        await db.image_analyses.insert_one(analysis_result)
+        await db.image_analyses.insert_one(prepare_for_insert(analysis_result))
         
         # Create alert if disease detected
         diseases = analysis_result.get("results", {}).get("diseases", [])
@@ -1146,7 +1146,7 @@ async def upload_and_analyze_image(
                 "channels": ["in_app", "sms"],
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.alerts.insert_one(alert)
+            await db.alerts.insert_one(prepare_for_insert(alert))
         
         return analysis_result
         
@@ -1287,7 +1287,7 @@ async def create_parcel(data: ParcelCreate, user = Depends(get_current_user)):
         **data.model_dump(),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.parcels.insert_one(parcel)
+    await db.parcels.insert_one(prepare_for_insert(parcel))
     return parcel
 
 @api_router.put("/parcels/{parcel_id}")
@@ -1504,7 +1504,7 @@ async def create_marketplace_product(
         "image_url": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.marketplace_products.insert_one(product)
+    await db.marketplace_products.insert_one(prepare_for_insert(product))
     return product
 
 @api_router.post("/marketplace/orders")
@@ -1527,7 +1527,7 @@ async def create_order(product_id: str, quantity: float, delivery_address: str, 
         "payment_method": payment_method,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.orders.insert_one(order)
+    await db.orders.insert_one(prepare_for_insert(order))
     await db.marketplace_products.update_one({"id": product_id}, {"$set": {"status": "en_negociation"}})
     return order
 
@@ -1562,7 +1562,7 @@ async def request_loan(amount: float, purpose: str, duration_months: int, instit
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.loans.insert_one(loan)
+    await db.loans.insert_one(prepare_for_insert(loan))
     return loan
 
 @api_router.get("/financial/loans")
@@ -1820,7 +1820,7 @@ async def import_iot_data(
                 "user_id": user["id"],
                 "imported_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.sensor_history.insert_one(record)
+            await db.sensor_history.insert_one(prepare_for_insert(record))
             records_imported += 1
         
         # AI Analysis of imported data
@@ -1973,7 +1973,7 @@ async def create_irrigation_system(data: IrrigationConfig, user = Depends(get_cu
         "last_activation": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.irrigation_systems.insert_one(system)
+    await db.irrigation_systems.insert_one(prepare_for_insert(system))
     return system
 
 @api_router.put("/irrigation/systems/{system_id}/config")
@@ -2042,7 +2042,7 @@ async def ai_irrigation_optimization(user = Depends(get_current_user)):
                     "status": "pending",
                     "created_at": datetime.now(timezone.utc).isoformat()
                 }
-                await db.recommendations.insert_one(rec)
+                await db.recommendations.insert_one(prepare_for_insert(rec))
                 recommendations.append(rec)
                 
                 # Create alert
@@ -2286,7 +2286,7 @@ async def create_product(data: ProductCreate, user = Depends(get_current_user)):
         "available_date": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.marketplace_products.insert_one(product)
+    await db.marketplace_products.insert_one(prepare_for_insert(product))
     return product
 
 @api_router.get("/marketplace/products/{product_id}")
@@ -2363,7 +2363,7 @@ async def send_chat_message(data: ChatMessageCreate, user = Depends(get_current_
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.chat_messages.insert_one(message)
+    await db.chat_messages.insert_one(prepare_for_insert(message))
     
     # Notify receiver
     await db.alerts.insert_one({
@@ -2465,7 +2465,7 @@ async def create_smart_contract(data: ContractCreate, user = Depends(get_current
         "buyer_signature": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.contracts.insert_one(contract)
+    await db.contracts.insert_one(prepare_for_insert(contract))
     
     # Notify buyer
     await db.alerts.insert_one({
@@ -2543,7 +2543,7 @@ async def request_subsidy(data: SubsidyRequest, user = Depends(get_current_user)
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.subsidies.insert_one(subsidy)
+    await db.subsidies.insert_one(prepare_for_insert(subsidy))
     return subsidy
 
 @api_router.get("/financial/subsidies")
@@ -2572,7 +2572,7 @@ async def upload_financial_document(
         "content_base64": base64.b64encode(content).decode('utf-8')[:1000] + "...",  # Truncate for demo
         "uploaded_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.financial_documents.insert_one(doc)
+    await db.financial_documents.insert_one(prepare_for_insert(doc))
     return {"id": doc["id"], "filename": file.filename, "uploaded": True}
 
 @api_router.get("/financial/documents")
@@ -2615,7 +2615,7 @@ async def create_drone(data: DroneCreate, user = Depends(get_current_user)):
         "total_flight_hours": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.drones.insert_one(drone)
+    await db.drones.insert_one(prepare_for_insert(drone))
     return drone
 
 @api_router.get("/drones")
@@ -2673,7 +2673,7 @@ async def create_drone_mission(
         "user_id": user["id"],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.drone_missions.insert_one(mission)
+    await db.drone_missions.insert_one(prepare_for_insert(mission))
     return mission
 
 @api_router.get("/drones/{drone_id}/video-feed")
@@ -2716,7 +2716,7 @@ async def create_robot(data: RobotCreate, user = Depends(get_current_user)):
         "total_operation_hours": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.robots.insert_one(robot)
+    await db.robots.insert_one(prepare_for_insert(robot))
     return robot
 
 @api_router.get("/robots")
@@ -2775,7 +2775,7 @@ async def generate_ai_alerts(user = Depends(get_current_user)):
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.alerts.insert_one(alert)
+            await db.alerts.insert_one(prepare_for_insert(alert))
             alerts_generated.append(alert)
         
         # Check status
@@ -2792,7 +2792,7 @@ async def generate_ai_alerts(user = Depends(get_current_user)):
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.alerts.insert_one(alert)
+            await db.alerts.insert_one(prepare_for_insert(alert))
             alerts_generated.append(alert)
     
     # Check sensor errors
@@ -2810,7 +2810,7 @@ async def generate_ai_alerts(user = Depends(get_current_user)):
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.alerts.insert_one(alert)
+            await db.alerts.insert_one(prepare_for_insert(alert))
             alerts_generated.append(alert)
     
     return {"alerts_generated": len(alerts_generated), "alerts": alerts_generated}
@@ -2887,7 +2887,7 @@ async def chatbot_analyze_file(
             analysis_result["type"] = "document_analysis"
         
         # Save analysis
-        await db.chatbot_file_analyses.insert_one(analysis_result)
+        await db.chatbot_file_analyses.insert_one(prepare_for_insert(analysis_result))
         
         return analysis_result
         
@@ -2940,7 +2940,7 @@ async def create_course(data: CourseCreate, user = Depends(require_roles([UserRo
         "rating": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.courses.insert_one(course)
+    await db.courses.insert_one(prepare_for_insert(course))
     return course
 
 @api_router.get("/learning/courses")
@@ -2973,7 +2973,7 @@ async def create_ebook(data: EbookCreate, user = Depends(get_current_user)):
         "downloads": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.ebooks.insert_one(ebook)
+    await db.ebooks.insert_one(prepare_for_insert(ebook))
     return ebook
 
 @api_router.get("/learning/ebooks")
@@ -3002,7 +3002,7 @@ async def register_institution(
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.training_institutions.insert_one(institution)
+    await db.training_institutions.insert_one(prepare_for_insert(institution))
     return institution
 
 @api_router.get("/learning/institutions")
@@ -3176,7 +3176,7 @@ async def generate_news_article(topic: str, user = Depends(require_roles([UserRo
             "generated_by": user["id"],
             "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.news_articles.insert_one(article)
+        await db.news_articles.insert_one(prepare_for_insert(article))
         
         return article
         
