@@ -176,8 +176,7 @@ export const importParcelsData = (file) => {
 export const exportIoTData = (format) => api.get(`/iot/export?format=${format}`);
 export const analyzeIoTData = (sensorIds, analysisType) => api.post("/iot/analyze", { sensor_ids: sensorIds, analysis_type: analysisType });
 
-// Sensors CRUD
-export const createSensor = (data) => api.post("/sensors", data);
+// Sensors CRUD (createSensor already defined above)
 export const updateSensor = (sensorId, data) => api.put(`/sensors/${sensorId}`, data);
 export const deleteSensor = (sensorId) => api.delete(`/sensors/${sensorId}`);
 
