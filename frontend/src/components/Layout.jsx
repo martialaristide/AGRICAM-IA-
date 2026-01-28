@@ -21,7 +21,9 @@ import {
   User,
   Shield,
   Banknote,
-  X
+  X,
+  Bot,
+  GraduationCap
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -58,6 +60,8 @@ const getNavItems = (role) => {
       { path: "/financial", icon: Banknote, label: "Finances" },
       { path: "/analytics", icon: BarChart3, label: "Analytics" },
       { path: "/alertes", icon: Bell, label: "Alertes" },
+      { path: "/chatbot", icon: Bot, label: "AgriBot IA" },
+      { path: "/apprentissage", icon: GraduationCap, label: "Apprentissage" },
       { path: "/parametres", icon: Settings, label: "Paramètres" },
     ];
   }
@@ -75,6 +79,8 @@ const getNavItems = (role) => {
       { path: "/marketplace", icon: ShoppingCart, label: "Marketplace" },
       { path: "/financial", icon: Banknote, label: "Finances" },
       { path: "/alertes", icon: Bell, label: "Alertes" },
+      { path: "/chatbot", icon: Bot, label: "AgriBot IA" },
+      { path: "/apprentissage", icon: GraduationCap, label: "Apprentissage" },
       { path: "/parametres", icon: Settings, label: "Paramètres" },
     ];
   }
