@@ -20,6 +20,8 @@ import Parametres from "./pages/Parametres";
 import Financial from "./pages/Financial";
 import Chatbot from "./pages/Chatbot";
 import Apprentissage from "./pages/Apprentissage";
+import CameraIA from "./pages/CameraIA";
+import Robots from "./pages/Robots";
 import { Toaster } from "./components/ui/sonner";
 
 // Auth Context
