@@ -3216,6 +3216,498 @@ async def convert_currency(amount: float, from_currency: str = "XAF", to_currenc
     }
 
 # =============================================================================
+# API ROUTES - GOVERNMENT & INSTITUTION (Subsidies, Programs)
+# =============================================================================
+
+class SubsidyProgramCreate(BaseModel):
+    title: str
+    description: str
+    crop_type: str
+    budget_total: float
+    deadline: str
+    eligibility_criteria: List[str] = []
+    documents_required: List[str] = []
+    region: Optional[str] = None
+
+@api_router.post("/government/programs")
+async def create_subsidy_program(data: SubsidyProgramCreate, user = Depends(require_roles([UserRole.ADMIN, UserRole.GOVERNMENT, UserRole.INSTITUTION]))):
+    """Government/Institution creates a new subsidy program"""
+    program = {
+        "id": str(uuid.uuid4()),
+        "created_by": user["id"],
+        "organization_name": user.get("full_name", ""),
+        "title": data.title,
+        "description": data.description,
+        "crop_type": data.crop_type,
+        "budget_total": data.budget_total,
+        "budget_remaining": data.budget_total,
+        "currency": "XAF",
+        "deadline": data.deadline,
+        "eligibility_criteria": data.eligibility_criteria,
+        "documents_required": data.documents_required,
+        "region": data.region,
+        "applications_count": 0,
+        "approved_count": 0,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.subsidy_programs.insert_one(prepare_for_insert(program))
+    
+    # Notify all farmers
+    farmers = await db.users.find({"role": "farmer"}, {"_id": 0, "id": 1}).to_list(1000)
+    for farmer in farmers:
+        await db.alerts.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": farmer["id"],
+            "type": "opportunity",
+            "title": f"Nouvelle opportunité: {data.title}",
+            "message": f"Programme de subvention pour {data.crop_type}. Budget: {data.budget_total:,.0f} XAF",
+            "priority": "info",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return program
+
+@api_router.get("/government/programs")
+async def get_subsidy_programs(crop_type: Optional[str] = None, region: Optional[str] = None):
+    """Get available subsidy programs"""
+    query = {"status": "active"}
+    if crop_type:
+        query["crop_type"] = crop_type
+    if region:
+        query["region"] = region
+    programs = await db.subsidy_programs.find(query, {"_id": 0}).to_list(100)
+    return programs
+
+@api_router.post("/government/programs/{program_id}/apply")
+async def apply_to_program(program_id: str, parcel_ids: List[str], user = Depends(get_current_user)):
+    """Farmer applies to a subsidy program"""
+    program = await db.subsidy_programs.find_one({"id": program_id}, {"_id": 0})
+    if not program:
+        raise HTTPException(status_code=404, detail="Programme non trouvé")
+    
+    application = {
+        "id": str(uuid.uuid4()),
+        "program_id": program_id,
+        "program_title": program.get("title", ""),
+        "farmer_id": user["id"],
+        "farmer_name": user["full_name"],
+        "parcel_ids": parcel_ids,
+        "status": "pending",
+        "submitted_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.subsidy_applications.insert_one(prepare_for_insert(application))
+    await db.subsidy_programs.update_one({"id": program_id}, {"$inc": {"applications_count": 1}})
+    
+    return application
+
+@api_router.get("/government/applications")
+async def get_program_applications(program_id: Optional[str] = None, user = Depends(get_current_user)):
+    """Get subsidy applications"""
+    if user["role"] in ["government", "institution", "admin"]:
+        query = {"program_id": program_id} if program_id else {}
+    else:
+        query = {"farmer_id": user["id"]}
+    applications = await db.subsidy_applications.find(query, {"_id": 0}).to_list(100)
+    return applications
+
+@api_router.put("/government/applications/{application_id}/review")
+async def review_application(
+    application_id: str, 
+    status: str, 
+    amount_approved: Optional[float] = None,
+    user = Depends(require_roles([UserRole.ADMIN, UserRole.GOVERNMENT, UserRole.INSTITUTION]))
+):
+    """Review and approve/reject a subsidy application"""
+    application = await db.subsidy_applications.find_one({"id": application_id}, {"_id": 0})
+    if not application:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    update = {
+        "status": status,
+        "reviewed_by": user["id"],
+        "reviewed_at": datetime.now(timezone.utc).isoformat()
+    }
+    if amount_approved:
+        update["amount_approved"] = amount_approved
+    
+    await db.subsidy_applications.update_one({"id": application_id}, {"$set": update})
+    
+    if status == "approved":
+        await db.subsidy_programs.update_one(
+            {"id": application["program_id"]},
+            {"$inc": {"approved_count": 1, "budget_remaining": -(amount_approved or 0)}}
+        )
+    
+    # Notify farmer
+    await db.alerts.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": application["farmer_id"],
+        "type": "subsidy",
+        "title": f"Demande {status}",
+        "message": f"Votre demande pour '{application['program_title']}' a été {status}." + 
+                   (f" Montant approuvé: {amount_approved:,.0f} XAF" if amount_approved else ""),
+        "priority": "elevee" if status == "approved" else "info",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": f"Demande {status}"}
+
+@api_router.get("/government/farmers/{farmer_id}/follow")
+async def follow_farmer(farmer_id: str, user = Depends(require_roles([UserRole.GOVERNMENT, UserRole.INSTITUTION]))):
+    """Government follows a farmer to monitor their activities"""
+    farmer = await db.users.find_one({"id": farmer_id}, {"_id": 0, "password_hash": 0})
+    if not farmer:
+        raise HTTPException(status_code=404, detail="Agriculteur non trouvé")
+    
+    parcels = await db.parcels.find({"user_id": farmer_id}, {"_id": 0}).to_list(100)
+    sensors = await db.sensors.find({"user_id": farmer_id}, {"_id": 0}).to_list(100)
+    recommendations = await db.recommendations.find({"user_id": farmer_id}, {"_id": 0}).to_list(50)
+    
+    return {
+        "farmer": farmer,
+        "parcels": parcels,
+        "sensors": sensors,
+        "recommendations": recommendations,
+        "total_area_hectares": sum(p.get("area_hectares", 0) for p in parcels)
+    }
+
+# =============================================================================
+# API ROUTES - AI CAMERA (Real-time Recognition)
+# =============================================================================
+
+@api_router.post("/ai/camera/recognize")
+async def ai_camera_recognize(
+    image: UploadFile = File(...),
+    user = Depends(get_current_user)
+):
+    """Real-time AI recognition of plants, fruits, insects, diseases"""
+    content = await image.read()
+    image_base64 = base64.b64encode(content).decode('utf-8')
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"camera-{uuid.uuid4()}",
+            system_message="""Tu es un système de reconnaissance visuelle agricole avancé.
+            Pour chaque image, identifie et retourne en JSON:
+            {
+                "objects": [
+                    {
+                        "name": "nom de l'objet",
+                        "category": "plante|fruit|legume|insecte|maladie|tubercule|animal",
+                        "confidence": 0.95,
+                        "is_dangerous": false,
+                        "is_disease": false,
+                        "scientific_name": "nom scientifique",
+                        "description": "description courte",
+                        "recommendations": ["conseil 1", "conseil 2"]
+                    }
+                ],
+                "overall_assessment": "description générale de la scène"
+            }
+            Marque is_dangerous=true pour les plantes toxiques ou insectes nuisibles.
+            Marque is_disease=true pour les maladies des plantes."""
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        image_content = ImageContent(image_base64=image_base64)
+        response = await chat.send_message(UserMessage(
+            text="Analyse cette image agricole. Identifie tous les éléments visibles (plantes, fruits, insectes, maladies, etc.)",
+            file_contents=[image_content]
+        ))
+        
+        # Parse JSON from response
+        try:
+            # Try to extract JSON from the response
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                recognition_result = json.loads(json_match.group())
+            else:
+                recognition_result = {
+                    "objects": [],
+                    "overall_assessment": response,
+                    "raw_analysis": True
+                }
+        except:
+            recognition_result = {
+                "objects": [],
+                "overall_assessment": response,
+                "raw_analysis": True
+            }
+        
+        return {
+            "success": True,
+            "recognition": recognition_result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.post("/ai/camera/video-frame")
+async def ai_video_frame_analysis(
+    frame: UploadFile = File(...),
+    session_id: str = None,
+    user = Depends(get_current_user)
+):
+    """Analyze a video frame for real-time recognition"""
+    content = await frame.read()
+    image_base64 = base64.b64encode(content).decode('utf-8')
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=session_id or f"video-{uuid.uuid4()}",
+            system_message="Tu es un système de détection en temps réel. Identifie rapidement les objets agricoles."
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        image_content = ImageContent(image_base64=image_base64)
+        response = await chat.send_message(UserMessage(
+            text="Identifie rapidement: nom de l'objet principal, catégorie, et s'il y a un problème (maladie, danger).",
+            file_contents=[image_content]
+        ))
+        
+        return {
+            "frame_analysis": response,
+            "session_id": session_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+# =============================================================================
+# API ROUTES - ROBOTS ENHANCED (Control, Tasks, Monitoring)
+# =============================================================================
+
+class RobotConfigUpdate(BaseModel):
+    speed_mode: Optional[str] = None  # slow, normal, fast
+    operation_area: Optional[dict] = None  # GeoJSON polygon
+    schedule_start: Optional[str] = None
+    schedule_end: Optional[str] = None
+    autonomous_mode: bool = True
+
+@api_router.put("/robots/{robot_id}/config")
+async def configure_robot(robot_id: str, config: RobotConfigUpdate, user = Depends(get_current_user)):
+    """Configure robot parameters"""
+    update_data = {k: v for k, v in config.model_dump().items() if v is not None}
+    update_data["configured_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["configured_by"] = user["id"]
+    
+    await db.robots.update_one({"id": robot_id}, {"$set": update_data})
+    return await db.robots.find_one({"id": robot_id}, {"_id": 0})
+
+@api_router.post("/robots/{robot_id}/start")
+async def start_robot(robot_id: str, task_type: str, parcel_id: str, user = Depends(get_current_user)):
+    """Start robot operation"""
+    robot = await db.robots.find_one({"id": robot_id}, {"_id": 0})
+    if not robot:
+        raise HTTPException(status_code=404, detail="Robot non trouvé")
+    
+    task = {
+        "id": str(uuid.uuid4()),
+        "robot_id": robot_id,
+        "robot_name": robot.get("name", ""),
+        "task_type": task_type,
+        "parcel_id": parcel_id,
+        "status": "running",
+        "progress_percent": 0,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_by": user["id"]
+    }
+    await db.robot_tasks.insert_one(prepare_for_insert(task))
+    await db.robots.update_one({"id": robot_id}, {"$set": {"status": "working", "current_task": task}})
+    
+    return task
+
+@api_router.post("/robots/{robot_id}/stop")
+async def stop_robot(robot_id: str, user = Depends(get_current_user)):
+    """Stop robot operation"""
+    await db.robots.update_one(
+        {"id": robot_id}, 
+        {"$set": {"status": "idle", "current_task": None}}
+    )
+    await db.robot_tasks.update_one(
+        {"robot_id": robot_id, "status": "running"},
+        {"$set": {"status": "stopped", "stopped_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Robot arrêté"}
+
+@api_router.get("/robots/{robot_id}/telemetry")
+async def get_robot_telemetry(robot_id: str):
+    """Get real-time robot telemetry"""
+    robot = await db.robots.find_one({"id": robot_id}, {"_id": 0})
+    if not robot:
+        raise HTTPException(status_code=404, detail="Robot non trouvé")
+    
+    # Simulated telemetry
+    return {
+        "robot_id": robot_id,
+        "status": robot.get("status", "idle"),
+        "battery_level": robot.get("battery_level", 100),
+        "location": {
+            "latitude": 7.3697 + (hash(robot_id) % 100) / 10000,
+            "longitude": -5.5471 + (hash(robot_id) % 100) / 10000
+        },
+        "speed_kmh": 5.2 if robot.get("status") == "working" else 0,
+        "sensors": {
+            "temperature": 28 + (hash(robot_id) % 10),
+            "humidity": 65,
+            "obstacle_detected": False
+        },
+        "current_task": robot.get("current_task"),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+# =============================================================================
+# API ROUTES - FILE TEMPLATES (CSV/Excel Examples)
+# =============================================================================
+
+@api_router.get("/templates/sensors-data")
+async def get_sensors_template():
+    """Get CSV template for IoT sensor data import"""
+    template = """sensor_id,sensor_name,value,unit,timestamp
+SENS001,Humidité Zone A,65.5,%,2025-01-28T10:00:00
+SENS002,Température Zone A,28.3,°C,2025-01-28T10:00:00
+SENS003,pH Sol Zone B,6.8,pH,2025-01-28T10:00:00
+SENS004,NPK Zone A,45,ppm,2025-01-28T10:00:00"""
+    
+    return StreamingResponse(
+        iter([template]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=template_sensors.csv"}
+    )
+
+@api_router.get("/templates/parcels")
+async def get_parcels_template():
+    """Get CSV template for parcels import"""
+    template = """name,crop_type,area_hectares,latitude,longitude,planting_date,status
+Parcelle Nord,Maïs,5.5,7.3697,-5.5471,2025-03-15,bon
+Parcelle Sud,Blé,3.2,7.3650,-5.5420,2025-04-01,excellent
+Parcelle Est,Cacao,8.0,7.3710,-5.5500,2024-06-10,attention"""
+    
+    return StreamingResponse(
+        iter([template]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=template_parcels.csv"}
+    )
+
+@api_router.get("/templates/products")
+async def get_products_template():
+    """Get CSV template for marketplace products"""
+    template = """title,category,quantity,unit,price_per_unit,location,quality_grade,is_bio
+Maïs Bio Premium,cereals,50,tonnes,250000,Yaoundé,A,true
+Riz Parfumé,cereals,30,tonnes,350000,Douala,A+,false
+Cacao Grade A,cacao,20,tonnes,1500000,Abidjan,A,true"""
+    
+    return StreamingResponse(
+        iter([template]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=template_products.csv"}
+    )
+
+# =============================================================================
+# API ROUTES - ENHANCED IRRIGATION (Full Control)
+# =============================================================================
+
+@api_router.get("/irrigation/systems/{system_id}/status")
+async def get_irrigation_status(system_id: str, user = Depends(get_current_user)):
+    """Get detailed irrigation system status"""
+    system = await db.irrigation_systems.find_one({"id": system_id}, {"_id": 0})
+    if not system:
+        raise HTTPException(status_code=404, detail="Système non trouvé")
+    
+    # Get parcel data
+    parcel = await db.parcels.find_one({"id": system.get("parcel_id")}, {"_id": 0})
+    
+    return {
+        "system": system,
+        "parcel": parcel,
+        "current_humidity": parcel.get("humidity", 50) if parcel else 50,
+        "needs_irrigation": parcel.get("humidity", 50) < 40 if parcel else False,
+        "ai_recommendation": f"{'Irrigation recommandée' if parcel and parcel.get('humidity', 50) < 40 else 'Niveau d eau optimal'}",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.post("/irrigation/systems/{system_id}/start")
+async def start_irrigation(system_id: str, duration_minutes: int = 30, user = Depends(get_current_user)):
+    """Manually start irrigation"""
+    await db.irrigation_systems.update_one(
+        {"id": system_id},
+        {"$set": {
+            "status": "irrigating",
+            "last_activation": datetime.now(timezone.utc).isoformat(),
+            "current_session": {
+                "started_at": datetime.now(timezone.utc).isoformat(),
+                "duration_minutes": duration_minutes,
+                "started_by": user["id"]
+            }
+        }}
+    )
+    return {"message": f"Irrigation démarrée pour {duration_minutes} minutes"}
+
+@api_router.post("/irrigation/systems/{system_id}/stop")
+async def stop_irrigation(system_id: str, user = Depends(get_current_user)):
+    """Stop irrigation"""
+    await db.irrigation_systems.update_one(
+        {"id": system_id},
+        {"$set": {"status": "actif", "current_session": None}}
+    )
+    return {"message": "Irrigation arrêtée"}
+
+@api_router.post("/irrigation/systems/{system_id}/schedule")
+async def schedule_irrigation(
+    system_id: str,
+    schedules: List[dict],  # [{"day": "monday", "start": "06:00", "end": "07:00"}, ...]
+    user = Depends(get_current_user)
+):
+    """Set irrigation schedule"""
+    await db.irrigation_systems.update_one(
+        {"id": system_id},
+        {"$set": {"schedules": schedules, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Programmation enregistrée", "schedules": schedules}
+
+# =============================================================================
+# API ROUTES - PLATFORM INFO
+# =============================================================================
+
+@api_router.get("/platform/info")
+async def get_platform_info():
+    """Get platform information"""
+    return {
+        "name": "AGRICAM IA",
+        "version": "3.0.0",
+        "description": "Plateforme d'agriculture de précision intelligente",
+        "developer": {
+            "name": "Barra Martial Aristide",
+            "company": "African AI Solutions",
+            "website": "https://africanaisolution.com"
+        },
+        "features": [
+            "Gestion des parcelles avec cartographie SIG",
+            "Capteurs IoT en temps réel",
+            "Drones et robots agricoles",
+            "IA prédictive (météo, rendement, maladies)",
+            "Marketplace agricole B2B",
+            "Système de subventions gouvernementales",
+            "Chatbot AgriBot avec analyse d'images"
+        ],
+        "supported_currencies": ["XAF", "EUR", "USD", "GBP"],
+        "contact": {
+            "email": "contact@africanaisolution.com",
+            "website": "https://africanaisolution.com"
+        }
+    }
+
+# =============================================================================
 # SEED DATA
 # =============================================================================
 
