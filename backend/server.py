@@ -3895,7 +3895,101 @@ async def seed_database():
     ]
     await db.alerts.insert_many(alerts_data)
     
-    return {"message": "Base de données initialisée avec succès", "developer": "Barra Martial Aristide", "company": "African AI Solutions"}
+    # Create demo drones
+    drones_data = [
+        {"id": "drone-001", "user_id": "farmer-001", "name": "DJI Agras T30", "model": "T30",
+         "serial_number": "1ZGGJ5DA0HA000001", "connection_type": "wifi", "camera_resolution": "4K",
+         "max_flight_time_minutes": 25, "status": "ready", "battery_level": 95, "is_connected": True,
+         "total_flight_hours": 45.5, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "drone-002", "user_id": "farmer-001", "name": "DJI Phantom 4 RTK", "model": "P4RTK",
+         "serial_number": "1ZGGJ5DA0HA000002", "connection_type": "4g", "camera_resolution": "20MP",
+         "max_flight_time_minutes": 30, "status": "inactive", "battery_level": 100, "is_connected": False,
+         "total_flight_hours": 23.2, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "drone-003", "user_id": "farmer-001", "name": "Parrot Bluegrass", "model": "Bluegrass",
+         "serial_number": "PI030000AA0000003", "connection_type": "wifi", "camera_resolution": "14MP",
+         "max_flight_time_minutes": 25, "status": "inactive", "battery_level": 78, "is_connected": False,
+         "total_flight_hours": 12.8, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "drone-004", "user_id": "farmer-001", "name": "senseFly eBee X", "model": "eBeeX",
+         "serial_number": "SF2020000000004", "connection_type": "bluetooth", "camera_resolution": "24MP",
+         "max_flight_time_minutes": 90, "status": "inactive", "battery_level": 100, "is_connected": False,
+         "total_flight_hours": 156.3, "created_at": datetime.now(timezone.utc).isoformat()}
+    ]
+    await db.drones.insert_many(drones_data)
+    
+    # Create demo robots
+    robots_data = [
+        {"id": "robot-001", "user_id": "farmer-001", "name": "AgBot Surveillance", "model": "AB-500",
+         "robot_type": "surveillance", "serial_number": "AGR001-2024-001",
+         "max_operation_hours": 12, "status": "ready", "battery_level": 92, "is_connected": True,
+         "total_operation_hours": 234, "autonomous_mode": True,
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "robot-002", "user_id": "farmer-001", "name": "Harvest Master", "model": "HM-1000",
+         "robot_type": "harvesting", "serial_number": "AGR001-2024-002",
+         "max_operation_hours": 8, "status": "idle", "battery_level": 100, "is_connected": False,
+         "total_operation_hours": 89, "autonomous_mode": True,
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "robot-003", "user_id": "farmer-001", "name": "SprayBot Pro", "model": "SP-750",
+         "robot_type": "spraying", "serial_number": "AGR001-2024-003",
+         "max_operation_hours": 10, "status": "idle", "battery_level": 67, "is_connected": False,
+         "total_operation_hours": 156, "autonomous_mode": False,
+         "created_at": datetime.now(timezone.utc).isoformat()}
+    ]
+    await db.robots.insert_many(robots_data)
+    
+    # Create demo irrigation systems
+    irrigation_data = [
+        {"id": "irrig-001", "user_id": "farmer-001", "parcel_id": "p1", "parcel_name": "Parcelle Nord",
+         "name": "Système Goutte-à-Goutte Nord", "status": "actif", "is_automatic": True,
+         "humidity_threshold_min": 35, "humidity_threshold_max": 70,
+         "flow_rate_liters_per_hour": 120, "efficiency_percent": 92,
+         "water_used_today_liters": 450, "zones": [
+             {"id": "z1", "name": "Zone A", "area_hectares": 5, "is_active": True},
+             {"id": "z2", "name": "Zone B", "area_hectares": 5.5, "is_active": True},
+             {"id": "z3", "name": "Zone C", "area_hectares": 5, "is_active": False}
+         ],
+         "schedules": [
+             {"day": "monday", "start": "06:00", "end": "07:30"},
+             {"day": "thursday", "start": "06:00", "end": "07:30"}
+         ],
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "irrig-002", "user_id": "farmer-001", "parcel_id": "p3", "parcel_name": "Parcelle Est",
+         "name": "Aspersion Parcelle Est", "status": "actif", "is_automatic": True,
+         "humidity_threshold_min": 40, "humidity_threshold_max": 75,
+         "flow_rate_liters_per_hour": 200, "efficiency_percent": 85,
+         "water_used_today_liters": 0, "zones": [
+             {"id": "z1", "name": "Section Est", "area_hectares": 18.7, "is_active": True}
+         ],
+         "created_at": datetime.now(timezone.utc).isoformat()}
+    ]
+    await db.irrigation_systems.insert_many(irrigation_data)
+    
+    # Create demo subsidy programs
+    subsidy_programs = [
+        {"id": "prog-001", "created_by": "gov-001", "organization_name": "MINADER",
+         "title": "Subvention Maïs 2025", "description": "Programme national de soutien à la culture du maïs",
+         "crop_type": "Maïs", "budget_total": 500000000, "budget_remaining": 450000000, "currency": "XAF",
+         "deadline": "2025-06-30", "region": "National",
+         "eligibility_criteria": ["Être agriculteur enregistré", "Cultiver au moins 2 ha de maïs", "Utiliser des semences certifiées"],
+         "documents_required": ["Carte d'identité", "Titre foncier ou bail", "Plan de culture"],
+         "applications_count": 45, "approved_count": 32, "status": "active",
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "prog-002", "created_by": "inst-001", "organization_name": "FAO",
+         "title": "Agriculture Résiliente au Climat", "description": "Financement pour l'adaptation au changement climatique",
+         "crop_type": "Toutes cultures", "budget_total": 2000000000, "budget_remaining": 1800000000, "currency": "XAF",
+         "deadline": "2025-12-31", "region": "Afrique Centrale",
+         "eligibility_criteria": ["Exploitation de moins de 10 ha", "Engagement à des pratiques durables", "Formation obligatoire"],
+         "documents_required": ["Dossier complet", "Plan d'adaptation climatique"],
+         "applications_count": 120, "approved_count": 78, "status": "active",
+         "created_at": datetime.now(timezone.utc).isoformat()}
+    ]
+    await db.subsidy_programs.insert_many(subsidy_programs)
+    
+    return {
+        "message": "Base de données initialisée avec succès",
+        "developer": "Barra Martial Aristide",
+        "company": "African AI Solutions",
+        "website": "https://africanaisolution.com"
+    }
 
 # Include router and middleware
 app.include_router(api_router)
