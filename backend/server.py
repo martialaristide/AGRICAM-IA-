@@ -71,6 +71,8 @@ class UserRole(str, Enum):
     FINANCIAL = "financial"
     PARTNER = "partner"
     INVESTOR = "investor"
+    GOVERNMENT = "government"
+    INSTITUTION = "institution"
 
 class SubscriptionType(str, Enum):
     FREEMIUM = "freemium"
