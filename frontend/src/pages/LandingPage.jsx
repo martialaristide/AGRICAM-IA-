@@ -289,13 +289,25 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-slate-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex items-center gap-3">
-              <img src={LOGO_URL} alt="African AI Solutions" className="h-10 w-auto" />
+              <img src={LOGO_URL} alt="African AI Solutions" className="h-12 w-auto" />
               <div>
-                <p className="text-white font-bold font-[Manrope]">AGRICAM IA</p>
+                <p className="text-white font-bold font-[Manrope] text-lg">AGRICAM IA</p>
                 <p className="text-slate-400 text-sm">African AI Solutions</p>
               </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-emerald-400 font-semibold mb-2">Visitez notre site</p>
+              <a 
+                href="https://africanaisolution.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white hover:text-emerald-300 transition-colors"
+              >
+                www.africanaisolution.com
+              </a>
             </div>
             
             <div className="text-center md:text-right">
@@ -303,8 +315,16 @@ const LandingPage = () => {
                 Développé par <span className="text-emerald-400 font-semibold">Barra Martial Aristide</span>
               </p>
               <p className="text-slate-500 text-sm mt-1">
-                © 2024 African AI Solutions. Tous droits réservés.
+                © 2025 African AI Solutions. Tous droits réservés.
               </p>
+              <a 
+                href="https://africanaisolution.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block"
+              >
+                africanaisolution.com
+              </a>
             </div>
           </div>
         </div>
