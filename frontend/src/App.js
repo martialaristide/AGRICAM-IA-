@@ -179,8 +179,10 @@ function App() {
             <Route path="parcelles" element={<Parcelles />} />
             <Route path="capteurs" element={<CapteursIoT />} />
             <Route path="drones" element={<GestionDrones />} />
+            <Route path="robots" element={<Robots />} />
             <Route path="satellites" element={<ImagesSatellites />} />
             <Route path="analyse-ia" element={<AnalyseImagesIA />} />
+            <Route path="camera-ia" element={<CameraIA />} />
             <Route path="irrigation" element={<IrrigationAuto />} />
             <Route path="recommandations" element={<RecommandationsIA />} />
             <Route path="marketplace" element={<Marketplace />} />
