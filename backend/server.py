@@ -3739,6 +3739,14 @@ async def seed_database():
         {"id": "financial-001", "email": "banque@demo.com", "password_hash": hash_password("bank123"),
          "full_name": "Crédit Agricole Cameroun", "phone": "+237677777777", "role": "financial",
          "company_name": "Crédit Agricole Cameroun", "is_verified": True, "is_active": True,
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "gov-001", "email": "minader@gov.cm", "password_hash": hash_password("gov123"),
+         "full_name": "MINADER - Ministère Agriculture", "phone": "+237622222222", "role": "government",
+         "company_name": "Ministère de l'Agriculture et du Développement Rural", "is_verified": True, "is_active": True,
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "inst-001", "email": "fao@org.int", "password_hash": hash_password("inst123"),
+         "full_name": "FAO - Organisation des Nations Unies", "phone": "+237633333333", "role": "institution",
+         "company_name": "Organisation des Nations Unies pour l'alimentation et l'agriculture", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()}
     ]
     await db.users.insert_many(users_data)
