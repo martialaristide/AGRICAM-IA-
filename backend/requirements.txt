@@ -1,6 +1,7 @@
 aiofiles==25.1.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.3
+aiohttp-retry==2.9.1
 aiosignal==1.4.0
 annotated-types==0.7.0
 anyio==4.12.1
@@ -91,6 +92,7 @@ pytest==9.0.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 python-jose==3.5.0
+python-magic==0.4.27
 python-multipart==0.0.21
 pytokens==0.3.0
 pytz==2025.2
@@ -114,6 +116,7 @@ tenacity==9.1.2
 tiktoken==0.12.0
 tokenizers==0.22.2
 tqdm==4.67.1
+twilio==9.10.0
 typer==0.21.1
 typer-slim==0.21.1
 typing-inspection==0.4.2
