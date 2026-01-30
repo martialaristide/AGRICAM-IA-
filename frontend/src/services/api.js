@@ -246,4 +246,85 @@ export const getAgricultureNews = () => api.get("/news/agriculture");
 export const convertCurrency = (amount, fromCurrency, toCurrency) => 
   api.get("/currency/convert", { params: { amount, from_currency: fromCurrency, to_currency: toCurrency } });
 
+// ============================================
+// SATELLITE & DRONE ADVANCED APIs
+// ============================================
+
+// Satellite Data
+export const getSatelliteNDVI = (parcelId) => api.get(`/satellite/ndvi/${parcelId}`);
+export const getSatelliteTrueColor = (parcelId) => api.get(`/satellite/true-color/${parcelId}`);
+export const getSatelliteMoisture = (parcelId) => api.get(`/satellite/moisture/${parcelId}`);
+export const getSatelliteWeather = (parcelId) => api.get(`/satellite/weather/${parcelId}`);
+export const getSatelliteStressAnalysis = (parcelId) => api.get(`/satellite/stress-analysis/${parcelId}`);
+export const analyzeSatelliteImage = (file, parcelId, analysisType) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (parcelId) formData.append("parcel_id", parcelId);
+  formData.append("analysis_type", analysisType || "full");
+  return api.post("/satellite/analyze-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const getSatelliteHistory = (parcelId, limit) => 
+  api.get("/satellite/history", { params: { parcel_id: parcelId, limit } });
+export const getWorldCropsCartography = (region, cropType) => 
+  api.get("/satellite/world-crops", { params: { region, crop_type: cropType } });
+
+// Advanced Drone Management
+export const getAdvancedDrones = () => api.get("/satellite/drones");
+export const connectDroneAdvanced = (droneId, connectionType, ssid, password, ipAddress) => 
+  api.post("/satellite/drones/connect", { 
+    drone_id: droneId, 
+    connection_type: connectionType, 
+    ssid, 
+    password, 
+    ip_address: ipAddress 
+  });
+export const disconnectDroneAdvanced = (droneId) => api.post(`/satellite/drones/${droneId}/disconnect`);
+export const getDroneStatus = (droneId) => api.get(`/satellite/drones/${droneId}/status`);
+export const createFlightPlan = (droneId, parcelId, waypoints, altitude, speed, captureInterval, scheduledDate) => 
+  api.post(`/satellite/drones/${droneId}/flight-plan`, {
+    drone_id: droneId,
+    parcel_id: parcelId,
+    waypoints,
+    altitude,
+    speed,
+    capture_interval: captureInterval,
+    scheduled_date: scheduledDate
+  });
+export const getDroneFlightPlans = (droneId) => api.get(`/satellite/drones/${droneId}/flight-plans`);
+export const startDroneMission = (droneId, planId) => api.post(`/satellite/drones/${droneId}/start-mission/${planId}`);
+export const controlDroneAdvanced = (droneId, action) => 
+  api.post(`/satellite/drones/${droneId}/control`, null, { params: { action } });
+export const captureDroneImage = (droneId) => api.post(`/satellite/drones/${droneId}/capture`);
+export const getDroneCaptures = (droneId, limit) => 
+  api.get(`/satellite/drones/${droneId}/captures`, { params: { limit } });
+
+// AI Camera Recognition
+export const aiCameraRecognize = (file, parcelId) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (parcelId) formData.append("parcel_id", parcelId);
+  return api.post("/satellite/ai/recognize", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const aiSoilAnalysis = (file, parcelId) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (parcelId) formData.append("parcel_id", parcelId);
+  return api.post("/satellite/ai/soil-analysis", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const aiPredictHarvest = (file, parcelId, cropType) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (parcelId) formData.append("parcel_id", parcelId);
+  if (cropType) formData.append("crop_type", cropType);
+  return api.post("/satellite/ai/predict-harvest", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+
 export default api;
