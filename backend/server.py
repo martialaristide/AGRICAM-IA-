@@ -3994,6 +3994,11 @@ async def seed_database():
 # Include router and middleware
 app.include_router(api_router)
 
+# Include satellite/drone advanced APIs
+from satellite_api import create_satellite_router
+satellite_router = create_satellite_router(db, get_current_user, get_optional_user, clean_doc, prepare_for_insert)
+app.include_router(satellite_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
