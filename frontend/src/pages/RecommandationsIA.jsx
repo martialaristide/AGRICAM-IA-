@@ -196,28 +196,34 @@ const RecommandationsIA = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
-                      <Button
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                        onClick={() => handleAction(rec.id, "apply")}
-                        data-testid={`apply-${rec.id}`}
-                      >
-                        Appliquer
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleAction(rec.id, "postpone")}
-                        data-testid={`postpone-${rec.id}`}
-                      >
-                        Reporter
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleAction(rec.id, "ignore")}
-                        data-testid={`ignore-${rec.id}`}
-                      >
-                        Ignorer
-                      </Button>
+                      <ActionTooltip content="Appliquer cette recommandation à votre parcelle">
+                        <Button
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() => handleAction(rec.id, "apply")}
+                          data-testid={`apply-${rec.id}`}
+                        >
+                          Appliquer
+                        </Button>
+                      </ActionTooltip>
+                      <ActionTooltip content="Reporter cette action à plus tard">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleAction(rec.id, "postpone")}
+                          data-testid={`postpone-${rec.id}`}
+                        >
+                          Reporter
+                        </Button>
+                      </ActionTooltip>
+                      <ActionTooltip content="Ignorer cette recommandation">
+                        <Button
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleAction(rec.id, "ignore")}
+                          data-testid={`ignore-${rec.id}`}
+                        >
+                          Ignorer
+                        </Button>
+                      </ActionTooltip>
                     </div>
                     <span className="text-xs text-slate-400">
                       Généré il y a {Math.floor(Math.random() * 24) + 1}h
