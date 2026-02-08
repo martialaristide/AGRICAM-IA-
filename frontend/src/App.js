@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import Alertes from "./pages/Alertes";
 import Parametres from "./pages/Parametres";
 import Financial from "./pages/Financial";
+import ELearning from "./pages/ELearning";
 import { Toaster } from "./components/ui/sonner";
 
 // Auth Context
