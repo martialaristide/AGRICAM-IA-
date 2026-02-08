@@ -185,6 +185,7 @@ function App() {
             <Route path="alertes" element={<Alertes />} />
             <Route path="financial" element={<Financial />} />
             <Route path="parametres" element={<Parametres />} />
+            <Route path="formation" element={<ELearning />} />
           </Route>
         </Routes>
       </BrowserRouter>
