@@ -316,14 +316,14 @@ const Parcelles = () => {
 
             {/* Import Button */}
             <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-              <DialogTrigger asChild>
-                <ActionTooltip content="Importer des parcelles depuis un fichier CSV ou Excel avec coordonnées">
+              <ActionTooltip content="Importer des parcelles depuis un fichier CSV ou Excel avec coordonnées">
+                <DialogTrigger asChild>
                   <Button variant="secondary" className="bg-white/20 text-white hover:bg-white/30" data-testid="import-parcels-btn">
                     <Upload className="h-4 w-4 mr-2" />
                     Importer
                   </Button>
-                </ActionTooltip>
-              </DialogTrigger>
+                </DialogTrigger>
+              </ActionTooltip>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Importer des parcelles</DialogTitle>
