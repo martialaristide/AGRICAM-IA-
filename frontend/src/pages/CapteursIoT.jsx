@@ -238,6 +238,14 @@ const CapteursIoT = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+            {/* Export Button */}
+            <ExportButton 
+              data={sensors} 
+              type="capteurs" 
+              title="Rapport des Capteurs IoT AGRICAM IA"
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            />
+            
             {/* Add Sensor */}
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <ActionTooltip content="Ajouter un nouveau capteur et le configurer">
