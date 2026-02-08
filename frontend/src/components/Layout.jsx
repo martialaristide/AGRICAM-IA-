@@ -200,7 +200,7 @@ const Layout = () => {
             <nav className="space-y-1 px-3">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
-                return (
+                const navContent = (
                   <NavLink
                     key={item.path}
                     to={item.path}
@@ -223,6 +223,16 @@ const Layout = () => {
                       <span className="text-sm">{item.label}</span>
                     )}
                   </NavLink>
+                );
+                
+                return collapsed ? (
+                  <ActionTooltip key={item.path} content={item.tooltip} side="right">
+                    {navContent}
+                  </ActionTooltip>
+                ) : (
+                  <ActionTooltip key={item.path} content={item.tooltip} side="right">
+                    {navContent}
+                  </ActionTooltip>
                 );
               })}
             </nav>
