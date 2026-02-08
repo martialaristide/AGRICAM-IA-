@@ -84,6 +84,7 @@ const getNavItems = (role) => {
       { path: "/irrigation", icon: Droplets, label: "Irrigation", tooltip: "Contrôler l'arrosage de vos parcelles" },
       { path: "/recommandations", icon: Lightbulb, label: "Recommandations", tooltip: "Conseils personnalisés pour vos cultures" },
       { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Vendre vos récoltes et acheter des intrants" },
+      { path: "/paiements", icon: Smartphone, label: "Paiements", tooltip: "Paiements Orange Money et MTN MoMo" },
       { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Demander des prêts agricoles" },
       { path: "/formation", icon: GraduationCap, label: "Formation", tooltip: "Cours en ligne et certificats" },
       { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Notifications importantes" },
