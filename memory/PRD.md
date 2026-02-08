@@ -37,9 +37,15 @@ Plateforme d'agriculture de précision intelligente complète combinant IoT, dro
 
 ### P3 - Final Features (NEW) ✅
 - ✅ **PWA Conversion** - Mode hors-ligne avec service worker
-- ✅ **Export PDF/Word/CSV** - jsPDF + docx
+- ✅ **Export PDF/Word/CSV** - jsPDF + docx sur 4 pages
 - ✅ **Backend Refactoring** - Modules config.py, database.py, payment_service.py
 - ✅ **Mobile Money Architecture** - CinetPay/PayDunya integration ready
+
+## Pages avec Export PDF/Word/CSV
+- ✅ `/parcelles` - Export parcelles
+- ✅ `/capteurs` - Export capteurs IoT
+- ✅ `/analytics` - Export analytics
+- ✅ `/formation` - Export cours E-Learning
 
 ## Test Results
 - **Backend**: 100% (12/12 tests passés)
