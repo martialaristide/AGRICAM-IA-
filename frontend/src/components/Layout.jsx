@@ -59,6 +59,7 @@ const getNavItems = (role) => {
       { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Acheter et vendre des produits agricoles" },
       { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Gérer les prêts, crédits et transactions financières" },
       { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Analyser les performances et statistiques de votre exploitation" },
+      { path: "/formation", icon: GraduationCap, label: "Formation", tooltip: "Cours et certifications en agriculture de précision" },
       { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Voir les notifications et alertes importantes" },
       { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configurer votre profil et les préférences de l'application" },
     ];
@@ -76,6 +77,7 @@ const getNavItems = (role) => {
       { path: "/recommandations", icon: Lightbulb, label: "Recommandations", tooltip: "Conseils personnalisés pour vos cultures" },
       { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Vendre vos récoltes et acheter des intrants" },
       { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Demander des prêts agricoles" },
+      { path: "/formation", icon: GraduationCap, label: "Formation", tooltip: "Cours en ligne et certificats" },
       { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Notifications importantes" },
       { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
     ];
