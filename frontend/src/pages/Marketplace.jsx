@@ -5,6 +5,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { ActionTooltip } from "../components/ui/tooltip";
 import { 
   ShoppingCart, Search, Filter, MapPin, Calendar, 
   Award, MessageCircle, ChevronRight, Plus, Truck,
