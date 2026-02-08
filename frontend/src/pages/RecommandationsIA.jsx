@@ -3,9 +3,10 @@ import { getRecommendations, getRecommendationsStats, updateRecommendationStatus
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { ActionTooltip } from "../components/ui/tooltip";
 import { 
   Lightbulb, AlertTriangle, Clock, TrendingUp, 
-  Droplets, Zap, Bug, Check, X, ChevronRight, Settings, Brain, Satellite
+  Droplets, Zap, Bug, Check, X, ChevronRight, Settings, Brain, Satellite, RefreshCw
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
