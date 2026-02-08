@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#059669">
+  <title>AGRICAM IA - Mode Hors Ligne</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+    .brand {
+      color: #059669;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      font-weight: 500;
+    }
+    .status-icon {
+      width: 20px;
+      height: 20px;
+    }
+    p {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .features {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .features h3 {
+      color: #334155;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .features ul {
+      list-style: none;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .features li {
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .features li::before {
+      content: '✓';
+      color: #059669;
+      font-weight: bold;
+    }
+    .btn {
+      display: inline-block;
+      background: #059669;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #047857;
+      transform: translateY(-2px);
+    }
+    .footer {
+      margin-top: 24px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img 
+      src="https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png" 
+      alt="AGRICAM IA" 
+      class="logo"
+    >
+    <h1>AGRICAM <span class="brand">IA</span></h1>
+    
+    <div class="status">
+      <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414">
+        </path>
+      </svg>
+      Mode Hors Ligne
+    </div>
+    
+    <p>
+      Vous êtes actuellement hors ligne. Certaines fonctionnalités nécessitent une connexion internet.
+    </p>
+    
+    <div class="features">
+      <h3>Disponible hors ligne :</h3>
+      <ul>
+        <li>Consulter vos parcelles enregistrées</li>
+        <li>Voir les dernières données capteurs</li>
+        <li>Accéder aux recommandations sauvegardées</li>
+        <li>Consulter l'historique des alertes</li>
+      </ul>
+    </div>
+    
+    <a href="/" class="btn" onclick="window.location.reload(); return false;">
+      Réessayer la connexion
+    </a>
+    
+    <p class="footer">
+      AGRICAM IA - Agriculture de précision<br>
+      Développé par African AI Solutions
+    </p>
+  </div>
+  
+  <script>
+    // Check for connection and redirect when online
+    window.addEventListener('online', () => {
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
