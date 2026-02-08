@@ -2018,6 +2018,535 @@ async def seed_database():
     
     return {"message": "Base de données initialisée avec succès", "developer": "Barra Martial Aristide", "company": "African AI Solutions"}
 
+# =============================================================================
+# P0 FEATURES - AI RECOMMENDATIONS AGENT
+# =============================================================================
+
+@api_router.post("/ai/generate-recommendations")
+async def generate_ai_recommendations(user = Depends(get_current_user)):
+    """Generate AI-powered recommendations based on parcel and sensor data"""
+    try:
+        user_query = {"user_id": user["id"]} if user.get("role") != "admin" else {}
+        
+        # Get parcels and sensors data
+        parcels = await db.parcels.find(user_query if user_query else {}, {"_id": 0}).to_list(20)
+        sensors = await db.sensors.find({}, {"_id": 0}).to_list(50)
+        
+        recommendations = []
+        
+        for parcel in parcels:
+            # Analyze humidity
+            if parcel.get("humidity", 50) < 40:
+                recommendations.append({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user["id"],
+                    "parcel_id": parcel["id"],
+                    "parcel_name": parcel["name"],
+                    "type": "irrigation",
+                    "priority": "urgent" if parcel.get("humidity", 50) < 30 else "elevee",
+                    "title": f"Irrigation urgente - {parcel['name']}",
+                    "message": f"L'humidité du sol est critique ({parcel.get('humidity', 0)}%). Activez l'irrigation immédiatement pour éviter le stress hydrique des cultures {parcel.get('crop_type', '')}.",
+                    "actions": ["Activer irrigation automatique", "Programmer arrosage manuel"],
+                    "confidence_percent": 92,
+                    "source": "agricam_ai_agent",
+                    "status": "pending",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+            
+            # Analyze temperature
+            if parcel.get("temperature", 25) > 35:
+                recommendations.append({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user["id"],
+                    "parcel_id": parcel["id"],
+                    "parcel_name": parcel["name"],
+                    "type": "protection",
+                    "priority": "elevee",
+                    "title": f"Protection thermique - {parcel['name']}",
+                    "message": f"Température élevée détectée ({parcel.get('temperature', 0)}°C). Recommandation: installer des voiles d'ombrage ou activer le brumisateur.",
+                    "actions": ["Installer protection solaire", "Activer brumisation"],
+                    "confidence_percent": 88,
+                    "source": "agricam_ai_agent",
+                    "status": "pending",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+            
+            # Analyze soil nutrients
+            soil = parcel.get("soil_analysis", {})
+            if soil.get("nitrogen", 50) < 40:
+                recommendations.append({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user["id"],
+                    "parcel_id": parcel["id"],
+                    "parcel_name": parcel["name"],
+                    "type": "fertilisation",
+                    "priority": "moyenne",
+                    "title": f"Fertilisation azotée - {parcel['name']}",
+                    "message": f"Niveau d'azote faible ({soil.get('nitrogen', 0)}). Application d'engrais azoté recommandée pour optimiser la croissance de {parcel.get('crop_type', '')}.",
+                    "actions": ["Appliquer urée 46%", "Utiliser engrais organique"],
+                    "confidence_percent": 85,
+                    "source": "agricam_ai_agent",
+                    "status": "pending",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+        
+        # Save to database
+        if recommendations:
+            await db.recommendations.insert_many(recommendations)
+        
+        return {
+            "generated": len(recommendations),
+            "recommendations": recommendations,
+            "message": f"{len(recommendations)} nouvelles recommandations générées par l'IA AGRICAM"
+        }
+        
+    except Exception as e:
+        logger.error(f"AI Recommendations error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================================================
+# P0 FEATURES - SMS ALERTS (TWILIO SIMULATION)
+# =============================================================================
+
+class SMSRequest(BaseModel):
+    phone_number: str
+    message: str
+    alert_id: Optional[str] = None
+
+@api_router.post("/sms/send")
+async def send_sms_alert(request: SMSRequest, user = Depends(get_current_user)):
+    """Send SMS alert (simulated for Orange/MTN Cameroon)"""
+    try:
+        # Simulate SMS sending for African networks
+        phone = request.phone_number
+        network = "Orange Cameroun" if phone.startswith("+237 6") else "MTN Cameroun" if phone.startswith("+237 65") else "Réseau inconnu"
+        
+        # Log SMS
+        sms_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "phone_number": phone,
+            "message": request.message[:160],  # SMS limit
+            "network": network,
+            "alert_id": request.alert_id,
+            "status": "sent",  # Simulated
+            "cost_xaf": 25,  # Typical SMS cost in XAF
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.sms_logs.insert_one(sms_record)
+        
+        # Update alert if linked
+        if request.alert_id:
+            await db.alerts.update_one(
+                {"id": request.alert_id},
+                {"$push": {"channels": "sms"}, "$set": {"sms_sent_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        
+        return {
+            "success": True,
+            "message": f"SMS envoyé à {phone} via {network} (simulé)",
+            "sms_id": sms_record["id"],
+            "cost_xaf": 25,
+            "note": "Mode simulation - En production, intégrez l'API Orange/MTN"
+        }
+        
+    except Exception as e:
+        logger.error(f"SMS error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/sms/broadcast")
+async def broadcast_sms_to_farmers(message: str = Form(...), priority: str = Form("info"), user = Depends(require_roles([UserRole.ADMIN]))):
+    """Send SMS broadcast to all farmers (admin only, simulated)"""
+    try:
+        farmers = await db.users.find({"role": "farmer", "phone": {"$exists": True}}, {"_id": 0, "phone": 1, "first_name": 1}).to_list(100)
+        
+        sent_count = 0
+        for farmer in farmers:
+            if farmer.get("phone"):
+                sms_record = {
+                    "id": str(uuid.uuid4()),
+                    "phone_number": farmer["phone"],
+                    "message": message[:160],
+                    "type": "broadcast",
+                    "priority": priority,
+                    "status": "sent",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.sms_logs.insert_one(sms_record)
+                sent_count += 1
+        
+        return {
+            "success": True,
+            "sent_count": sent_count,
+            "total_farmers": len(farmers),
+            "message": f"Diffusion SMS envoyée à {sent_count} agriculteurs (simulé)",
+            "total_cost_xaf": sent_count * 25
+        }
+        
+    except Exception as e:
+        logger.error(f"SMS broadcast error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/sms/history")
+async def get_sms_history(user = Depends(get_current_user)):
+    """Get SMS sending history"""
+    query = {"user_id": user["id"]} if user.get("role") != "admin" else {}
+    sms_logs = await db.sms_logs.find(query, {"_id": 0}).sort("created_at", -1).to_list(50)
+    
+    total_cost = sum(log.get("cost_xaf", 0) for log in sms_logs)
+    
+    return {
+        "logs": sms_logs,
+        "total_sent": len(sms_logs),
+        "total_cost_xaf": total_cost
+    }
+
+# =============================================================================
+# P0 FEATURES - PDF/WORD EXPORT
+# =============================================================================
+
+@api_router.get("/export/report/{report_type}")
+async def export_report(report_type: str, format: str = Query("pdf", enum=["pdf", "word", "csv"]), user = Depends(get_current_user)):
+    """Export reports in PDF, Word or CSV format"""
+    try:
+        user_query = {"user_id": user["id"]} if user.get("role") != "admin" else {}
+        
+        # Gather data based on report type
+        if report_type == "parcels":
+            data = await db.parcels.find(user_query if user_query else {}, {"_id": 0}).to_list(100)
+            title = "Rapport des Parcelles"
+        elif report_type == "sensors":
+            data = await db.sensors.find({}, {"_id": 0}).to_list(100)
+            title = "Rapport des Capteurs IoT"
+        elif report_type == "irrigation":
+            data = await db.irrigation_systems.find({}, {"_id": 0}).to_list(100)
+            title = "Rapport d'Irrigation"
+        elif report_type == "recommendations":
+            data = await db.recommendations.find(user_query, {"_id": 0}).to_list(100)
+            title = "Rapport des Recommandations"
+        elif report_type == "alerts":
+            data = await db.alerts.find(user_query, {"_id": 0}).to_list(100)
+            title = "Rapport des Alertes"
+        elif report_type == "analytics":
+            # Comprehensive analytics report
+            parcels = await db.parcels.find(user_query if user_query else {}, {"_id": 0}).to_list(100)
+            sensors = await db.sensors.find({}, {"_id": 0}).to_list(100)
+            
+            data = {
+                "total_parcels": len(parcels),
+                "total_area_hectares": sum(p.get("area_hectares", 0) for p in parcels),
+                "average_humidity": round(sum(p.get("humidity", 0) for p in parcels) / max(len(parcels), 1), 1),
+                "average_temperature": round(sum(p.get("temperature", 0) for p in parcels) / max(len(parcels), 1), 1),
+                "active_sensors": len([s for s in sensors if s.get("status") == "actif"]),
+                "cultures": list(set(p.get("crop_type", "") for p in parcels)),
+                "parcels_status": {
+                    "excellent": len([p for p in parcels if p.get("status") == "excellent"]),
+                    "bon": len([p for p in parcels if p.get("status") == "bon"]),
+                    "attention": len([p for p in parcels if p.get("status") == "attention"])
+                }
+            }
+            title = "Rapport Analytics Complet"
+        else:
+            raise HTTPException(status_code=400, detail="Type de rapport non supporté")
+        
+        # Generate report content
+        report_content = {
+            "title": title,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_by": f"{user.get('first_name', '')} {user.get('last_name', '')}",
+            "company": "African AI Solutions",
+            "platform": "AGRICAM IA",
+            "format": format,
+            "data": data
+        }
+        
+        if format == "csv":
+            # Return CSV
+            if isinstance(data, list) and data:
+                output = io.StringIO()
+                writer = csv.DictWriter(output, fieldnames=data[0].keys())
+                writer.writeheader()
+                writer.writerows(data)
+                content = output.getvalue()
+                
+                return StreamingResponse(
+                    io.BytesIO(content.encode('utf-8')),
+                    media_type="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=agricam_{report_type}_{datetime.now().strftime('%Y%m%d')}.csv"}
+                )
+        
+        # For PDF/Word, return JSON that frontend will convert
+        return {
+            "report": report_content,
+            "download_instructions": f"Utilisez les données ci-dessous pour générer votre rapport {format.upper()}",
+            "format": format,
+            "filename": f"agricam_{report_type}_{datetime.now().strftime('%Y%m%d')}.{format}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Export error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================================================
+# P1 FEATURES - E-LEARNING MODULE
+# =============================================================================
+
+@api_router.get("/learning/courses")
+async def get_courses():
+    """Get available e-learning courses"""
+    courses = await db.courses.find({}, {"_id": 0}).to_list(50)
+    
+    if not courses:
+        # Return demo courses
+        courses = [
+            {
+                "id": "course-001",
+                "title": "Introduction à l'Agriculture de Précision",
+                "description": "Découvrez les fondamentaux de l'agriculture de précision et comment utiliser AGRICAM IA",
+                "instructor": "AGRICAM IA",
+                "duration_hours": 2,
+                "level": "debutant",
+                "modules": [
+                    {"title": "Qu'est-ce que l'agriculture de précision?", "duration_min": 30},
+                    {"title": "Utilisation des capteurs IoT", "duration_min": 45},
+                    {"title": "Analyse des données avec l'IA", "duration_min": 45}
+                ],
+                "certificate_available": True,
+                "language": "fr",
+                "enrolled_count": 156,
+                "rating": 4.8
+            },
+            {
+                "id": "course-002",
+                "title": "Gestion de l'Irrigation Intelligente",
+                "description": "Apprenez à optimiser votre consommation d'eau grâce aux systèmes d'irrigation automatisés",
+                "instructor": "AGRICAM IA",
+                "duration_hours": 3,
+                "level": "intermediaire",
+                "modules": [
+                    {"title": "Configuration des systèmes d'irrigation", "duration_min": 40},
+                    {"title": "Interprétation des données d'humidité", "duration_min": 50},
+                    {"title": "Programmation des cycles d'arrosage", "duration_min": 45},
+                    {"title": "Maintenance préventive", "duration_min": 35}
+                ],
+                "certificate_available": True,
+                "language": "fr",
+                "enrolled_count": 89,
+                "rating": 4.6
+            },
+            {
+                "id": "course-003",
+                "title": "Détection des Maladies par IA",
+                "description": "Utilisez l'intelligence artificielle pour identifier et traiter les maladies de vos cultures",
+                "instructor": "AGRICAM IA",
+                "duration_hours": 4,
+                "level": "avance",
+                "modules": [
+                    {"title": "Bases de la phytopathologie", "duration_min": 60},
+                    {"title": "Capture d'images pour l'analyse", "duration_min": 30},
+                    {"title": "Interprétation des résultats IA", "duration_min": 45},
+                    {"title": "Traitements recommandés", "duration_min": 50},
+                    {"title": "Prévention et bonnes pratiques", "duration_min": 55}
+                ],
+                "certificate_available": True,
+                "language": "fr",
+                "enrolled_count": 67,
+                "rating": 4.9
+            }
+        ]
+    
+    return courses
+
+@api_router.post("/learning/enroll/{course_id}")
+async def enroll_course(course_id: str, user = Depends(get_current_user)):
+    """Enroll in an e-learning course"""
+    enrollment = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "course_id": course_id,
+        "progress_percent": 0,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "completed_modules": [],
+        "certificate_earned": False
+    }
+    
+    await db.enrollments.insert_one(enrollment)
+    
+    return {
+        "success": True,
+        "enrollment_id": enrollment["id"],
+        "message": "Inscription réussie au cours"
+    }
+
+@api_router.post("/learning/complete-module")
+async def complete_module(course_id: str = Form(...), module_index: int = Form(...), user = Depends(get_current_user)):
+    """Mark a course module as completed"""
+    enrollment = await db.enrollments.find_one({"user_id": user["id"], "course_id": course_id})
+    
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Inscription non trouvée")
+    
+    completed_modules = enrollment.get("completed_modules", [])
+    if module_index not in completed_modules:
+        completed_modules.append(module_index)
+    
+    # Calculate progress
+    courses = await get_courses()
+    course = next((c for c in courses if c["id"] == course_id), None)
+    total_modules = len(course["modules"]) if course else 3
+    progress = int((len(completed_modules) / total_modules) * 100)
+    
+    await db.enrollments.update_one(
+        {"user_id": user["id"], "course_id": course_id},
+        {"$set": {"completed_modules": completed_modules, "progress_percent": progress}}
+    )
+    
+    # Issue certificate if completed
+    certificate_id = None
+    if progress >= 100:
+        certificate_id = str(uuid.uuid4())
+        await db.enrollments.update_one(
+            {"user_id": user["id"], "course_id": course_id},
+            {"$set": {
+                "certificate_earned": True,
+                "certificate_id": certificate_id,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    return {
+        "progress_percent": progress,
+        "completed_modules": completed_modules,
+        "certificate_earned": progress >= 100,
+        "certificate_id": certificate_id
+    }
+
+@api_router.get("/learning/my-courses")
+async def get_my_courses(user = Depends(get_current_user)):
+    """Get user's enrolled courses with progress"""
+    enrollments = await db.enrollments.find({"user_id": user["id"]}, {"_id": 0}).to_list(20)
+    return enrollments
+
+@api_router.get("/learning/certificate/{certificate_id}")
+async def get_certificate(certificate_id: str, user = Depends(get_current_user)):
+    """Get certificate details"""
+    enrollment = await db.enrollments.find_one(
+        {"user_id": user["id"], "certificate_id": certificate_id},
+        {"_id": 0}
+    )
+    
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Certificat non trouvé")
+    
+    courses = await get_courses()
+    course = next((c for c in courses if c["id"] == enrollment["course_id"]), None)
+    
+    return {
+        "certificate_id": certificate_id,
+        "course_title": course["title"] if course else "Cours AGRICAM IA",
+        "user_name": f"{user.get('first_name', '')} {user.get('last_name', '')}",
+        "issued_date": enrollment.get("completed_at", datetime.now(timezone.utc).isoformat()),
+        "issuer": "AGRICAM IA - African AI Solutions",
+        "verification_url": f"https://agricam-ia.com/verify/{certificate_id}"
+    }
+
+# =============================================================================
+# P1 FEATURES - MULTILINGUAL SUPPORT
+# =============================================================================
+
+LANGUAGES = {
+    "fr": {"name": "Français", "native": "Français"},
+    "en": {"name": "English", "native": "English"},
+    "fulbe": {"name": "Fulfulde", "native": "𞤊𞤵𞤤𞤬𞤵𞤤𞤣𞤫"},
+    "bassa": {"name": "Bassa", "native": "Ɓàsàa"},
+    "douala": {"name": "Douala", "native": "Duálá"},
+    "ewondo": {"name": "Ewondo", "native": "Ewondo"},
+    "bulu": {"name": "Bulu", "native": "Bulu"},
+    "ghomala": {"name": "Ghomala'", "native": "Ghɔmálá'"},
+    "fe_fe": {"name": "Fe'fe'", "native": "Fə̀ʼfə̀ʼ"},
+    "bamoun": {"name": "Bamoun", "native": "Shü Pamom"},
+    "ar": {"name": "Arabic", "native": "العربية"},
+    "sw": {"name": "Swahili", "native": "Kiswahili"},
+    "pt": {"name": "Portuguese", "native": "Português"},
+    "es": {"name": "Spanish", "native": "Español"},
+    "zh": {"name": "Chinese", "native": "中文"}
+}
+
+TRANSLATIONS = {
+    "fr": {
+        "welcome": "Bienvenue sur AGRICAM IA",
+        "dashboard": "Tableau de bord",
+        "parcels": "Parcelles",
+        "sensors": "Capteurs",
+        "irrigation": "Irrigation",
+        "alerts": "Alertes",
+        "recommendations": "Recommandations",
+        "settings": "Paramètres"
+    },
+    "en": {
+        "welcome": "Welcome to AGRICAM IA",
+        "dashboard": "Dashboard",
+        "parcels": "Parcels",
+        "sensors": "Sensors",
+        "irrigation": "Irrigation",
+        "alerts": "Alerts",
+        "recommendations": "Recommendations",
+        "settings": "Settings"
+    },
+    "fulbe": {
+        "welcome": "Bisimilla e AGRICAM IA",
+        "dashboard": "Taftal",
+        "parcels": "Gese",
+        "sensors": "Masiŋji",
+        "irrigation": "Ndiyam",
+        "alerts": "Habrude",
+        "recommendations": "Wasiyaaji",
+        "settings": "Teelal"
+    },
+    "ewondo": {
+        "welcome": "Mbolo e AGRICAM IA",
+        "dashboard": "Etut",
+        "parcels": "Afup",
+        "sensors": "Bitsit",
+        "irrigation": "Mendim",
+        "alerts": "Akalan",
+        "recommendations": "Minkpaman",
+        "settings": "Mintil"
+    }
+}
+
+@api_router.get("/languages")
+async def get_available_languages():
+    """Get list of available languages including Cameroonian"""
+    return {
+        "languages": LANGUAGES,
+        "default": "fr",
+        "cameroonian": ["fulbe", "bassa", "douala", "ewondo", "bulu", "ghomala", "fe_fe", "bamoun"]
+    }
+
+@api_router.get("/translations/{lang}")
+async def get_translations(lang: str):
+    """Get UI translations for a language"""
+    if lang not in TRANSLATIONS:
+        lang = "fr"  # Fallback to French
+    
+    return {
+        "language": lang,
+        "translations": TRANSLATIONS.get(lang, TRANSLATIONS["fr"]),
+        "direction": "rtl" if lang == "ar" else "ltr"
+    }
+
+@api_router.post("/user/language")
+async def set_user_language(lang: str = Form(...), user = Depends(get_current_user)):
+    """Set user's preferred language"""
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"preferred_language": lang}}
+    )
+    
+    return {"success": True, "language": lang}
+
 # Include router and middleware
 app.include_router(api_router)
 
