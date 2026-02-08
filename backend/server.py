@@ -1272,12 +1272,27 @@ async def upload_and_analyze_csv(
                 "chart_data": {
                     "type": "line",
                     "labels": [f"Semaine {i+1}" for i in range(min(len(records), 12))],
-                    "datasets": [
-                        {"label": col, "data": [float(records[i].get(col, 0)) for i in range(min(len(records), 12))] 
-                         for col in columns[:3] if any(records[0].get(col, '').replace('.','').replace('-','').isdigit() for _ in [1])}
-                    ][:3]
+                    "datasets": []
                 }
             }
+            
+            # Build chart datasets for numeric columns
+            for col in columns[:3]:
+                try:
+                    data_points = []
+                    for i in range(min(len(records), 12)):
+                        val = records[i].get(col, '0')
+                        if val and str(val).replace('.','').replace('-','').isdigit():
+                            data_points.append(float(val))
+                        else:
+                            data_points.append(0)
+                    if any(d > 0 for d in data_points):
+                        analysis_result["results"]["chart_data"]["datasets"].append({
+                            "label": col,
+                            "data": data_points
+                        })
+                except:
+                    pass
         else:
             analysis_result["results"] = {
                 "message": "Fichier vide ou format non reconnu",
