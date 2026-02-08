@@ -1,21 +1,64 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { 
   BarChart3, TrendingUp, PieChart, LineChart,
   Download, Calendar
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import ExportButton from "../components/ExportButton";
+import api from "../services/api";
 
 const Analytics = () => {
+  const [analyticsData, setAnalyticsData] = useState({
+    total_users: 0,
+    active_users: 0,
+    total_parcels: 0,
+    total_sensors: 0,
+    total_analyses: 0,
+    total_revenue: 0
+  });
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await api.get("/dashboard/stats");
+      setAnalyticsData({
+        total_users: response.data.total_parcels || 0,
+        active_users: response.data.total_sensors || 0,
+        total_parcels: response.data.total_parcels || 0,
+        total_sensors: response.data.total_sensors || 0,
+        total_analyses: response.data.total_alerts || 0,
+        total_revenue: 0
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-slide-in" data-testid="analytics-page">
       {/* Header */}
       <div className="gradient-analytics rounded-2xl p-8 text-white shadow-xl">
-        <div className="flex items-center gap-3 mb-2">
-          <BarChart3 className="h-8 w-8" />
-          <h1 className="text-3xl font-bold font-[Manrope]">Analytics & Reporting</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="h-8 w-8" />
+              <h1 className="text-3xl font-bold font-[Manrope]">Analytics & Reporting</h1>
+            </div>
+            <p className="text-white/80">Analyses avancées et rapports détaillés de vos exploitations</p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <ExportButton 
+              data={analyticsData} 
+              type="analytics" 
+              title="Rapport Analytics AGRICAM IA"
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            />
+          </div>
         </div>
-        <p className="text-white/80">Analyses avancées et rapports détaillés de vos exploitations</p>
       </div>
 
       {/* Charts Grid */}
