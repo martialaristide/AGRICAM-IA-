@@ -161,13 +161,17 @@ const Marketplace = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" data-testid={`contact-${product.id}`}>
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Contacter
-                    </Button>
-                    <Button variant="outline" data-testid={`details-${product.id}`}>
-                      Détails
-                    </Button>
+                    <ActionTooltip content="Envoyer un message au vendeur pour négocier le prix">
+                      <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" data-testid={`contact-${product.id}`}>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Contacter
+                      </Button>
+                    </ActionTooltip>
+                    <ActionTooltip content="Voir les détails complets du produit et l'analyse qualité IA">
+                      <Button variant="outline" data-testid={`details-${product.id}`}>
+                        Détails
+                      </Button>
+                    </ActionTooltip>
                   </div>
                 </CardContent>
               </Card>
