@@ -419,9 +419,11 @@ class TestELearning:
         assert response.status_code == 200
         data = response.json()
         
-        assert "success" in data
+        # Verify response structure
         assert "progress_percent" in data
+        assert "completed_modules" in data
         assert data["progress_percent"] > 0
+        assert 0 in data["completed_modules"]
         
         print(f"✓ Module completed, progress: {data['progress_percent']}%")
 
