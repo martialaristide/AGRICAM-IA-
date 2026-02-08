@@ -2722,6 +2722,8 @@ async def analyze_camera_frame(
     
     await db.camera_analyses.insert_one(analysis)
     
+    # Remove MongoDB _id before returning
+    analysis.pop("_id", None)
     return analysis
 
 @api_router.get("/camera-ai/live-stats")
