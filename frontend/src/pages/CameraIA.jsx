@@ -46,7 +46,9 @@ const CameraIA = () => {
       const formData = new FormData();
       formData.append("image_data", "base64_simulated_frame_data");
       
-      const response = await api.post("/camera-ai/analyze-frame", formData);
+      const response = await api.post("/camera-ai/analyze-frame", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
       setAnalysisResult(response.data.analysis_results);
       toast.success("Analyse terminée en " + response.data.processing_time_ms + "ms");
     } catch (error) {
