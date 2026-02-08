@@ -177,14 +177,16 @@ const Alertes = () => {
                         )}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleMarkRead(alert.id)}
-                      data-testid={`mark-read-${alert.id}`}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
+                    <ActionTooltip content="Marquer cette alerte comme lue et traitée">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleMarkRead(alert.id)}
+                        data-testid={`mark-read-${alert.id}`}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    </ActionTooltip>
                   </div>
                 </div>
               );
