@@ -287,6 +287,14 @@ const Parcelles = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+            {/* Export Button */}
+            <ExportButton 
+              data={parcels} 
+              type="parcelles" 
+              title="Rapport des Parcelles AGRICAM IA"
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            />
+            
             {/* View Toggle */}
             <div className="flex bg-white/20 rounded-lg p-1">
               <ActionTooltip content="Afficher la carte interactive avec géolocalisation satellite">
