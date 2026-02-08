@@ -73,6 +73,9 @@ export const getParcel = (id) => api.get(`/parcels/${id}`);
 export const createParcel = (data) => api.post("/parcels", data);
 export const updateParcel = (id, data) => api.put(`/parcels/${id}`, data);
 export const deleteParcel = (id) => api.delete(`/parcels/${id}`);
+export const importParcels = (formData) => api.post("/import/parcels", formData, {
+  headers: { "Content-Type": "multipart/form-data" }
+});
 
 // Sensors
 export const getSensors = () => api.get("/sensors");
