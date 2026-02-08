@@ -2153,6 +2153,7 @@ async def send_sms_alert(request: SMSRequest, user = Depends(get_current_user)):
             "success": True,
             "message": f"SMS envoyé à {phone} via {network} (simulé)",
             "sms_id": sms_record["id"],
+            "network": network,
             "cost_xaf": 25,
             "note": "Mode simulation - En production, intégrez l'API Orange/MTN"
         }
