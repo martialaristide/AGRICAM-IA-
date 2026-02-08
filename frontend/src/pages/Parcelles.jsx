@@ -352,14 +352,14 @@ const Parcelles = () => {
 
             {/* Add Parcel Button */}
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <ActionTooltip content="Créer une nouvelle parcelle avec définition géographique sur la carte">
+              <ActionTooltip content="Créer une nouvelle parcelle avec définition géographique sur la carte">
+                <DialogTrigger asChild>
                   <Button className="bg-white text-emerald-700 hover:bg-white/90" data-testid="add-parcel-btn">
                     <Plus className="h-4 w-4 mr-2" />
                     Nouvelle parcelle
                   </Button>
-                </ActionTooltip>
-              </DialogTrigger>
+                </DialogTrigger>
+              </ActionTooltip>
               <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
