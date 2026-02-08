@@ -3,9 +3,10 @@ import { getAlerts, markAlertRead } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { ActionTooltip } from "../components/ui/tooltip";
 import { 
   Bell, AlertTriangle, Clock, Check, 
-  Bug, Droplets, Plane, Wifi, X
+  Bug, Droplets, Plane, Wifi, X, RefreshCw, Mail, Smartphone
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
