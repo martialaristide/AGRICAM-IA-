@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getDashboardStats, getParcels, getAlerts } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { ActionTooltip } from "../components/ui/tooltip";
 import { 
   Zap, Droplets, Thermometer, AlertTriangle, 
   MapPin, TrendingUp, Clock
