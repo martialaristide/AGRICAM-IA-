@@ -2118,8 +2118,14 @@ async def send_sms_alert(request: SMSRequest, user = Depends(get_current_user)):
     """Send SMS alert (simulated for Orange/MTN Cameroon)"""
     try:
         # Simulate SMS sending for African networks
-        phone = request.phone_number
-        network = "Orange Cameroun" if phone.startswith("+237 6") else "MTN Cameroun" if phone.startswith("+237 65") else "Réseau inconnu"
+        phone = request.phone_number.replace(" ", "")  # Remove spaces
+        # Orange: 69x, 65x (some), MTN: 67x, 68x, 65x (some)
+        if phone.startswith("+23769") or phone.startswith("+23766"):
+            network = "Orange Cameroun"
+        elif phone.startswith("+23767") or phone.startswith("+23768") or phone.startswith("+23765"):
+            network = "MTN Cameroun"
+        else:
+            network = "Réseau Cameroun"
         
         # Log SMS
         sms_record = {
