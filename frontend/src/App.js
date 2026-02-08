@@ -19,6 +19,10 @@ import Alertes from "./pages/Alertes";
 import Parametres from "./pages/Parametres";
 import Financial from "./pages/Financial";
 import ELearning from "./pages/ELearning";
+import MobileMoneyPayment from "./pages/MobileMoneyPayment";
+import RobotControl from "./pages/RobotControl";
+import CameraIA from "./pages/CameraIA";
+import DevAnalytics from "./pages/DevAnalytics";
 import { Toaster } from "./components/ui/sonner";
 
 // Auth Context
@@ -186,6 +190,22 @@ function App() {
             <Route path="financial" element={<Financial />} />
             <Route path="parametres" element={<Parametres />} />
             <Route path="formation" element={<ELearning />} />
+            <Route path="paiements" element={<MobileMoneyPayment />} />
+            <Route path="robot-control" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <RobotControl />
+              </ProtectedRoute>
+            } />
+            <Route path="camera-ia" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <CameraIA />
+              </ProtectedRoute>
+            } />
+            <Route path="dev-analytics" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <DevAnalytics />
+              </ProtectedRoute>
+            } />
           </Route>
         </Routes>
       </BrowserRouter>
