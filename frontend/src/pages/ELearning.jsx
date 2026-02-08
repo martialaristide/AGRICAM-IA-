@@ -1,0 +1,449 @@
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Progress } from "../components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { ActionTooltip } from "../components/ui/tooltip";
+import { 
+  GraduationCap, BookOpen, Clock, Star, Award,
+  Play, CheckCircle, Users, FileText, Video,
+  Download, ChevronRight, Trophy, Sparkles
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import { toast } from "sonner";
+import api from "../services/api";
+
+const ELearning = () => {
+  const [courses, setCourses] = useState([]);
+  const [myCourses, setMyCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showCertificateDialog, setShowCertificateDialog] = useState(false);
+  const [certificate, setCertificate] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [coursesRes, myCoursesRes] = await Promise.all([
+        api.get("/learning/courses"),
+        api.get("/learning/my-courses")
+      ]);
+      setCourses(coursesRes.data);
+      setMyCourses(myCoursesRes.data);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async (courseId) => {
+    try {
+      await api.post(`/learning/enroll/${courseId}`);
+      toast.success("Inscription réussie au cours!");
+      fetchData();
+    } catch (error) {
+      toast.error("Erreur lors de l'inscription");
+    }
+  };
+
+  const handleCompleteModule = async (courseId, moduleIndex) => {
+    try {
+      const formData = new FormData();
+      formData.append("course_id", courseId);
+      formData.append("module_index", moduleIndex);
+      
+      const response = await api.post("/learning/complete-module", formData);
+      
+      if (response.data.certificate_earned) {
+        toast.success("🎉 Félicitations! Vous avez terminé le cours et obtenu votre certificat!");
+        setCertificate(response.data.certificate_id);
+      } else {
+        toast.success("Module complété!");
+      }
+      
+      fetchData();
+    } catch (error) {
+      toast.error("Erreur lors de la validation");
+    }
+  };
+
+  const viewCertificate = async (certificateId) => {
+    try {
+      const response = await api.get(`/learning/certificate/${certificateId}`);
+      setCertificate(response.data);
+      setShowCertificateDialog(true);
+    } catch (error) {
+      toast.error("Certificat non trouvé");
+    }
+  };
+
+  const getLevelBadge = (level) => {
+    switch (level) {
+      case "debutant":
+        return <Badge className="bg-emerald-100 text-emerald-700">Débutant</Badge>;
+      case "intermediaire":
+        return <Badge className="bg-blue-100 text-blue-700">Intermédiaire</Badge>;
+      case "avance":
+        return <Badge className="bg-purple-100 text-purple-700">Avancé</Badge>;
+      default:
+        return <Badge variant="secondary">{level}</Badge>;
+    }
+  };
+
+  const getEnrollment = (courseId) => {
+    return myCourses.find(e => e.course_id === courseId);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-slide-in" data-testid="elearning-page">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-8 text-white shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <GraduationCap className="h-8 w-8" />
+              <h1 className="text-3xl font-bold font-[Manrope]">Formation AGRICAM IA</h1>
+            </div>
+            <p className="text-white/80">Apprenez à utiliser la plateforme et améliorez vos compétences agricoles</p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+            <div className="bg-white/20 rounded-xl px-4 py-2 text-center">
+              <p className="text-2xl font-bold">{courses.length}</p>
+              <p className="text-xs">Cours disponibles</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-2 text-center">
+              <p className="text-2xl font-bold">{myCourses.length}</p>
+              <p className="text-xs">Mes inscriptions</p>
+            </div>
+            <div className="bg-white/20 rounded-xl px-4 py-2 text-center">
+              <p className="text-2xl font-bold">{myCourses.filter(c => c.certificate_earned).length}</p>
+              <p className="text-xs">Certificats</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* My Progress */}
+      {myCourses.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              Mes cours en cours
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {myCourses.map((enrollment) => {
+                const course = courses.find(c => c.id === enrollment.course_id);
+                if (!course) return null;
+                
+                return (
+                  <div key={enrollment.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                    <div className="h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                      <BookOpen className="h-6 w-6 text-indigo-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{course.title}</h4>
+                      <div className="flex items-center gap-4 mt-1">
+                        <Progress value={enrollment.progress_percent} className="flex-1 h-2" />
+                        <span className="text-sm text-slate-500">{enrollment.progress_percent}%</span>
+                      </div>
+                    </div>
+                    {enrollment.certificate_earned ? (
+                      <ActionTooltip content="Voir votre certificat">
+                        <Button 
+                          variant="outline" 
+                          className="text-amber-600 border-amber-300"
+                          onClick={() => viewCertificate(enrollment.certificate_id)}
+                        >
+                          <Award className="h-4 w-4 mr-2" />
+                          Certificat
+                        </Button>
+                      </ActionTooltip>
+                    ) : (
+                      <Button onClick={() => setSelectedCourse(course)}>
+                        Continuer
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Course Catalog */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-indigo-600" />
+          Catalogue des formations
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course) => {
+            const enrollment = getEnrollment(course.id);
+            const isEnrolled = !!enrollment;
+            
+            return (
+              <Card key={course.id} className="overflow-hidden card-hover" data-testid={`course-${course.id}`}>
+                {/* Course Header */}
+                <div className="h-32 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative p-4">
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    {getLevelBadge(course.level)}
+                    {course.certificate_available && (
+                      <Badge className="bg-amber-500 text-white">
+                        <Award className="h-3 w-3 mr-1" />
+                        Certifié
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="absolute bottom-4 left-4">
+                    <GraduationCap className="h-10 w-10 text-white/80" />
+                  </div>
+                </div>
+
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h3 className="font-bold text-lg">{course.title}</h3>
+                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{course.description}</p>
+                  </div>
+
+                  {/* Course Info */}
+                  <div className="flex items-center gap-4 text-sm text-slate-600">
+                    <ActionTooltip content="Durée totale du cours">
+                      <div className="flex items-center gap-1 cursor-help">
+                        <Clock className="h-4 w-4" />
+                        {course.duration_hours}h
+                      </div>
+                    </ActionTooltip>
+                    <ActionTooltip content="Nombre de modules">
+                      <div className="flex items-center gap-1 cursor-help">
+                        <FileText className="h-4 w-4" />
+                        {course.modules?.length || 0} modules
+                      </div>
+                    </ActionTooltip>
+                    <ActionTooltip content="Étudiants inscrits">
+                      <div className="flex items-center gap-1 cursor-help">
+                        <Users className="h-4 w-4" />
+                        {course.enrolled_count}
+                      </div>
+                    </ActionTooltip>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star 
+                        key={star} 
+                        className={cn(
+                          "h-4 w-4",
+                          star <= Math.round(course.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                        )} 
+                      />
+                    ))}
+                    <span className="text-sm text-slate-600">{course.rating}/5</span>
+                  </div>
+
+                  {/* Instructor */}
+                  <div className="text-sm text-slate-500">
+                    Par: <span className="font-medium text-indigo-600">{course.instructor}</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    {isEnrolled ? (
+                      <>
+                        {enrollment.certificate_earned ? (
+                          <ActionTooltip content="Vous avez complété ce cours">
+                            <Button className="flex-1 bg-emerald-600">
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Complété
+                            </Button>
+                          </ActionTooltip>
+                        ) : (
+                          <Button 
+                            className="flex-1"
+                            onClick={() => setSelectedCourse(course)}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Continuer ({enrollment.progress_percent}%)
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <ActionTooltip content="S'inscrire à cette formation gratuite">
+                        <Button 
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                          onClick={() => handleEnroll(course.id)}
+                          data-testid={`enroll-${course.id}`}
+                        >
+                          <GraduationCap className="h-4 w-4 mr-2" />
+                          S'inscrire gratuitement
+                        </Button>
+                      </ActionTooltip>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Course Detail Dialog */}
+      <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedCourse && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-indigo-600" />
+                  {selectedCourse.title}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                <p className="text-slate-600">{selectedCourse.description}</p>
+                
+                {/* Modules */}
+                <div>
+                  <h4 className="font-semibold mb-3">Modules du cours</h4>
+                  <div className="space-y-2">
+                    {selectedCourse.modules?.map((module, idx) => {
+                      const enrollment = getEnrollment(selectedCourse.id);
+                      const isCompleted = enrollment?.completed_modules?.includes(idx);
+                      
+                      return (
+                        <div 
+                          key={idx}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-lg border",
+                            isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            {isCompleted ? (
+                              <CheckCircle className="h-5 w-5 text-emerald-500" />
+                            ) : (
+                              <Play className="h-5 w-5 text-slate-400" />
+                            )}
+                            <div>
+                              <p className="font-medium">{module.title}</p>
+                              <p className="text-xs text-slate-500">{module.duration_min} min</p>
+                            </div>
+                          </div>
+                          {!isCompleted && enrollment && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleCompleteModule(selectedCourse.id, idx)}
+                            >
+                              Marquer terminé
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Enroll if not enrolled */}
+                {!getEnrollment(selectedCourse.id) && (
+                  <Button 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => {
+                      handleEnroll(selectedCourse.id);
+                      setSelectedCourse(null);
+                    }}
+                  >
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    S'inscrire à ce cours
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Certificate Dialog */}
+      <Dialog open={showCertificateDialog} onOpenChange={setShowCertificateDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500" />
+              Certificat de Réussite
+            </DialogTitle>
+          </DialogHeader>
+          
+          {certificate && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-xl border-2 border-amber-200 text-center">
+                <Trophy className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+                <p className="text-sm text-slate-500 mb-2">Ce certificat atteste que</p>
+                <p className="text-2xl font-bold text-slate-900 mb-2">{certificate.user_name}</p>
+                <p className="text-sm text-slate-500 mb-4">a complété avec succès le cours</p>
+                <p className="text-lg font-semibold text-indigo-600 mb-4">{certificate.course_title}</p>
+                <div className="text-xs text-slate-400">
+                  <p>Délivré le: {new Date(certificate.issued_date).toLocaleDateString('fr-FR')}</p>
+                  <p>Par: {certificate.issuer}</p>
+                  <p className="mt-2 font-mono">ID: {certificate.certificate_id}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1">
+                  <Download className="h-4 w-4 mr-2" />
+                  Télécharger PDF
+                </Button>
+                <Button className="flex-1 bg-indigo-600">
+                  Partager
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Info Card */}
+      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="h-12 w-12 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-indigo-800">Formations certifiantes AGRICAM IA</h3>
+              <p className="text-indigo-700 mt-1">
+                Nos cours sont conçus par des experts agricoles et technologiques pour vous aider à:
+              </p>
+              <ul className="mt-2 text-sm text-indigo-600 space-y-1">
+                <li>• Maîtriser la plateforme AGRICAM IA</li>
+                <li>• Optimiser vos rendements agricoles</li>
+                <li>• Comprendre l'agriculture de précision</li>
+                <li>• Obtenir des certificats reconnus</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ELearning;
