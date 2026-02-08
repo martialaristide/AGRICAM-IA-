@@ -22,7 +22,11 @@ import {
   Shield,
   Banknote,
   GraduationCap,
-  X
+  X,
+  Smartphone,
+  Bot,
+  Camera,
+  Code2
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
