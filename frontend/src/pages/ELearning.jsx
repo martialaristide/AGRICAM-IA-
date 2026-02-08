@@ -122,6 +122,13 @@ const ELearning = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+            {/* Export Button */}
+            <ExportButton 
+              data={courses} 
+              type="recommendations" 
+              title="Rapport Formation E-Learning AGRICAM IA"
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            />
             <div className="bg-white/20 rounded-xl px-4 py-2 text-center">
               <p className="text-2xl font-bold">{courses.length}</p>
               <p className="text-xs">Cours disponibles</p>
