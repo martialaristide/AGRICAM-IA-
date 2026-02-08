@@ -26,6 +26,7 @@ import {
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import { ActionTooltip } from "./ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,71 +41,71 @@ const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artif
 
 const getNavItems = (role) => {
   const baseItems = [
-    { path: "/dashboard", icon: LayoutDashboard, label: "Tableau de bord" },
+    { path: "/dashboard", icon: LayoutDashboard, label: "Tableau de bord", tooltip: "Vue d'ensemble de votre exploitation agricole" },
   ];
   
   if (role === "admin") {
     return [
       ...baseItems,
-      { path: "/admin", icon: Shield, label: "Administration" },
-      { path: "/parcelles", icon: Map, label: "Parcelles" },
-      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT" },
-      { path: "/drones", icon: Plane, label: "Gestion Drones" },
-      { path: "/satellites", icon: Satellite, label: "Images satellites" },
-      { path: "/analyse-ia", icon: ScanSearch, label: "Analyse Images IA" },
-      { path: "/irrigation", icon: Droplets, label: "Irrigation Auto" },
-      { path: "/recommandations", icon: Lightbulb, label: "Recommandations IA" },
-      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace" },
-      { path: "/financial", icon: Banknote, label: "Finances" },
-      { path: "/analytics", icon: BarChart3, label: "Analytics" },
-      { path: "/alertes", icon: Bell, label: "Alertes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres" },
+      { path: "/admin", icon: Shield, label: "Administration", tooltip: "Gérer les utilisateurs, abonnements et paramètres de la plateforme" },
+      { path: "/parcelles", icon: Map, label: "Parcelles", tooltip: "Visualiser et gérer vos parcelles avec géolocalisation satellite" },
+      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT", tooltip: "Configurer et surveiller vos capteurs connectés (température, humidité, pH)" },
+      { path: "/drones", icon: Plane, label: "Gestion Drones", tooltip: "Planifier et contrôler les missions de surveillance par drone" },
+      { path: "/satellites", icon: Satellite, label: "Images satellites", tooltip: "Analyser les images satellite et indices NDVI de vos cultures" },
+      { path: "/analyse-ia", icon: ScanSearch, label: "Analyse Images IA", tooltip: "Détecter les maladies et analyser l'état des cultures par IA" },
+      { path: "/irrigation", icon: Droplets, label: "Irrigation Auto", tooltip: "Configurer et contrôler le système d'irrigation automatisé" },
+      { path: "/recommandations", icon: Lightbulb, label: "Recommandations IA", tooltip: "Recevoir des conseils personnalisés de l'IA pour vos cultures" },
+      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Acheter et vendre des produits agricoles" },
+      { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Gérer les prêts, crédits et transactions financières" },
+      { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Analyser les performances et statistiques de votre exploitation" },
+      { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Voir les notifications et alertes importantes" },
+      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configurer votre profil et les préférences de l'application" },
     ];
   }
   
   if (role === "farmer") {
     return [
       ...baseItems,
-      { path: "/parcelles", icon: Map, label: "Mes Parcelles" },
-      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT" },
-      { path: "/drones", icon: Plane, label: "Missions Drones" },
-      { path: "/satellites", icon: Satellite, label: "Images satellites" },
-      { path: "/analyse-ia", icon: ScanSearch, label: "Analyse IA" },
-      { path: "/irrigation", icon: Droplets, label: "Irrigation" },
-      { path: "/recommandations", icon: Lightbulb, label: "Recommandations" },
-      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace" },
-      { path: "/financial", icon: Banknote, label: "Finances" },
-      { path: "/alertes", icon: Bell, label: "Alertes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres" },
+      { path: "/parcelles", icon: Map, label: "Mes Parcelles", tooltip: "Visualiser et gérer vos parcelles avec géolocalisation satellite" },
+      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT", tooltip: "Surveiller vos capteurs en temps réel" },
+      { path: "/drones", icon: Plane, label: "Missions Drones", tooltip: "Planifier des vols de surveillance" },
+      { path: "/satellites", icon: Satellite, label: "Images satellites", tooltip: "Analyser vos cultures depuis l'espace" },
+      { path: "/analyse-ia", icon: ScanSearch, label: "Analyse IA", tooltip: "Détecter les maladies et problèmes de cultures" },
+      { path: "/irrigation", icon: Droplets, label: "Irrigation", tooltip: "Contrôler l'arrosage de vos parcelles" },
+      { path: "/recommandations", icon: Lightbulb, label: "Recommandations", tooltip: "Conseils personnalisés pour vos cultures" },
+      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Vendre vos récoltes et acheter des intrants" },
+      { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Demander des prêts agricoles" },
+      { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Notifications importantes" },
+      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
     ];
   }
   
   if (role === "supplier") {
     return [
       ...baseItems,
-      { path: "/marketplace", icon: ShoppingCart, label: "Mes Produits" },
-      { path: "/analytics", icon: BarChart3, label: "Ventes" },
-      { path: "/alertes", icon: Bell, label: "Commandes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres" },
+      { path: "/marketplace", icon: ShoppingCart, label: "Mes Produits", tooltip: "Gérer vos produits en vente" },
+      { path: "/analytics", icon: BarChart3, label: "Ventes", tooltip: "Analyser vos performances commerciales" },
+      { path: "/alertes", icon: Bell, label: "Commandes", tooltip: "Voir les nouvelles commandes" },
+      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configurer votre boutique" },
     ];
   }
   
   if (role === "financial") {
     return [
       ...baseItems,
-      { path: "/financial", icon: Banknote, label: "Prêts & Crédits" },
-      { path: "/analytics", icon: BarChart3, label: "Analytics" },
-      { path: "/alertes", icon: Bell, label: "Demandes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres" },
+      { path: "/financial", icon: Banknote, label: "Prêts & Crédits", tooltip: "Gérer les demandes de prêts agricoles" },
+      { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Statistiques des prêts et remboursements" },
+      { path: "/alertes", icon: Bell, label: "Demandes", tooltip: "Nouvelles demandes de financement" },
+      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configuration de votre institution" },
     ];
   }
   
   // Default (partner, investor)
   return [
     ...baseItems,
-    { path: "/analytics", icon: BarChart3, label: "Analytics" },
-    { path: "/marketplace", icon: ShoppingCart, label: "Marketplace" },
-    { path: "/parametres", icon: Settings, label: "Paramètres" },
+    { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Statistiques et performances" },
+    { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Explorer le marché agricole" },
+    { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
   ];
 };
 
