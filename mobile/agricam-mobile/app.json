@@ -1,32 +1,72 @@
 {
   "expo": {
-    "name": "agricam-mobile",
+    "name": "AGRICAM IA",
     "slug": "agricam-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#059669"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.africanai.agricam",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "AGRICAM IA utilise la caméra pour analyser l'état de santé de vos cultures",
+        "NSPhotoLibraryUsageDescription": "AGRICAM IA accède à vos photos pour analyser les images de vos cultures",
+        "NSLocationWhenInUseUsageDescription": "AGRICAM IA utilise votre position pour localiser vos parcelles"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#059669"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.africanai.agricam",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Autoriser AGRICAM IA à accéder à votre caméra pour analyser vos cultures."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Autoriser AGRICAM IA à accéder à votre position pour localiser vos parcelles."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Autoriser AGRICAM IA à accéder à vos photos pour analyser vos cultures."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "agricam-ia-mobile"
+      }
+    },
+    "owner": "africanaisolutions"
   }
 }
