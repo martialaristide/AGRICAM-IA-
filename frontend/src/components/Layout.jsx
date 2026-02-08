@@ -241,37 +241,41 @@ const Layout = () => {
           {/* Bottom Actions */}
           <div className="p-3 border-t border-slate-100 space-y-2">
             {/* Logout Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className={cn(
-                "w-full text-red-600 hover:text-red-700 hover:bg-red-50",
-                collapsed ? "justify-center" : "justify-start"
-              )}
-              data-testid="logout-btn"
-            >
-              <LogOut className="h-5 w-5" />
-              {!collapsed && <span className="ml-2">Déconnexion</span>}
-            </Button>
+            <ActionTooltip content="Se déconnecter de votre compte AGRICAM IA" side="right">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className={cn(
+                  "w-full text-red-600 hover:text-red-700 hover:bg-red-50",
+                  collapsed ? "justify-center" : "justify-start"
+                )}
+                data-testid="logout-btn"
+              >
+                <LogOut className="h-5 w-5" />
+                {!collapsed && <span className="ml-2">Déconnexion</span>}
+              </Button>
+            </ActionTooltip>
 
             {/* Collapse Button (Desktop only) */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed(!collapsed)}
-              className="w-full justify-center text-slate-500 hover:text-slate-700 hidden lg:flex"
-              data-testid="collapse-sidebar-btn"
-            >
-              {collapsed ? (
-                <ChevronRight className="h-5 w-5" />
-              ) : (
-                <>
-                  <ChevronLeft className="h-5 w-5 mr-2" />
-                  <span>Réduire</span>
-                </>
-              )}
-            </Button>
+            <ActionTooltip content={collapsed ? "Agrandir le menu latéral" : "Réduire le menu latéral"} side="right">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCollapsed(!collapsed)}
+                className="w-full justify-center text-slate-500 hover:text-slate-700 hidden lg:flex"
+                data-testid="collapse-sidebar-btn"
+              >
+                {collapsed ? (
+                  <ChevronRight className="h-5 w-5" />
+                ) : (
+                  <>
+                    <ChevronLeft className="h-5 w-5 mr-2" />
+                    <span>Réduire</span>
+                  </>
+                )}
+              </Button>
+            </ActionTooltip>
           </div>
         </div>
       </aside>
