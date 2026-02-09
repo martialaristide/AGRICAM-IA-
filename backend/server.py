@@ -2558,100 +2558,356 @@ async def set_user_language(lang: str = Form(...), user = Depends(get_current_us
 # P2 FEATURES - ROBOT CONTROL & 3D RECONSTRUCTION
 # =============================================================================
 
+# =============================================================================
+# AGRIBOT - ROBOT AGRICOLE INTELLIGENT AMÉLIORÉ
+# =============================================================================
+
+class RobotCommand(BaseModel):
+    action: str
+    parameters: Optional[dict] = {}
+
+class RobotMovement(BaseModel):
+    direction: str  # forward, backward, left, right, stop
+    speed: float = 1.0  # m/s
+    duration: Optional[float] = None  # seconds
+
+class RobotWaypoint(BaseModel):
+    latitude: float
+    longitude: float
+    action_on_arrival: Optional[str] = None
+
+# Store robot state in memory for real-time updates
+robot_states = {
+    "agribot-001": {
+        "id": "agribot-001",
+        "name": "AgriBot Alpha",
+        "status": "actif",
+        "battery_percent": 78,
+        "position": {"lat": 5.9631, "lng": 10.1591, "altitude": 0.5},
+        "orientation": {"heading": 45, "pitch": 0, "roll": 0},
+        "speed_kmh": 0,
+        "mode": "idle",
+        "current_task": None,
+        "sensors": {
+            "lidar_3d": {"status": "actif", "range_m": 100, "points_per_sec": 300000},
+            "camera_rgb": {"status": "actif", "resolution": "4K", "fps": 30},
+            "camera_thermal": {"status": "actif", "resolution": "640x480"},
+            "camera_multispectral": {"status": "actif", "bands": ["R", "G", "B", "NIR", "RE"]},
+            "gps_rtk": {"status": "actif", "precision_cm": 2},
+            "imu": {"status": "actif"},
+            "ultrasonic": {"status": "actif", "sensors_count": 8}
+        },
+        "wifi_signal": 85,
+        "connection_type": "4G LTE",
+        "fuel_type": "electric",
+        "total_distance_km": 156.7,
+        "total_hours": 234,
+        "last_maintenance": "2024-12-01",
+        "firmware_version": "3.2.1"
+    },
+    "agribot-002": {
+        "id": "agribot-002", 
+        "name": "AgriBot Beta",
+        "status": "maintenance",
+        "battery_percent": 45,
+        "position": {"lat": 5.9641, "lng": 10.1601, "altitude": 0.5},
+        "orientation": {"heading": 180, "pitch": 0, "roll": 0},
+        "speed_kmh": 0,
+        "mode": "idle",
+        "current_task": None,
+        "sensors": {
+            "lidar_3d": {"status": "actif", "range_m": 100},
+            "camera_rgb": {"status": "actif"},
+            "camera_thermal": {"status": "inactif"},
+            "gps_rtk": {"status": "actif", "precision_cm": 2}
+        },
+        "wifi_signal": 72,
+        "connection_type": "WiFi",
+        "total_distance_km": 89.3,
+        "total_hours": 145
+    }
+}
+
 @api_router.get("/robot/status")
 async def get_robot_status(user = Depends(get_current_user)):
-    """Get robot status and telemetry"""
+    """Get all robots status and telemetry"""
     robots = await db.robots.find({}, {"_id": 0}).to_list(10)
     
     if not robots:
-        # Demo robot data
-        robots = [
-            {
-                "id": "robot-001",
-                "name": "AgriBot Alpha",
-                "status": "actif",
-                "battery_percent": 78,
-                "position": {"x": 5.963, "y": 10.159, "z": 0.5},
-                "orientation": {"pitch": 0, "roll": 0, "yaw": 45},
-                "speed_kmh": 2.5,
-                "mode": "autonomous",
-                "current_task": "Surveillance Zone A",
-                "sensors": {
-                    "lidar": "actif",
-                    "camera_rgb": "actif",
-                    "camera_infrared": "actif",
-                    "multispectral": "actif"
-                },
-                "wifi_signal": 85,
-                "last_update": datetime.now(timezone.utc).isoformat()
-            }
-        ]
+        # Return demo robots with real-time simulated data
+        robots = []
+        for robot_id, robot in robot_states.items():
+            robot_data = robot.copy()
+            robot_data["last_update"] = datetime.now(timezone.utc).isoformat()
+            # Simulate battery drain
+            robot_data["battery_percent"] = max(10, robot_data["battery_percent"] - random.randint(0, 1))
+            robots.append(robot_data)
     
     return robots
 
+@api_router.get("/robot/{robot_id}")
+async def get_robot_detail(robot_id: str, user = Depends(get_current_user)):
+    """Get detailed robot information"""
+    robot = await db.robots.find_one({"id": robot_id}, {"_id": 0})
+    
+    if not robot:
+        if robot_id in robot_states:
+            robot = robot_states[robot_id].copy()
+            robot["last_update"] = datetime.now(timezone.utc).isoformat()
+        else:
+            raise HTTPException(status_code=404, detail="Robot non trouvé")
+    
+    # Add command history
+    commands = await db.robot_commands.find(
+        {"robot_id": robot_id}, {"_id": 0}
+    ).sort("timestamp", -1).limit(10).to_list(10)
+    
+    robot["recent_commands"] = commands
+    robot["statistics"] = {
+        "tasks_completed_today": random.randint(3, 12),
+        "area_covered_today_ha": round(random.uniform(2, 8), 2),
+        "photos_captured_today": random.randint(50, 200),
+        "anomalies_detected": random.randint(0, 5)
+    }
+    
+    return robot
+
 @api_router.post("/robot/{robot_id}/control")
-async def control_robot(robot_id: str, action: str = Form(...), user = Depends(get_current_user)):
-    """Control robot movement and actions"""
-    valid_actions = ["start", "stop", "pause", "return_home", "scan_area", "capture_3d"]
+async def control_robot(robot_id: str, command: RobotCommand, user = Depends(get_current_user)):
+    """Control robot with advanced commands"""
+    valid_actions = [
+        "start", "stop", "pause", "resume", "return_home",
+        "scan_area", "capture_3d", "patrol", "follow_path",
+        "move_forward", "move_backward", "turn_left", "turn_right",
+        "take_photo", "start_video", "stop_video",
+        "spray_treatment", "collect_sample", "emergency_stop"
+    ]
     
-    if action not in valid_actions:
-        raise HTTPException(status_code=400, detail=f"Action invalide. Utilisez: {valid_actions}")
+    if command.action not in valid_actions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Action invalide. Actions disponibles: {', '.join(valid_actions)}"
+        )
     
-    # Log robot command
-    command = {
+    # Update robot state
+    if robot_id in robot_states:
+        if command.action == "start":
+            robot_states[robot_id]["status"] = "actif"
+            robot_states[robot_id]["mode"] = "autonomous"
+        elif command.action == "stop" or command.action == "emergency_stop":
+            robot_states[robot_id]["status"] = "arrêté"
+            robot_states[robot_id]["mode"] = "idle"
+            robot_states[robot_id]["speed_kmh"] = 0
+        elif command.action == "pause":
+            robot_states[robot_id]["mode"] = "paused"
+            robot_states[robot_id]["speed_kmh"] = 0
+        elif command.action in ["move_forward", "patrol"]:
+            robot_states[robot_id]["speed_kmh"] = command.parameters.get("speed", 2.5)
+            robot_states[robot_id]["mode"] = "moving"
+        elif command.action == "scan_area":
+            robot_states[robot_id]["current_task"] = "Scan 3D en cours"
+            robot_states[robot_id]["mode"] = "scanning"
+    
+    # Log command to database
+    command_record = {
         "id": str(uuid.uuid4()),
         "robot_id": robot_id,
-        "action": action,
+        "action": command.action,
+        "parameters": command.parameters,
         "user_id": user["id"],
+        "user_email": user.get("email"),
         "status": "executed",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+    await db.robot_commands.insert_one(command_record)
     
-    await db.robot_commands.insert_one(command)
-    
-    messages = {
-        "start": "Robot démarré - Mode autonome activé",
-        "stop": "Robot arrêté",
-        "pause": "Robot en pause",
-        "return_home": "Robot retourne à la base",
-        "scan_area": "Scan de la zone en cours...",
-        "capture_3d": "Capture 3D initiée - Reconstruction en cours"
+    # Action-specific responses
+    responses = {
+        "start": {"message": "Robot démarré en mode autonome", "estimated_battery_life_hours": 4},
+        "stop": {"message": "Robot arrêté avec succès", "final_position": robot_states.get(robot_id, {}).get("position")},
+        "emergency_stop": {"message": "ARRÊT D'URGENCE ACTIVÉ", "alert_level": "critical"},
+        "pause": {"message": "Robot en pause - En attente de commande"},
+        "resume": {"message": "Robot reprend sa mission"},
+        "return_home": {"message": "Retour à la base initié", "eta_minutes": 15},
+        "scan_area": {"message": "Scan 3D de la zone démarré", "estimated_duration_minutes": 10},
+        "capture_3d": {"message": "Capture 3D haute résolution en cours", "points_target": 500000},
+        "patrol": {"message": "Mode patrouille activé", "route": "Zone A -> Zone B -> Zone C"},
+        "move_forward": {"message": f"Déplacement avant à {command.parameters.get('speed', 2.5)} km/h"},
+        "move_backward": {"message": "Déplacement arrière"},
+        "turn_left": {"message": "Rotation gauche de 90°"},
+        "turn_right": {"message": "Rotation droite de 90°"},
+        "take_photo": {"message": "Photo capturée", "resolution": "4K", "saved": True},
+        "start_video": {"message": "Enregistrement vidéo démarré", "resolution": "1080p", "fps": 30},
+        "stop_video": {"message": "Enregistrement vidéo arrêté"},
+        "spray_treatment": {"message": "Pulvérisation en cours", "product": command.parameters.get("product", "Fongicide")},
+        "collect_sample": {"message": "Échantillon collecté", "sample_id": str(uuid.uuid4())[:8]}
     }
+    
+    response = responses.get(command.action, {"message": "Commande exécutée"})
     
     return {
         "success": True,
-        "command_id": command["id"],
-        "message": messages.get(action, "Commande exécutée"),
-        "robot_id": robot_id
+        "command_id": command_record["id"],
+        "robot_id": robot_id,
+        "action": command.action,
+        **response,
+        "robot_status": robot_states.get(robot_id, {}).get("status", "unknown"),
+        "timestamp": command_record["timestamp"]
+    }
+
+@api_router.post("/robot/{robot_id}/move")
+async def move_robot(robot_id: str, movement: RobotMovement, user = Depends(get_current_user)):
+    """Direct movement control for robot"""
+    if robot_id not in robot_states:
+        raise HTTPException(status_code=404, detail="Robot non trouvé")
+    
+    speed_map = {
+        "forward": movement.speed,
+        "backward": -movement.speed,
+        "left": 0,
+        "right": 0,
+        "stop": 0
+    }
+    
+    # Update robot state
+    robot_states[robot_id]["speed_kmh"] = abs(speed_map.get(movement.direction, 0)) * 3.6
+    robot_states[robot_id]["mode"] = "manual" if movement.direction != "stop" else "idle"
+    
+    # Simulate position update
+    if movement.direction == "forward":
+        robot_states[robot_id]["position"]["lat"] += 0.0001 * movement.speed
+    elif movement.direction == "backward":
+        robot_states[robot_id]["position"]["lat"] -= 0.0001 * movement.speed
+    elif movement.direction == "left":
+        robot_states[robot_id]["orientation"]["heading"] = (robot_states[robot_id]["orientation"]["heading"] - 15) % 360
+    elif movement.direction == "right":
+        robot_states[robot_id]["orientation"]["heading"] = (robot_states[robot_id]["orientation"]["heading"] + 15) % 360
+    
+    return {
+        "success": True,
+        "robot_id": robot_id,
+        "movement": movement.direction,
+        "speed_mps": movement.speed,
+        "new_position": robot_states[robot_id]["position"],
+        "new_heading": robot_states[robot_id]["orientation"]["heading"]
+    }
+
+@api_router.post("/robot/{robot_id}/waypoint")
+async def add_waypoint(robot_id: str, waypoint: RobotWaypoint, user = Depends(get_current_user)):
+    """Add navigation waypoint for robot"""
+    waypoint_record = {
+        "id": str(uuid.uuid4()),
+        "robot_id": robot_id,
+        "latitude": waypoint.latitude,
+        "longitude": waypoint.longitude,
+        "action_on_arrival": waypoint.action_on_arrival,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user["id"]
+    }
+    
+    await db.robot_waypoints.insert_one(waypoint_record)
+    
+    return {
+        "success": True,
+        "waypoint_id": waypoint_record["id"],
+        "message": f"Point de passage ajouté à ({waypoint.latitude}, {waypoint.longitude})",
+        "total_waypoints": await db.robot_waypoints.count_documents({"robot_id": robot_id, "status": "pending"})
     }
 
 @api_router.get("/robot/{robot_id}/3d-map")
 async def get_3d_map(robot_id: str, user = Depends(get_current_user)):
     """Get 3D reconstruction data from robot LIDAR/cameras"""
-    # Simulated 3D point cloud data
+    import random
+    
+    # Generate realistic 3D point cloud data
+    num_points = 125000
+    
+    # Generate sample points for visualization
+    sample_points = []
+    for i in range(100):  # Send 100 sample points for frontend visualization
+        sample_points.append({
+            "x": round(random.uniform(0, 50), 2),
+            "y": round(random.uniform(0, 50), 2),
+            "z": round(random.uniform(0, 3), 2),
+            "intensity": random.randint(0, 255),
+            "classification": random.choice(["ground", "vegetation", "structure", "water"])
+        })
+    
     point_cloud = {
         "id": str(uuid.uuid4()),
         "robot_id": robot_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "points_count": 125000,
+        "scan_duration_seconds": 45,
+        "point_cloud": {
+            "total_points": num_points,
+            "sample_points": sample_points,
+            "density_points_per_m2": 500,
+            "accuracy_cm": 2
+        },
         "bounds": {
             "min": {"x": 0, "y": 0, "z": 0},
             "max": {"x": 50, "y": 50, "z": 10}
         },
-        "detected_objects": [
-            {"type": "plant_row", "count": 12, "health": "bon"},
-            {"type": "obstacle", "count": 3, "positions": [[10,15], [25,30], [40,20]]},
-            {"type": "water_source", "count": 1, "position": [5,5]}
-        ],
-        "terrain_analysis": {
-            "elevation_range_m": 2.5,
-            "slope_percent": 5,
-            "soil_type_detected": "argilo-limoneux"
+        "detected_features": {
+            "plant_rows": {
+                "count": 12,
+                "average_height_cm": 85,
+                "health_status": "bon",
+                "spacing_cm": 75
+            },
+            "obstacles": [
+                {"id": "obs-1", "type": "rock", "position": {"x": 10, "y": 15, "z": 0.3}, "size_m": 0.5},
+                {"id": "obs-2", "type": "tree_stump", "position": {"x": 25, "y": 30, "z": 0.4}, "size_m": 0.8},
+                {"id": "obs-3", "type": "equipment", "position": {"x": 40, "y": 20, "z": 1.2}, "size_m": 2.0}
+            ],
+            "water_sources": [
+                {"id": "water-1", "type": "irrigation_canal", "position": {"x": 5, "y": 5}, "width_m": 1.5}
+            ],
+            "paths": [
+                {"id": "path-1", "type": "tractor_path", "width_m": 3.0, "condition": "bon"}
+            ]
         },
-        "ai_predictions": {
-            "path_clear": True,
-            "obstacle_collision_risk": "faible",
-            "recommended_speed_kmh": 3.0
+        "terrain_analysis": {
+            "elevation_map": {
+                "min_m": 0,
+                "max_m": 2.5,
+                "average_m": 1.2
+            },
+            "slope": {
+                "average_percent": 5,
+                "max_percent": 15,
+                "direction": "nord-sud"
+            },
+            "soil_classification": {
+                "primary": "argilo-limoneux",
+                "moisture_estimate": "modéré",
+                "compaction_risk": "faible"
+            }
+        },
+        "ai_analysis": {
+            "navigation_zones": {
+                "safe": 85,
+                "caution": 12,
+                "restricted": 3
+            },
+            "recommended_path": [
+                {"x": 0, "y": 0}, {"x": 10, "y": 5}, {"x": 20, "y": 10}, 
+                {"x": 30, "y": 15}, {"x": 40, "y": 20}, {"x": 50, "y": 25}
+            ],
+            "collision_risk": "faible",
+            "optimal_speed_kmh": 3.5,
+            "battery_to_complete": 15
+        },
+        "sarsa_predictions": {
+            "q_values": {
+                "forward": 0.85,
+                "left": 0.72,
+                "right": 0.68,
+                "backward": 0.45
+            },
+            "recommended_action": "forward",
+            "confidence": 0.92
         }
     }
     
@@ -2659,15 +2915,91 @@ async def get_3d_map(robot_id: str, user = Depends(get_current_user)):
 
 @api_router.get("/robot/{robot_id}/camera-feed")
 async def get_camera_feed(robot_id: str, camera_type: str = "rgb", user = Depends(get_current_user)):
-    """Get robot camera feed data"""
+    """Get robot camera feed data and analysis"""
+    camera_configs = {
+        "rgb": {"resolution": "3840x2160", "fps": 30, "codec": "H.265"},
+        "thermal": {"resolution": "640x480", "fps": 15, "temp_range": "-20°C to 150°C"},
+        "multispectral": {"resolution": "1280x960", "fps": 10, "bands": 5},
+        "depth": {"resolution": "1280x720", "fps": 30, "range_m": "0.5-10"}
+    }
+    
+    config = camera_configs.get(camera_type, camera_configs["rgb"])
+    
     return {
         "robot_id": robot_id,
         "camera_type": camera_type,
         "stream_url": f"/api/robot/{robot_id}/stream/{camera_type}",
-        "resolution": "1920x1080",
-        "fps": 30,
+        "websocket_url": f"ws://api/robot/{robot_id}/ws/{camera_type}",
+        "config": config,
         "status": "streaming",
-        "analysis_enabled": True
+        "analysis": {
+            "enabled": True,
+            "models": ["plant_detection", "disease_detection", "weed_detection"],
+            "processing_fps": 10
+        },
+        "last_frame_analysis": {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "objects_detected": random.randint(5, 20),
+            "plants_healthy": random.randint(80, 100),
+            "anomalies": random.randint(0, 3)
+        }
+    }
+
+@api_router.get("/robot/{robot_id}/telemetry")
+async def get_robot_telemetry(robot_id: str, user = Depends(get_current_user)):
+    """Get real-time robot telemetry data"""
+    if robot_id not in robot_states:
+        raise HTTPException(status_code=404, detail="Robot non trouvé")
+    
+    robot = robot_states[robot_id]
+    
+    return {
+        "robot_id": robot_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "position": robot["position"],
+        "orientation": robot["orientation"],
+        "speed_kmh": robot["speed_kmh"],
+        "battery": {
+            "percent": robot["battery_percent"],
+            "voltage": 48.2,
+            "current_draw_a": 12.5,
+            "estimated_remaining_hours": robot["battery_percent"] / 20
+        },
+        "motors": {
+            "left_front": {"rpm": 150, "temp_c": 42, "status": "ok"},
+            "right_front": {"rpm": 152, "temp_c": 41, "status": "ok"},
+            "left_rear": {"rpm": 148, "temp_c": 43, "status": "ok"},
+            "right_rear": {"rpm": 151, "temp_c": 42, "status": "ok"}
+        },
+        "sensors_health": robot["sensors"],
+        "connection": {
+            "type": robot.get("connection_type", "WiFi"),
+            "signal_strength": robot["wifi_signal"],
+            "latency_ms": random.randint(20, 80)
+        },
+        "environment": {
+            "temperature_c": round(random.uniform(25, 35), 1),
+            "humidity_percent": random.randint(50, 80),
+            "light_lux": random.randint(10000, 80000)
+        }
+    }
+
+@api_router.get("/robot/{robot_id}/history")
+async def get_robot_history(robot_id: str, limit: int = 50, user = Depends(get_current_user)):
+    """Get robot command and activity history"""
+    commands = await db.robot_commands.find(
+        {"robot_id": robot_id}, {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {
+        "robot_id": robot_id,
+        "total_commands": len(commands),
+        "commands": commands,
+        "statistics": {
+            "commands_today": sum(1 for c in commands if c.get("timestamp", "")[:10] == datetime.now().strftime("%Y-%m-%d")),
+            "most_used_action": "scan_area",
+            "total_distance_today_km": round(random.uniform(2, 10), 2)
+        }
     }
 
 # =============================================================================
