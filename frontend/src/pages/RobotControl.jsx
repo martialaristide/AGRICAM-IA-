@@ -284,35 +284,29 @@ const RobotControl = () => {
                 <div 
                   className="absolute h-4 w-4 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"
                   style={{ 
-                    left: `${(selectedRobot.position?.x || 5) * 10}%`, 
-                    top: `${(selectedRobot.position?.y || 5) * 10}%` 
+                    left: `${((selectedRobot.position?.lat || selectedRobot.position?.x || 5) - 5) * 100 + 50}%`, 
+                    top: `${((selectedRobot.position?.lng || selectedRobot.position?.y || 10) - 10) * 100 + 50}%` 
                   }}
                 />
 
                 {/* Detected objects */}
-                {mapData?.detected_objects?.map((obj, idx) => (
-                  obj.positions ? obj.positions.map((pos, posIdx) => (
-                    <div 
-                      key={`${idx}-${posIdx}`}
-                      className={cn(
-                        "absolute h-3 w-3 rounded-full",
-                        obj.type === "obstacle" ? "bg-rose-500" : 
-                        obj.type === "water_source" ? "bg-blue-500" : "bg-emerald-400"
-                      )}
-                      style={{ left: `${pos[0] * 2}%`, top: `${pos[1] * 2}%` }}
-                    />
-                  )) : null
+                {mapData?.detected_features?.obstacles?.map((obj, idx) => (
+                  <div 
+                    key={idx}
+                    className="absolute h-3 w-3 rounded-full bg-rose-500"
+                    style={{ left: `${obj.position.x * 2}%`, top: `${obj.position.y * 2}%` }}
+                  />
                 ))}
 
                 {/* HUD Overlay */}
                 <div className="absolute top-4 left-4 text-white text-xs space-y-1 bg-black/40 p-2 rounded">
                   <div className="flex items-center gap-2">
                     <Navigation className="h-3 w-3" />
-                    Position: ({selectedRobot.position?.x.toFixed(2)}, {selectedRobot.position?.y.toFixed(2)})
+                    Position: ({(selectedRobot.position?.lat || selectedRobot.position?.x || 0).toFixed(4)}, {(selectedRobot.position?.lng || selectedRobot.position?.y || 0).toFixed(4)})
                   </div>
                   <div className="flex items-center gap-2">
                     <Compass className="h-3 w-3" />
-                    Orientation: {selectedRobot.orientation?.yaw}°
+                    Orientation: {selectedRobot.orientation?.heading || selectedRobot.orientation?.yaw || 0}°
                   </div>
                 </div>
 
@@ -320,7 +314,7 @@ const RobotControl = () => {
                   <div className="text-emerald-400 flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" /> LIDAR Actif
                   </div>
-                  <div>Points: {mapData?.points_count?.toLocaleString() || 0}</div>
+                  <div>Points: {(mapData?.point_cloud?.total_points || mapData?.points_count || 0).toLocaleString()}</div>
                 </div>
 
                 {/* Legend */}
