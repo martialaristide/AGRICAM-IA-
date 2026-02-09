@@ -1,6 +1,26 @@
 # 📱 Guide de Build et Publication - AGRICAM IA
 
-## 🔨 Build APK Android
+---
+
+## ✅ APK GÉNÉRÉ AVEC SUCCÈS !
+
+### 📱 Téléchargement Direct de l'APK
+**Lien:** https://expo.dev/artifacts/eas/ksmor2dmem9wdHqVe2sZDH.apk
+
+**Informations:**
+- **Version:** 1.0.0
+- **Build ID:** 9d8b894d-9009-4954-bb8e-83b5fea1040f
+- **Date:** 9 Février 2026
+- **Taille:** ~50-60 MB
+
+### Installation sur Android
+1. Téléchargez l'APK sur votre téléphone
+2. Autorisez l'installation depuis "Sources inconnues"
+3. Installez et lancez AGRICAM IA
+
+---
+
+## 🔨 Reconstruire l'APK Android
 
 ### Prérequis
 1. Compte Expo gratuit : https://expo.dev/signup
