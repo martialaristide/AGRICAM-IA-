@@ -1455,13 +1455,44 @@ async def get_parcel(parcel_id: str):
 
 @api_router.post("/parcels")
 async def create_parcel(data: ParcelCreate, user = Depends(get_current_user)):
+    # Handle aliases (French/English)
+    parcel_data = data.model_dump()
+    
+    # Use culture_type or crop_type
+    crop = parcel_data.get("crop_type") or parcel_data.get("culture_type") or "Non défini"
+    parcel_data["crop_type"] = crop
+    parcel_data["culture_type"] = crop
+    
+    # Use surface_hectares or area_hectares
+    area = parcel_data.get("area_hectares") or parcel_data.get("surface_hectares") or 0
+    parcel_data["area_hectares"] = area
+    parcel_data["surface_hectares"] = area
+    
+    # Default values
+    if not parcel_data.get("soil_analysis"):
+        parcel_data["soil_analysis"] = {
+            "ph": 6.5,
+            "nitrogen": 45,
+            "phosphorus": 30,
+            "potassium": 40,
+            "organic_matter": 3.5
+        }
+    
+    if not parcel_data.get("planting_date"):
+        parcel_data["planting_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
     parcel = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
-        **data.model_dump(),
+        **parcel_data,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+    
+    # Remove None values
+    parcel = {k: v for k, v in parcel.items() if v is not None}
+    
     await db.parcels.insert_one(parcel)
+    parcel.pop("_id", None)
     return parcel
 
 @api_router.put("/parcels/{parcel_id}")
