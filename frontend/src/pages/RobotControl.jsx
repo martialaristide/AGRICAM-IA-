@@ -332,25 +332,25 @@ const RobotControl = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="p-3 bg-indigo-50 rounded-lg text-center">
                     <p className="text-xs text-slate-500">Points 3D</p>
-                    <p className="text-xl font-bold text-indigo-700">{(mapData.points_count / 1000).toFixed(0)}K</p>
+                    <p className="text-xl font-bold text-indigo-700">{(mapData.point_cloud?.total_points || 0).toLocaleString()}</p>
                   </div>
                   <div className="p-3 bg-emerald-50 rounded-lg text-center">
                     <p className="text-xs text-slate-500">Rang. cultures</p>
-                    <p className="text-xl font-bold text-emerald-700">{mapData.detected_objects?.find(o => o.type === "plant_row")?.count || 0}</p>
+                    <p className="text-xl font-bold text-emerald-700">{mapData.detected_features?.plant_rows?.count || 0}</p>
                   </div>
                   <div className="p-3 bg-rose-50 rounded-lg text-center">
                     <p className="text-xs text-slate-500">Obstacles</p>
-                    <p className="text-xl font-bold text-rose-700">{mapData.detected_objects?.find(o => o.type === "obstacle")?.count || 0}</p>
+                    <p className="text-xl font-bold text-rose-700">{mapData.detected_features?.obstacles?.length || 0}</p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg text-center">
                     <p className="text-xs text-slate-500">Pente</p>
-                    <p className="text-xl font-bold text-blue-700">{mapData.terrain_analysis?.slope_percent}%</p>
+                    <p className="text-xl font-bold text-blue-700">{mapData.terrain_analysis?.slope?.average_percent || 0}%</p>
                   </div>
                 </div>
               )}
 
               {/* AI Predictions */}
-              {mapData?.ai_predictions && (
+              {mapData?.ai_analysis && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="h-5 w-5 text-purple-600" />
@@ -358,20 +358,42 @@ const RobotControl = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
-                      <p className="text-slate-500">Chemin dégagé</p>
-                      <p className={cn("font-semibold", mapData.ai_predictions.path_clear ? "text-emerald-600" : "text-rose-600")}>
-                        {mapData.ai_predictions.path_clear ? "OUI" : "NON"}
+                      <p className="text-slate-500">Zones sûres</p>
+                      <p className="font-semibold text-emerald-600">
+                        {mapData.ai_analysis.navigation_zones?.safe || 0}%
                       </p>
                     </div>
                     <div>
                       <p className="text-slate-500">Risque collision</p>
-                      <p className="font-semibold text-amber-600">{mapData.ai_predictions.obstacle_collision_risk}</p>
+                      <p className="font-semibold text-amber-600">{mapData.ai_analysis.collision_risk || "faible"}</p>
                     </div>
                     <div>
                       <p className="text-slate-500">Vitesse recommandée</p>
-                      <p className="font-semibold text-indigo-600">{mapData.ai_predictions.recommended_speed_kmh} km/h</p>
+                      <p className="font-semibold text-indigo-600">{mapData.ai_analysis.optimal_speed_kmh || 0} km/h</p>
                     </div>
                   </div>
+                  
+                  {/* SARSA Q-Values */}
+                  {mapData.sarsa_predictions && (
+                    <div className="mt-3 pt-3 border-t border-purple-200">
+                      <p className="text-xs text-slate-500 mb-2">Q-Values SARSA (confiance: {(mapData.sarsa_predictions.confidence * 100).toFixed(0)}%)</p>
+                      <div className="flex gap-2">
+                        {Object.entries(mapData.sarsa_predictions.q_values || {}).map(([action, value]) => (
+                          <div 
+                            key={action}
+                            className={cn(
+                              "px-2 py-1 rounded text-xs",
+                              action === mapData.sarsa_predictions.recommended_action 
+                                ? "bg-emerald-100 text-emerald-700 font-semibold" 
+                                : "bg-slate-100 text-slate-600"
+                            )}
+                          >
+                            {action}: {value.toFixed(2)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
