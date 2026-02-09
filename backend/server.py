@@ -251,16 +251,19 @@ class TokenResponse(BaseModel):
 
 class ParcelCreate(BaseModel):
     name: str
-    crop_type: str
+    crop_type: Optional[str] = None
+    culture_type: Optional[str] = None  # Alias for crop_type (French)
     variety: Optional[str] = None
-    area_hectares: float
-    humidity: float
-    temperature: float
-    soil_analysis: SoilAnalysis
-    planting_date: str
-    status: ParcelStatus
+    area_hectares: Optional[float] = None
+    surface_hectares: Optional[float] = None  # Alias for area_hectares (French)
+    humidity: Optional[float] = 60.0
+    temperature: Optional[float] = 28.0
+    soil_analysis: Optional[SoilAnalysis] = None
+    planting_date: Optional[str] = None
+    status: Optional[ParcelStatus] = ParcelStatus.BON
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    location: Optional[str] = None
     geometry: Optional[Dict] = None  # GeoJSON polygon
 
 class ChatMessage(BaseModel):
