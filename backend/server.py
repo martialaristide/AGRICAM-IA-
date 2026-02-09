@@ -3447,6 +3447,14 @@ async def validate_user_subscription(user_id: str, plan: str = Form(...), months
         "message": f"Abonnement {plan} validé pour {months} mois"
     }
 
+# Import and include advanced routes
+try:
+    from routes.advanced_api import router as advanced_router
+    api_router.include_router(advanced_router, tags=["Advanced"])
+    logger.info("✅ Advanced API routes loaded successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Advanced routes not loaded: {e}")
+
 # Include router and middleware
 app.include_router(api_router)
 
