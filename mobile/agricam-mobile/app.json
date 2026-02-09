@@ -63,10 +63,8 @@
       ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "agricam-ia-mobile"
-      }
+      "eas": {}
     },
-    "owner": "africanaisolutions"
+    "owner": "martial02"
   }
 }
