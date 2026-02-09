@@ -1589,12 +1589,47 @@ async def get_irrigation_stats():
     return {"active_systems": active, "average_efficiency": round(avg_eff), "water_used_today": water, "monitoring": "24/7"}
 
 @api_router.put("/irrigation/{system_id}/control")
-async def control_irrigation(system_id: str, action: str = Query(...)):
+async def control_irrigation_put(system_id: str, action: str = Query(...)):
     status_map = {"start": "actif", "pause": "pause", "stop": "arrete"}
     if action not in status_map:
         raise HTTPException(status_code=400, detail="Action invalide")
     await db.irrigation_systems.update_one({"id": system_id}, {"$set": {"status": status_map[action], "last_activation": datetime.now(timezone.utc).isoformat()}})
-    return {"message": f"Irrigation {action}"}
+    return {"message": f"Irrigation {action}", "new_status": status_map[action]}
+
+class IrrigationControl(BaseModel):
+    action: str
+    duration_minutes: Optional[int] = None
+    zone: Optional[str] = None
+
+@api_router.post("/irrigation/{system_id}/control")
+async def control_irrigation_post(system_id: str, control: IrrigationControl, user = Depends(get_current_user)):
+    """Control irrigation system with POST method"""
+    status_map = {"start": "actif", "pause": "pause", "stop": "arrete", "manual": "manuel"}
+    if control.action not in status_map:
+        raise HTTPException(status_code=400, detail=f"Action invalide. Utilisez: {list(status_map.keys())}")
+    
+    update_data = {
+        "status": status_map[control.action],
+        "last_activation": datetime.now(timezone.utc).isoformat(),
+        "last_controlled_by": user.get("email")
+    }
+    
+    if control.duration_minutes:
+        update_data["scheduled_duration_minutes"] = control.duration_minutes
+    
+    await db.irrigation_systems.update_one(
+        {"id": system_id}, 
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Irrigation {control.action}",
+        "system_id": system_id,
+        "new_status": status_map[control.action],
+        "duration_minutes": control.duration_minutes,
+        "timestamp": update_data["last_activation"]
+    }
 
 # =============================================================================
 # API ROUTES - Recommendations
