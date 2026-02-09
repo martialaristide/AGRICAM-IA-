@@ -1,18 +1,23 @@
 # AGRICAM IA - Documentation Technique Complète
 
-## Version: 9.0.0 | Date: 2026-02-09
+## Version: 9.1.0 | Date: 2026-02-09
 
 ---
 
 ## 🎯 Résumé Exécutif
 
 **AGRICAM IA** est une plateforme d'agriculture de précision de niveau entreprise avec:
+- 🌐 **Site Web Marketing** - Landing page professionnelle pour vendre l'application
 - 🌐 **Application Web** (React + FastAPI) - 20+ pages fonctionnelles
 - 📱 **Application Mobile** (React Native / Expo) - APK DISPONIBLE
 - 🤖 **AgriBot IA** - LLM puissant (Gemini Pro) avec corpus agricole africain
 - 🚁 **Gestion Drones** - Configuration, pilotage, programmation de vols
 - 🤖 **Contrôle Robots** - Pilotage avec reconstruction 3D LIDAR
 - 📊 **Génération Rapports** - PDF, Word, Excel, CSV
+
+## 👥 Fondateurs
+- **Barra Martial Aristide** - Co-Fondateur & CEO - Ingénieur polytechnicien en IA
+- **Kenfack Claude Priscy Steffe** - Co-Fondatrice & COO - Experte gestion de projets
 
 ---
 
