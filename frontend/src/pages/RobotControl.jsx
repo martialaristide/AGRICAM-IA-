@@ -54,21 +54,21 @@ const RobotControl = () => {
     
     setControlling(true);
     try {
-      const formData = new FormData();
-      formData.append("action", action);
-      
-      const response = await api.post(`/robot/${selectedRobot.id}/control`, formData);
+      const response = await api.post(`/robot/${selectedRobot.id}/control`, {
+        action: action,
+        parameters: {}
+      });
       toast.success(response.data.message);
       
       // Refresh robot status
       fetchRobots();
       
       // If 3D capture, fetch new map data
-      if (action === "capture_3d") {
+      if (action === "capture_3d" || action === "scan_area") {
         setTimeout(() => fetch3DMap(selectedRobot.id), 2000);
       }
     } catch (error) {
-      toast.error("Erreur lors du contrôle du robot");
+      toast.error(error.response?.data?.detail || "Erreur lors du contrôle du robot");
     } finally {
       setControlling(false);
     }
