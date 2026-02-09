@@ -23,6 +23,9 @@ import MobileMoneyPayment from "./pages/MobileMoneyPayment";
 import RobotControl from "./pages/RobotControl";
 import CameraIA from "./pages/CameraIA";
 import DevAnalytics from "./pages/DevAnalytics";
+import AgribotIA from "./pages/AgribotIA";
+import GestionDronesAvance from "./pages/GestionDronesAvance";
+import GestionRobotsAvance from "./pages/GestionRobotsAvance";
 import { Toaster } from "./components/ui/sonner";
 
 // Auth Context
