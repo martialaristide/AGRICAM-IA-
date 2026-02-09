@@ -24,6 +24,15 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 // Auth functions
 export const login = async (email, password) => {
   const response = await api.post('/auth/login', { email, password });
