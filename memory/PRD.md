@@ -1,101 +1,147 @@
-# AGRICAM IA - Documentation Technique
+# AGRICAM IA - Documentation Technique Complète
 
-## Version: 8.2.0 | Date: 2026-02-09
+## Version: 9.0.0 | Date: 2026-02-09
 
 ---
 
-## 🎯 Résumé
+## 🎯 Résumé Exécutif
 
-**AGRICAM IA** est une plateforme complète d'agriculture de précision avec :
-- 🌐 **Application Web** (React + FastAPI) - 18 pages
+**AGRICAM IA** est une plateforme d'agriculture de précision de niveau entreprise avec:
+- 🌐 **Application Web** (React + FastAPI) - 20+ pages fonctionnelles
 - 📱 **Application Mobile** (React Native / Expo) - APK DISPONIBLE
-- 🤖 **AgriBot** - Robot agricole intelligent avec LIDAR 3D et IA SARSA
+- 🤖 **AgriBot IA** - LLM puissant (Gemini Pro) avec corpus agricole africain
+- 🚁 **Gestion Drones** - Configuration, pilotage, programmation de vols
+- 🤖 **Contrôle Robots** - Pilotage avec reconstruction 3D LIDAR
+- 📊 **Génération Rapports** - PDF, Word, Excel, CSV
 
 ---
 
-## ✅ LIVRABLE - APK ANDROID
+## ✅ APK ANDROID DISPONIBLE
 
-### 📱 Téléchargement Direct
-**Lien APK:** https://expo.dev/artifacts/eas/ksmor2dmem9wdHqVe2sZDH.apk
-
-| Info | Valeur |
-|------|--------|
-| Version | 1.0.0 |
-| Build ID | 9d8b894d-9009-4954-bb8e-83b5fea1040f |
-| Date Build | 9 Février 2026 |
-| SDK Expo | 54.0.0 |
-| Statut | ✅ TERMINÉ |
+**Téléchargement:** https://expo.dev/artifacts/eas/ksmor2dmem9wdHqVe2sZDH.apk
 
 ---
 
-## ✅ Application Web
+## 🆕 Nouvelles Fonctionnalités (v9.0.0)
 
-**URL Preview:** https://smartfarm-app-6.preview.emergentagent.com
+### 1. AgriBot IA - LLM Puissant
+- **Chat IA** avec Gemini Pro et corpus agricole africain
+- **Analyse d'images** : détection maladies, ravageurs, pollution
+- **Prédiction rendement** par culture/surface/pays
+- **Prédiction propagation maladies** (date, zone, vitesse)
+- **Conseils écologiques** personnalisés
+- **Analyse sol** : NPK, humidité, niveau de stress
+- **Upload fichiers** : images, vidéos, Word, CSV, Excel
+- **Export rapports** : PDF, Word, Excel, CSV
 
-### Pages Disponibles
-- Dashboard, Parcelles, Capteurs IoT, Drones
-- Analyse Satellite, IA & Prédictions, Irrigation
-- Marketplace, E-Learning, AgriBot
-- Mobile Money, Analytics, Paramètres
+### 2. Gestion Drones Avancée
+- **Configuration** : ajout, suppression, paramétrage
+- **Connexion WiFi** depuis la plateforme
+- **Pilotage manuel** : décollage, atterrissage, déplacements
+- **Commandes** : photo, vidéo, scan, pulvérisation
+- **Programmation de missions** automatiques
+- **Télémétrie temps réel** : altitude, vitesse, batterie, GPS
+
+### 3. Contrôle Robots Avancé
+- **Configuration** : ajout, suppression, paramétrage
+- **Connexion WiFi** depuis la plateforme
+- **Pilotage directionnel** : avant, arrière, rotation
+- **Actions** : désherbage, pulvérisation, patrouille
+- **Capture 3D LIDAR**
+- **Modes** : manuel et autonome
+- **Télémétrie** : capteurs, batterie, position
+
+### 4. Page Paramètres Améliorée
+- **Configuration drones** avec ajout/suppression
+- **Configuration robots** avec ajout/suppression
+- **Connexion WiFi** directe
+- **Navigation vers pilotage**
 
 ---
 
-## ✅ Fonctionnalités Backend
+## 📁 Architecture des Fichiers
 
-### AgriBot - Robot Agricole
+```
+/app/
+├── backend/
+│   ├── server.py              # API FastAPI principale
+│   ├── routes/
+│   │   └── advanced_api.py    # Routes avancées (AgriBot, Drones, Robots)
+│   ├── services/
+│   │   ├── agribot_ai_service.py      # Service AgriBot IA
+│   │   ├── drone_management_service.py # Gestion drones
+│   │   ├── robot_management_service.py # Gestion robots
+│   │   └── report_generator_service.py # Génération rapports
+│   └── requirements.txt
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       │   ├── AgribotIA.jsx          # Chat IA agricole
+│       │   ├── GestionDronesAvance.jsx # Pilotage drones
+│       │   ├── GestionRobotsAvance.jsx # Pilotage robots
+│       │   └── Parametres.jsx          # Configuration
+│       └── components/
+└── mobile/
+    └── agricam-mobile/           # Application React Native
+```
+
+---
+
+## 🔌 Endpoints API Clés
+
+### AgriBot IA
 | Endpoint | Méthode | Description |
 |----------|---------|-------------|
-| `/api/robot/status` | GET | Liste tous les robots |
-| `/api/robot/{id}` | GET | Détails robot + historique |
-| `/api/robot/{id}/control` | POST | Contrôle JSON |
-| `/api/robot/{id}/move` | POST | Déplacement directionnel |
-| `/api/robot/{id}/3d-map` | GET | Carte 3D LIDAR |
-| `/api/robot/{id}/telemetry` | GET | Télémétrie temps réel |
+| `/api/agribot-ai/chat` | POST | Chat avec LLM |
+| `/api/agribot-ai/analyze-image` | POST | Analyse image agricole |
+| `/api/agribot-ai/analyze-soil` | POST | Analyse sol NPK |
+| `/api/agribot-ai/predict-yield` | POST | Prédiction rendement |
+| `/api/agribot-ai/predict-disease-spread` | POST | Prédiction propagation |
+| `/api/agribot-ai/ecological-advice` | POST | Conseils écologiques |
 
-### Irrigation
+### Drones
 | Endpoint | Méthode | Description |
 |----------|---------|-------------|
-| `/api/irrigation/{id}/control` | POST/PUT | Contrôle irrigation |
+| `/api/drones` | GET/POST | Liste/Ajout drones |
+| `/api/drones/{id}/pilot` | POST | Pilotage drone |
+| `/api/drones/{id}/connect-wifi` | POST | Connexion WiFi |
+| `/api/drones/{id}/missions` | GET/POST | Missions programmées |
+| `/api/drones/{id}/telemetry` | GET | Télémétrie |
 
-### Parcelles
+### Robots
 | Endpoint | Méthode | Description |
 |----------|---------|-------------|
-| `/api/parcels` | POST | Création avec aliases FR/EN |
+| `/api/robots` | GET/POST | Liste/Ajout robots |
+| `/api/robots/{id}/control` | POST | Contrôle robot |
+| `/api/robots/{id}/connect-wifi` | POST | Connexion WiFi |
+| `/api/robots/{id}/telemetry` | GET | Télémétrie |
+
+### Rapports
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/reports/generate` | POST | Générer rapport (PDF/Word/Excel/CSV) |
 
 ---
 
 ## 🔐 Comptes Test
 
-| Rôle | Email | Password |
-|------|-------|----------|
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
 | Admin | admin@agricam.ai | adminpassword |
-| Farmer | jean.dupont@agricam.ai | farmerpassword |
+| Agriculteur | jean.dupont@agricam.ai | farmerpassword |
 
 ---
 
-## 📂 Architecture des Fichiers
+## 📊 Tests Validés
 
-```
-/app/
-├── backend/
-│   ├── server.py         # API FastAPI
-│   ├── .env              # Configuration
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── App.js
-│   │   ├── pages/        # 18 pages
-│   │   └── components/
-│   └── package.json
-├── mobile/
-│   └── agricam-mobile/   # React Native Expo
-│       ├── App.js
-│       ├── app.json
-│       ├── eas.json
-│       └── src/
-└── memory/
-    └── PRD.md
-```
+| Fonctionnalité | Status |
+|----------------|--------|
+| AgriBot IA Chat | ✅ |
+| Prédiction Rendement | ✅ |
+| Pilotage Drones | ✅ |
+| Contrôle Robots | ✅ |
+| Génération PDF | ✅ |
+| Build APK | ✅ |
 
 ---
 
@@ -103,24 +149,28 @@
 
 ### P0 - Haute Priorité
 1. ✅ **Build APK Mobile** - TERMINÉ
-2. 🔄 **Intégration Mobile Money réelle** - En attente des clés API
+2. ✅ **AgriBot IA avec LLM** - TERMINÉ
+3. ✅ **Pilotage Drones/Robots** - TERMINÉ
+4. 🔄 **Intégration Mobile Money réelle** - En attente clés API
 
 ### P1 - Moyenne Priorité
-3. **Refactoring Backend** - Découper server.py en modules
-4. **Intégration Twilio SMS** - Notifications réelles
+5. **Caméra IA temps réel** - Utiliser vraie caméra appareil
+6. **Flux vidéo drone** - Streaming RTSP
+7. **Refactoring Backend** - Découper server.py en modules
 
-### P2 - Basse Priorité
-5. **Publication Google Play** - Guide disponible
-6. **Publication App Store** - Nécessite compte Apple Developer
+### P2 - Backlog
+8. **Publication Google Play**
+9. **Intégration Twilio SMS**
+10. **Tests automatisés complets**
 
 ---
 
 ## 🛠️ Configuration Mobile Money
 
-Ajouter vos clés dans `/app/backend/.env` :
+Ajoutez vos clés dans `/app/backend/.env` :
 
 ```env
-# CinetPay
+# CinetPay (recommandé)
 CINETPAY_API_KEY=votre_api_key
 CINETPAY_SITE_ID=votre_site_id
 CINETPAY_SECRET_KEY=votre_secret_key
@@ -128,20 +178,15 @@ CINETPAY_SECRET_KEY=votre_secret_key
 # OU PayDunya
 PAYDUNYA_MASTER_KEY=votre_master_key
 PAYDUNYA_PRIVATE_KEY=votre_private_key
-PAYDUNYA_TOKEN=votre_token
 ```
 
 ---
 
-## 📊 Tests Validés
+## 📱 Application Mobile
 
-| Suite | Résultat |
-|-------|----------|
-| Backend API | ✅ 100% |
-| Robot Control | ✅ |
-| Irrigation | ✅ |
-| Parcels | ✅ |
-| APK Build | ✅ |
+- **APK:** https://expo.dev/artifacts/eas/ksmor2dmem9wdHqVe2sZDH.apk
+- **Guide publication:** `/app/mobile/agricam-mobile/GUIDE_PUBLICATION.md`
+- **Build ID:** 9d8b894d-9009-4954-bb8e-83b5fea1040f
 
 ---
 
