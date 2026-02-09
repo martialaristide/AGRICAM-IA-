@@ -164,7 +164,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<LandingPagePro />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
