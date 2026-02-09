@@ -209,6 +209,9 @@ function App() {
                 <DevAnalytics />
               </ProtectedRoute>
             } />
+            <Route path="agribot-ia" element={<AgribotIA />} />
+            <Route path="drones-avance" element={<GestionDronesAvance />} />
+            <Route path="robots-avance" element={<GestionRobotsAvance />} />
           </Route>
         </Routes>
       </BrowserRouter>
