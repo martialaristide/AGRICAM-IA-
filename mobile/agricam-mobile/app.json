@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -17,12 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.africanai.agricam",
-      "buildNumber": "1.0.0",
-      "infoPlist": {
-        "NSCameraUsageDescription": "AGRICAM IA utilise la caméra pour analyser l'état de santé de vos cultures",
-        "NSPhotoLibraryUsageDescription": "AGRICAM IA accède à vos photos pour analyser les images de vos cultures",
-        "NSLocationWhenInUseUsageDescription": "AGRICAM IA utilise votre position pour localiser vos parcelles"
-      }
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,38 +26,16 @@
         "backgroundColor": "#059669"
       },
       "package": "com.africanai.agricam",
-      "versionCode": 1,
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store",
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Autoriser AGRICAM IA à accéder à votre caméra pour analyser vos cultures."
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Autoriser AGRICAM IA à accéder à votre position pour localiser vos parcelles."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Autoriser AGRICAM IA à accéder à vos photos pour analyser vos cultures."
-        }
-      ]
+      "expo-camera",
+      "expo-location",
+      "expo-image-picker"
     ],
     "extra": {
       "eas": {
