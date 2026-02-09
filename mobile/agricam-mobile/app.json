@@ -17,8 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.africanai.agricam",
-      "buildNumber": "1.0.0"
+      "bundleIdentifier": "com.africanai.agricam"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,8 +32,6 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-camera",
-      "expo-location",
       "expo-image-picker"
     ],
     "extra": {
