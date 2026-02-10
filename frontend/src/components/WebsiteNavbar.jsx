@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
 import IMAGES from "../assets/images";

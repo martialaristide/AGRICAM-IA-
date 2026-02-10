@@ -4,8 +4,8 @@ import {
   Mail, Phone, MapPin, Facebook, Twitter, Linkedin, 
   Instagram, Youtube, ArrowRight 
 } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import IMAGES from "../assets/images";
 
 const WebsiteFooter = () => {
