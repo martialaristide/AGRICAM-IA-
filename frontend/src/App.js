@@ -1,7 +1,13 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Layout from "./components/Layout";
-import LandingPagePro from "./pages/LandingPagePro";
+// Website Pages
+import HomePage from "./pages/website/HomePage";
+import SolutionsPage from "./pages/website/SolutionsPage";
+import AboutPage from "./pages/website/AboutPage";
+import PricingPage from "./pages/website/PricingPage";
+import ContactPage from "./pages/website/ContactPage";
+// App Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
