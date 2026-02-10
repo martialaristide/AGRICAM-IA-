@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import WebsiteNavbar from "../components/WebsiteNavbar";
-import WebsiteFooter from "../components/WebsiteFooter";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Badge } from "../components/ui/badge";
+import WebsiteNavbar from "../../components/WebsiteNavbar";
+import WebsiteFooter from "../../components/WebsiteFooter";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { 
   Mail, Phone, MapPin, Clock, Send, MessageSquare,
   Building2, Users, Headphones
 } from "lucide-react";
-import IMAGES from "../assets/images";
+import IMAGES from "../../assets/images";
 
 const ContactPage = () => {
   const [loading, setLoading] = useState(false);

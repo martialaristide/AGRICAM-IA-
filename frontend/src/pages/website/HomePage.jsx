@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import WebsiteNavbar from "../components/WebsiteNavbar";
-import WebsiteFooter from "../components/WebsiteFooter";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
+import WebsiteNavbar from "../../components/WebsiteNavbar";
+import WebsiteFooter from "../../components/WebsiteFooter";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import { 
   ArrowRight, Play, Star, Check, ChevronDown, Zap, 
   Bot, Plane, Satellite, Droplets, ShoppingCart, 
@@ -11,8 +11,8 @@ import {
   Shield, Users, Globe, Brain, Cpu, TrendingUp,
   Leaf, Bug, Cloud, Award
 } from "lucide-react";
-import { cn } from "../lib/utils";
-import IMAGES from "../assets/images";
+import { cn } from "../../lib/utils";
+import IMAGES from "../../assets/images";
 
 const HomePage = () => {
   const navigate = useNavigate();
