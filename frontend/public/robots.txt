@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://smartfarm-50.preview.emergentagent.com/sitemap.xml
+
+# AGRICAM IA - Agriculture de Précision
+# Contact: contact@agricam-ia.com
+# Location: Yaoundé, Cameroun
