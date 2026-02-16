@@ -31,12 +31,12 @@ const ContactPage = () => {
     {
       icon: MapPin,
       title: "Adresse",
-      lines: ["Douala, Cameroun", "Akwa, Rue de la Joie", "BP 12345"]
+      lines: ["Yaoundé, Cameroun", "Quartier Fouda", "En face du Mansel Hotel"]
     },
     {
       icon: Phone,
       title: "Téléphone",
-      lines: ["+237 6XX XXX XXX", "+237 6XX XXX XXX"]
+      lines: ["+237 652 646 824"]
     },
     {
       icon: Mail,
@@ -51,10 +51,10 @@ const ContactPage = () => {
   ];
 
   const offices = [
-    { city: "Douala", country: "Cameroun", type: "Siège social" },
+    { city: "Yaoundé", country: "Cameroun", type: "Siège social" },
+    { city: "Douala", country: "Cameroun", type: "Bureau régional" },
     { city: "Abidjan", country: "Côte d'Ivoire", type: "Bureau régional" },
-    { city: "Dakar", country: "Sénégal", type: "Bureau régional" },
-    { city: "Nairobi", country: "Kenya", type: "Bureau régional" }
+    { city: "Dakar", country: "Sénégal", type: "Bureau régional" }
   ];
 
   return (
