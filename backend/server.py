@@ -3458,27 +3458,28 @@ class LeadCreate(BaseModel):
     created_at: Optional[str] = None
 
 @api_router.post("/leads")
-def create_lead(lead: LeadCreate):
+async def create_lead(lead: LeadCreate):
     """Enregistrer un lead"""
     lead_data = lead.dict()
     lead_data["created_at"] = datetime.now(timezone.utc).isoformat()
     lead_data["status"] = "new"
     
     # Check if email already exists
-    existing = db.leads.find_one({"email": lead.email})
+    existing = await db.leads.find_one({"email": lead.email})
     if existing:
         return {"success": True, "message": "Lead already exists", "lead_id": str(existing.get("_id", ""))}
     
-    result = db.leads.insert_one(lead_data)
+    result = await db.leads.insert_one(lead_data)
     return {"success": True, "message": "Lead created", "lead_id": str(result.inserted_id)}
 
 @api_router.get("/leads")
-def get_leads(limit: int = 100, status: Optional[str] = None):
+async def get_leads(limit: int = 100, status: Optional[str] = None):
     """Obtenir la liste des leads"""
     query = {}
     if status:
         query["status"] = status
-    leads = list(db.leads.find(query, {"_id": 0}).limit(limit))
+    cursor = db.leads.find(query, {"_id": 0}).limit(limit)
+    leads = await cursor.to_list(length=limit)
     return leads
 
 
