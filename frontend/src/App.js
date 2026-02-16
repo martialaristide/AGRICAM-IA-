@@ -285,6 +285,7 @@ function App() {
         <Toaster position="top-right" richColors />
       </AuthProvider>
     </LanguageProvider>
+  </HelmetProvider>
   );
 }
 
