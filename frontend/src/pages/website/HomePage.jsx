@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import IMAGES from "../../assets/images";
+import SEOHead from "../../components/SEOHead";
+import InteractiveDemo from "../../components/InteractiveDemo";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [showDemo, setShowDemo] = useState(false);
 
   const stats = [
     { value: "50+", label: "Cultures africaines", icon: Leaf },
