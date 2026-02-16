@@ -107,6 +107,7 @@ const WebsiteNavbar = () => {
             ))}
             
             <div className="flex items-center gap-3">
+              <LanguageSelector variant="ghost" />
               <Button 
                 variant="ghost"
                 onClick={() => navigate("/login")}
