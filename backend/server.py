@@ -3447,6 +3447,42 @@ async def validate_user_subscription(user_id: str, plan: str = Form(...), months
         "message": f"Abonnement {plan} validé pour {months} mois"
     }
 
+# ============ LEADS CAPTURE ============
+
+class LeadCreate(BaseModel):
+    full_name: str
+    email: str
+    phone: str
+    source: str = "website"
+    accepted_privacy: bool = True
+    created_at: Optional[str] = None
+
+@api_router.post("/leads")
+async def create_lead(lead: LeadCreate):
+    """Enregistrer un lead"""
+    lead_data = lead.dict()
+    lead_data["created_at"] = datetime.now(timezone.utc).isoformat()
+    lead_data["status"] = "new"
+    
+    # Check if email already exists
+    existing = db.leads.find_one({"email": lead.email})
+    if existing:
+        return {"success": True, "message": "Lead already exists", "lead_id": str(existing.get("_id", ""))}
+    
+    result = db.leads.insert_one(lead_data)
+    return {"success": True, "message": "Lead created", "lead_id": str(result.inserted_id)}
+
+@api_router.get("/leads")
+async def get_leads(limit: int = 100, status: Optional[str] = None):
+    """Obtenir la liste des leads"""
+    query = {}
+    if status:
+        query["status"] = status
+    leads = list(db.leads.find(query, {"_id": 0}).limit(limit))
+    return leads
+
+
+
 # Import and include advanced routes
 try:
     from routes.advanced_api import router as advanced_router
