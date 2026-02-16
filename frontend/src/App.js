@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import Layout from "./components/Layout";
 // Website Pages
 import HomePage from "./pages/website/HomePage";
@@ -21,6 +22,7 @@ import AnalyseImagesIA from "./pages/AnalyseImagesIA";
 import IrrigationAuto from "./pages/IrrigationAuto";
 import RecommandationsIA from "./pages/RecommandationsIA";
 import Marketplace from "./pages/Marketplace";
+import MarketplaceEnhanced from "./pages/MarketplaceEnhanced";
 import Analytics from "./pages/Analytics";
 import Alertes from "./pages/Alertes";
 import Parametres from "./pages/Parametres";
