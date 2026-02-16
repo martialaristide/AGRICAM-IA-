@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
 import IMAGES from "../assets/images";
+import LanguageSelector from "./LanguageSelector";
 
 const WebsiteNavbar = () => {
   const [scrollY, setScrollY] = useState(0);
