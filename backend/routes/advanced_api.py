@@ -419,3 +419,98 @@ async def get_robot_telemetry(robot_id: str):
 async def get_robot_command_history(robot_id: str, limit: int = 50):
     """Historique des commandes d'un robot"""
     return robot_service.get_command_history(robot_id, limit)
+
+
+# ============ MÉTÉO ============
+
+class WeatherRequest(BaseModel):
+    lat: float
+    lon: float
+    lang: str = "fr"
+
+@router.get("/weather/current")
+async def get_current_weather(lat: float = 3.848, lon: float = 11.5021, lang: str = "fr"):
+    """Obtenir la météo actuelle pour une position"""
+    result = await weather_service.get_current_weather(lat, lon, lang)
+    if result.get("success"):
+        # Add agricultural advice
+        advice = await weather_service.get_agricultural_advice(result)
+        result["agricultural_advice"] = advice
+    return result
+
+@router.get("/weather/forecast")
+async def get_weather_forecast(lat: float = 3.848, lon: float = 11.5021, lang: str = "fr"):
+    """Obtenir les prévisions météo sur 5 jours"""
+    return await weather_service.get_forecast(lat, lon, lang)
+
+# ============ ANALYSE DE ZONES (Style Agremo) ============
+
+class ZoneCoordinate(BaseModel):
+    lat: float
+    lng: float
+
+class ZoneAnalysisRequest(BaseModel):
+    zone_id: str
+    coordinates: List[ZoneCoordinate]
+    analysis_types: List[str]  # ndvi, stress, disease, humidity, thermal, crop_health
+
+@router.post("/zones/analyze")
+async def analyze_zone(request: ZoneAnalysisRequest):
+    """Analyser une zone dessinée sur la carte (style Agremo)"""
+    coords = [{"lat": c.lat, "lng": c.lng} for c in request.coordinates]
+    result = zone_analysis_service.generate_zone_analysis(
+        request.zone_id,
+        coords,
+        request.analysis_types
+    )
+    return result
+
+@router.post("/zones/report")
+async def generate_zone_report(analysis_data: Dict):
+    """Générer un rapport d'analyse de zone"""
+    report = zone_analysis_service.generate_report(analysis_data)
+    return report
+
+@router.get("/zones/analysis-types")
+async def get_analysis_types():
+    """Obtenir la liste des types d'analyses disponibles"""
+    return {
+        "types": [
+            {
+                "id": "ndvi",
+                "name": "Indice NDVI",
+                "description": "Indice de végétation par différence normalisée",
+                "icon": "leaf"
+            },
+            {
+                "id": "stress",
+                "name": "Zones de Stress",
+                "description": "Détection des zones de stress hydrique et thermique",
+                "icon": "alert-triangle"
+            },
+            {
+                "id": "disease",
+                "name": "Détection Maladies",
+                "description": "Identification des maladies et ravageurs",
+                "icon": "bug"
+            },
+            {
+                "id": "humidity",
+                "name": "Humidité du Sol",
+                "description": "Analyse de l'humidité à différentes profondeurs",
+                "icon": "droplets"
+            },
+            {
+                "id": "thermal",
+                "name": "Analyse Thermique",
+                "description": "Cartographie thermique et points chauds",
+                "icon": "thermometer"
+            },
+            {
+                "id": "crop_health",
+                "name": "Santé des Cultures",
+                "description": "Évaluation globale de la santé des cultures",
+                "icon": "heart-pulse"
+            }
+        ]
+    }
