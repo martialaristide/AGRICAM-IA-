@@ -203,21 +203,22 @@ function App() {
   }
 
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Website Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/accueil" element={<HomePage />} />
-            <Route path="/solutions" element={<SolutionsPage />} />
-            <Route path="/solutions/:id" element={<SolutionsPage />} />
-            <Route path="/tarifs" element={<PricingPage />} />
-            <Route path="/a-propos" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-            <Route path="/politique-confidentialite" element={<PrivacyPolicyPage />} />
-            <Route path="/login" element={<Login />} />
+    <HelmetProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Website Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/accueil" element={<HomePage />} />
+              <Route path="/solutions" element={<SolutionsPage />} />
+              <Route path="/solutions/:id" element={<SolutionsPage />} />
+              <Route path="/tarifs" element={<PricingPage />} />
+              <Route path="/a-propos" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/politique-confidentialite" element={<PrivacyPolicyPage />} />
+              <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
             {/* Protected Routes */}
