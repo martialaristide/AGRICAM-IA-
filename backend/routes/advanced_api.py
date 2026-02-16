@@ -17,6 +17,8 @@ from services.agribot_ai_service import agribot_service
 from services.report_generator_service import report_generator
 from services.drone_management_service import drone_service, DroneType, DroneStatus
 from services.robot_management_service import robot_service, RobotType, RobotStatus
+from services.weather_service import weather_service
+from services.zone_analysis_service import zone_analysis_service
 
 # Router principal
 router = APIRouter()
