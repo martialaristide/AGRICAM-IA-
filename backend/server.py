@@ -3458,7 +3458,7 @@ class LeadCreate(BaseModel):
     created_at: Optional[str] = None
 
 @api_router.post("/leads")
-async def create_lead(lead: LeadCreate):
+def create_lead(lead: LeadCreate):
     """Enregistrer un lead"""
     lead_data = lead.dict()
     lead_data["created_at"] = datetime.now(timezone.utc).isoformat()
@@ -3473,7 +3473,7 @@ async def create_lead(lead: LeadCreate):
     return {"success": True, "message": "Lead created", "lead_id": str(result.inserted_id)}
 
 @api_router.get("/leads")
-async def get_leads(limit: int = 100, status: Optional[str] = None):
+def get_leads(limit: int = 100, status: Optional[str] = None):
     """Obtenir la liste des leads"""
     query = {}
     if status:
