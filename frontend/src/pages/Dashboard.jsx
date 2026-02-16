@@ -73,18 +73,23 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-slide-in" data-testid="dashboard-page">
-      {/* Header */}
-      <div className="gradient-dashboard rounded-2xl p-8 text-white shadow-xl">
-        <h1 className="text-3xl font-bold font-[Manrope] mb-2">
-          Bienvenue sur AGRICAM IA
-        </h1>
-        <p className="text-white/80 text-lg">
-          Votre assistant intelligent pour l'agriculture de précision
-        </p>
-        <div className="flex items-center gap-2 mt-4 text-sm">
-          <Zap className="h-4 w-4" />
-          <span>Système opérationnel • {stats?.active_sensors || 0} capteurs actifs</span>
+      {/* Header with Weather */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 gradient-dashboard rounded-2xl p-8 text-white shadow-xl">
+          <h1 className="text-3xl font-bold font-[Manrope] mb-2">
+            Bienvenue sur AGRICAM IA
+          </h1>
+          <p className="text-white/80 text-lg">
+            Votre assistant intelligent pour l'agriculture de précision
+          </p>
+          <div className="flex items-center gap-2 mt-4 text-sm">
+            <Zap className="h-4 w-4" />
+            <span>Système opérationnel • {stats?.active_sensors || 0} capteurs actifs</span>
+          </div>
         </div>
+        
+        {/* Weather Widget */}
+        <WeatherWidget lat={3.848} lon={11.5021} />
       </div>
 
       {/* Stats Cards */}
