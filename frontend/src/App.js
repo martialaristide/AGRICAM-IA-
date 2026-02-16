@@ -7,6 +7,7 @@ import SolutionsPage from "./pages/website/SolutionsPage";
 import AboutPage from "./pages/website/AboutPage";
 import PricingPage from "./pages/website/PricingPage";
 import ContactPage from "./pages/website/ContactPage";
+import PrivacyPolicyPage from "./pages/website/PrivacyPolicyPage";
 // App Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -33,6 +34,9 @@ import AgribotIA from "./pages/AgribotIA";
 import GestionDronesAvance from "./pages/GestionDronesAvance";
 import GestionRobotsAvance from "./pages/GestionRobotsAvance";
 import { Toaster } from "./components/ui/sonner";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import LeadCaptureModal from "./components/LeadCaptureModal";
+import ExitIntentPopup from "./components/ExitIntentPopup";
 
 // Auth Context
 const AuthContext = createContext(null);
