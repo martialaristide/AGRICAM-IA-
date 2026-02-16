@@ -16,19 +16,19 @@ const AboutPage = () => {
   const team = [
     {
       name: "Barra Martial Aristide",
-      role: "Co-Fondateur & CEO",
-      bio: "Ingénieur polytechnicien spécialisé en Intelligence Artificielle. Passionné par l'application de l'IA pour résoudre les défis agricoles en Afrique. Visionnaire derrière la technologie AgriBot IA.",
+      role: "Co-Fondateur & CTO",
+      bio: "Ingénieur polytechnicien spécialisé en Intelligence Artificielle. Passionné par l'application de l'IA pour résoudre les défis agricoles en Afrique. Architecte technique derrière la technologie AgriBot IA.",
       image: IMAGES.martial,
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/company/african-ai-solutions/",
       twitter: "#",
       email: "martial@agricam-ia.com"
     },
     {
       name: "Kenfack Claude Priscy Steffe",
-      role: "Co-Fondatrice & COO",
+      role: "Co-Fondatrice & CEO",
       bio: "Experte en gestion de projets et développement commercial. Engagée pour l'autonomisation des agriculteurs africains par la technologie. Pilote la stratégie de croissance et les partenariats.",
       image: IMAGES.priscy,
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/company/african-ai-solutions/",
       twitter: "#",
       email: "priscy@agricam-ia.com"
     }
