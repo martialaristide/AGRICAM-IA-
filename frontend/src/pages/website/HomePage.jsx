@@ -119,7 +119,22 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead 
+        title="AGRICAM IA - Plateforme d'Agriculture de Précision Intelligente"
+        description="Révolutionnez votre agriculture avec l'IA. Drones, robots, analyse NDVI, détection de maladies. La plateforme agricole la plus avancée d'Afrique."
+        keywords="agriculture IA, drones agricoles, AgriBot, NDVI, Cameroun, Afrique, analyse parcelles, smart farming"
+      />
       <WebsiteNavbar />
+
+      {/* Interactive Demo Modal */}
+      <InteractiveDemo 
+        isOpen={showDemo}
+        onClose={() => setShowDemo(false)}
+        onRegister={() => {
+          setShowDemo(false);
+          navigate("/register");
+        }}
+      />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
