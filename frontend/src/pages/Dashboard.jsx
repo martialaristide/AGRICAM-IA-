@@ -8,6 +8,7 @@ import {
   MapPin, TrendingUp, Clock
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import WeatherWidget from "../components/WeatherWidget";
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
