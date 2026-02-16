@@ -240,7 +240,7 @@ function App() {
               <Route path="analyse-ia" element={<AnalyseImagesIA />} />
               <Route path="irrigation" element={<IrrigationAuto />} />
               <Route path="recommandations" element={<RecommandationsIA />} />
-              <Route path="marketplace" element={<Marketplace />} />
+              <Route path="marketplace" element={<MarketplaceEnhanced />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="alertes" element={<Alertes />} />
               <Route path="financial" element={<Financial />} />
