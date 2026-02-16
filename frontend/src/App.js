@@ -164,75 +164,124 @@ const SplashScreen = ({ onComplete }) => {
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [showLeadCapture, setShowLeadCapture] = useState(false);
+  const [showExitIntent, setShowExitIntent] = useState(false);
+
+  useEffect(() => {
+    // Check if lead already captured
+    const leadCaptured = localStorage.getItem("agricam_lead_captured");
+    if (!leadCaptured) {
+      // Show lead capture after 5 seconds
+      const timer = setTimeout(() => {
+        setShowLeadCapture(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Exit intent detection
+    const handleMouseLeave = (e) => {
+      if (e.clientY < 10) {
+        const exitShown = sessionStorage.getItem("agricam_exit_shown");
+        const offerClaimed = localStorage.getItem("agricam_exit_offer_claimed");
+        if (!exitShown && !offerClaimed) {
+          setShowExitIntent(true);
+          sessionStorage.setItem("agricam_exit_shown", "true");
+        }
+      }
+    };
+
+    document.addEventListener("mouseleave", handleMouseLeave);
+    return () => document.removeEventListener("mouseleave", handleMouseLeave);
+  }, []);
 
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Website Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/accueil" element={<HomePage />} />
-          <Route path="/solutions" element={<SolutionsPage />} />
-          <Route path="/solutions/:id" element={<SolutionsPage />} />
-          <Route path="/tarifs" element={<PricingPage />} />
-          <Route path="/a-propos" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Protected Routes */}
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="admin" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Website Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/accueil" element={<HomePage />} />
+            <Route path="/solutions" element={<SolutionsPage />} />
+            <Route path="/solutions/:id" element={<SolutionsPage />} />
+            <Route path="/tarifs" element={<PricingPage />} />
+            <Route path="/a-propos" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/politique-confidentialite" element={<PrivacyPolicyPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Protected Routes */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <Layout />
               </ProtectedRoute>
-            } />
-            <Route path="parcelles" element={<Parcelles />} />
-            <Route path="capteurs" element={<CapteursIoT />} />
-            <Route path="drones" element={<GestionDrones />} />
-            <Route path="satellites" element={<ImagesSatellites />} />
-            <Route path="analyse-ia" element={<AnalyseImagesIA />} />
-            <Route path="irrigation" element={<IrrigationAuto />} />
-            <Route path="recommandations" element={<RecommandationsIA />} />
-            <Route path="marketplace" element={<Marketplace />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="alertes" element={<Alertes />} />
-            <Route path="financial" element={<Financial />} />
-            <Route path="parametres" element={<Parametres />} />
-            <Route path="formation" element={<ELearning />} />
-            <Route path="paiements" element={<MobileMoneyPayment />} />
-            <Route path="robot-control" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <RobotControl />
-              </ProtectedRoute>
-            } />
-            <Route path="camera-ia" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <CameraIA />
-              </ProtectedRoute>
-            } />
-            <Route path="dev-analytics" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <DevAnalytics />
-              </ProtectedRoute>
-            } />
-            <Route path="agribot-ia" element={<AgribotIA />} />
-            <Route path="drones-avance" element={<GestionDronesAvance />} />
-            <Route path="robots-avance" element={<GestionRobotsAvance />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-      <Toaster position="top-right" richColors />
-    </AuthProvider>
+            }>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="admin" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="parcelles" element={<Parcelles />} />
+              <Route path="capteurs" element={<CapteursIoT />} />
+              <Route path="drones" element={<GestionDrones />} />
+              <Route path="satellites" element={<ImagesSatellites />} />
+              <Route path="analyse-ia" element={<AnalyseImagesIA />} />
+              <Route path="irrigation" element={<IrrigationAuto />} />
+              <Route path="recommandations" element={<RecommandationsIA />} />
+              <Route path="marketplace" element={<Marketplace />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="alertes" element={<Alertes />} />
+              <Route path="financial" element={<Financial />} />
+              <Route path="parametres" element={<Parametres />} />
+              <Route path="formation" element={<ELearning />} />
+              <Route path="paiements" element={<MobileMoneyPayment />} />
+              <Route path="robot-control" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <RobotControl />
+                </ProtectedRoute>
+              } />
+              <Route path="camera-ia" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <CameraIA />
+                </ProtectedRoute>
+              } />
+              <Route path="dev-analytics" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DevAnalytics />
+                </ProtectedRoute>
+              } />
+              <Route path="agribot-ia" element={<AgribotIA />} />
+              <Route path="drones-avance" element={<GestionDronesAvance />} />
+              <Route path="robots-avance" element={<GestionRobotsAvance />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+        
+        {/* Lead Capture Modal */}
+        <LeadCaptureModal 
+          isOpen={showLeadCapture} 
+          onClose={() => setShowLeadCapture(false)}
+          onSuccess={() => setShowLeadCapture(false)}
+        />
+        
+        {/* Exit Intent Popup */}
+        <ExitIntentPopup
+          isOpen={showExitIntent}
+          onClose={() => setShowExitIntent(false)}
+        />
+        
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
