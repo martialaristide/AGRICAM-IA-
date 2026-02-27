@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
+import LanguageSelector from "./LanguageSelector";
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
 
@@ -311,6 +312,9 @@ const Layout = () => {
             <div className="lg:hidden w-10"></div>
             
             <div className="flex-1 flex items-center justify-end gap-4">
+              {/* Language Selector */}
+              <LanguageSelector variant="ghost" showLabel={true} />
+
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
