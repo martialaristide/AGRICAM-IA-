@@ -32,3 +32,40 @@
         transform: rotate(360deg);
     }
 }
+
+/* Global overflow fixes */
+* {
+  word-break: break-word;
+}
+
+button, [role="button"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prose {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+pre, code {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Fix for card content overflow */
+[class*="CardContent"] {
+  overflow: hidden;
+}
+
+/* Table responsive */
+table {
+  table-layout: auto;
+  width: 100%;
+}
+
+td, th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
