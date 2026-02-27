@@ -1,157 +1,206 @@
 <analysis>**original_problem_statement:**
-The user wants to build a comprehensive, enterprise-level precision agriculture platform named AGRICAM IA. The scope includes a multi-module web interface (Dashboard, Parcels, IoT, Drones, AI Analysis, etc.) and a corresponding native mobile application. The core user requirement is to make all features fully functional, moving from an initial mocked prototype to a production-ready application, and to deliver both a web app and a buildable Android APK.
+The user wants to build a comprehensive, enterprise-level precision agriculture platform named AGRICAM IA.
+
+The scope has massively expanded to include:
+1.  **Advanced Drone & Robot Management**: Configure, pilot, schedule flights, and analyze real-time video streams (Infrared, LiDAR, real) with AI-powered overlays detecting stress, disease, and anomalies.
+2.  **Agremo-inspired Analytics**: Implement features seen in the Agremo platform, including:
+    *   AI-powered plant counting.
+    *   Prescription map generation for variable rate application.
+    *   Drone image upload and processing.
+    *   Weed and pest detection.
+    *   Exportable reports (PDF, SHP).
+    *   Editable zone interface.
+    *   Weekly health alerts.
+    *   Integration with tractors/drones for application.
+3.  **Powerful AgriBot IA**: An LLM-powered assistant for analysis (image, video, soil, files), yield prediction, report generation, and farmer advisory.
+4.  **Enhanced Marketplace**: A multi-category marketplace for agricultural products (seeds, fertilizers, equipment) with search and filtering.
+5.  **Professional Marketing Website**: A high-quality, interactive, multi-page marketing site with an interactive demo, lead capture, and SEO. The co-founders are **Barra Martial Aristide (CO-FUNDER & CTO)** and **KENFACK CHUADE PRISCY STEFF (CO-FUNDER & CEO)**.
+6.  **Full Functionality**: Make all configuration pages functional, integrate real payment/SMS services, and add multi-language support.
+7.  **Data Privacy & User Experience**: Implement a GDPR-compliant privacy policy, an exit-intent popup, and require user registration before using features.
 
 **User's preferred language**: French
 
 **what currently exists?**
-A feature-rich full-stack application with a FastAPI backend and a React frontend. The web app is visually complete and most features are functional, though some advanced ones like Mobile Money are still simulated on the backend. The monolithic  has been significantly improved and bug-fixed, especially the AgriBot and Irrigation features. A complete React Native (Expo) mobile app has been scaffolded in  with all the necessary screens, navigation, and services to mirror the web app's functionality. The code for the mobile app is complete, but the build process is broken.
+A full-stack application (FastAPI, React, MongoDB) with a hybrid backend architecture (monolithic  and modular /). The application features:
+- A complete, tested, multi-page marketing website.
+- A functional web app core with pages for Dashboard, Drones, Robots, Parcels, AgriBot AI, etc.
+- **Phase 1 Features**:
+    - Real-time weather widget on the dashboard.
+    - Scaffolding for multi-language support (, ).
+    - Lead capture modal, exit-intent popup, and a GDPR privacy policy page.
+- **Phase 2 Features**:
+    - An enhanced marketplace with product categories and filters.
+    - An interactive analysis demo on the marketing homepage.
+    - SEO basics (, , ).
+    - Placeholder components for a Drone Video Stream and a 3D Robot Viewer.
+- **Agremo Feature Scaffolding**: Initial service () and route () files have been created to start building Agremo-inspired features.
 
 **Last working item**:
--   **Last item agent was working**: The agent was attempting to build the Android APK for the newly created React Native mobile app using Expo Application Services (EAS). The user provided an Expo token to authenticate the build process.
--   **Status**: BLOCKED
--   **Agent Testing Done**: N/A (Build process is failing before an APK can be tested)
--   **Which testing method agent to use?**: The next agent must debug the Expo build process using . This is not an application testing task.
--   **User Testing Done**: N
+- **Last item agent was working**: The agent had just started implementing the user's request to add features inspired by the Agremo platform. It created the initial backend service () and API route () files.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: both. First, implement the backend logic and test the new Agremo API endpoints using the backend testing agent. Then, build the corresponding frontend components and use the frontend testing agent to verify the UI and end-to-end functionality.
+- **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: Mobile App APK Build Failure (P0)
--   **Issue 2**: Simulated Advanced Features vs. User Expectation (P1)
+- **Issue 1**: Backend Refactoring (P1)
+- **Issue 2**: Async/Sync DB Call Confusion (P1)
+- **Issue 3**: Simulated Payments and SMS (P2)
 
-Issues Detail:
--   **Issue 1**:
-    -   **Attempted fixes**: The agent successfully logged into Expo using the user's token. However, the  command failed repeatedly with different errors (GraphQL errors, project ID issues, non-interactive shell problems, prebuild failures). The agent tried re-initializing the Expo project, simplifying  and  configurations, removing packages, and cleaning corrupted files, but the build process continues to fail in the non-interactive environment.
-    -   **Next debug checklist**:
-        1.  Verify the  and  files for any misconfiguration. The project ID is  for owner .
-        2.  The primary suspect is the non-interactive shell. Investigate using  scripts or by passing flags to  to automate prompts (e.g., ).
-        3.  Check the Expo build logs again. The previous attempts to crawl the log URL failed due to authentication. The agent should try to download the logs via the EAS CLI if possible ().
-        4.  As a last resort, simplify the mobile app to a single Hello World screen and try to build that to isolate the issue to the environment vs. the code.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is the user's current highest priority request. Fixing this will produce the deliverable Android APK file.
-    -   **Status**: BLOCKED
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: N/A (Debug build process first)
-    -   **Blocked on other issue**: None
+**Issues Detail**:
+- **Issue 1**:
+    - **Attempted fixes**: New features are built modularly, but the huge  monolith remains untouched.
+    - **Next debug checklist**: Systematically migrate endpoints and logic from  into the  and  directories.
+    - **Why fix this issue and what will be achieved with the fix?**: To improve maintainability, scalability, and reduce technical debt.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: backend
+    - **Blocked on other issue**: Blocked by user's continuous requests for new features.
 
--   **Issue 2**:
-    -   **Attempted fixes**: The agent created placeholder backend architecture for Mobile Money in  and added placeholder keys to . The core logic remains simulated.
-    -   **Next debug checklist**: Once the APK is built, the next priority is to implement real Mobile Money payments. Use the playbook generated by  (which recommended CinetPay/PayDunya/Flutterwave) and the user's real API keys (to be provided) to implement the logic in  and connect it to the corresponding endpoints in .
-    -   **Why fix this issue and what will be achieved with the fix?**: Fulfills the user's core goal of making the application fully functional and production-ready.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: Issue 1: Mobile App APK Build Failure
+- **Issue 2**:
+    - **Attempted fixes**: The agent encountered an  error due to incorrect handling of the async database client (). The fix involved converting the relevant functions to be fully  with  for all database operations.
+    - **Next debug checklist**: Ensure that *all* new backend code that interacts with the database correctly uses  and  for every database call (e.g., ).
+    - **Why fix this issue and what will be achieved with the fix?**: Prevents critical runtime errors in the backend and ensures stable database communication.
+    - **Status**: RESOLVED (but needs vigilance)
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: backend
+    - **Blocked on other issue**: None
+
+- **Issue 3**:
+    - **Attempted fixes**: None. Placeholder logic still exists.
+    - **Next debug checklist**: Use  to integrate a real payment provider like CinetPay or PayDunya and a real SMS provider like Twilio, once the user provides API keys.
+    - **Why fix this issue and what will be achieved with the fix?**: To make the application commercially viable.
+    - **Status**: NOT STARTED
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: Blocked by user feature priorities.
 
 **In progress Task List**:
--   **Task 1**: Backend Refactoring (P1)
-    -   **Where to resume**: The agent created the new directory structure (, , ) and some initial files (, , ). However, the monolithic  (now over 3000 lines) was never actually broken down. The next step is to methodically move the logic from  into the appropriate router and service files.
-    -   **What will be achieved with this?**: A maintainable, scalable, and production-ready backend architecture.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: backend
-    -   **Blocked on something**: Blocked by user priority on APK build.
+- **Task 1**: Complete Agremo-inspired Feature Implementation (P0)
+    - **Where to resume**:
+        1.  Integrate the new router from  into .
+        2.  Flesh out the logic in  and the endpoints in  to handle drone image uploads, plant counting analysis (likely via Gemini), and report generation.
+        3.  Create new frontend components for uploading images, displaying analysis results (maps, stats), and downloading reports.
+        4.  Integrate these components into the main application, possibly on a new Advanced Analysis page or by enhancing the existing  page.
+    - **What will be achieved with this?**: The application will have powerful analytical capabilities similar to leading industry tools, as requested by the user.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **Real Mobile Money Integration (P0)**: Integrate a real payment gateway (CinetPay/PayDunya) using the user's keys and the existing playbook.
--   **Future Tasks**:
-    -   **Push to User's GitHub**: Use  to explain the platform's Save to Github feature.
-    -   **Real Twilio Integration**: Replace the simulated SMS notification endpoint with a real Twilio integration.
-    -   **Publish Mobile App**: Guide the user on publishing the generated APK to the Google Play Store, using the .
+- **Upcoming Tasks (Phase 2 & 3 - P0)**:
+    - **Real-time Drone/Robot Views**: Integrate the  and  components into the drone/robot management pages to show live video and 3D models.
+    - **Live AI Analysis**: Implement AI logic to analyze the live video stream for anomalies.
+    - **Complete Multi-Language Support**: Populate  and wrap all user-facing strings in the application with a translation function.
+    - **Functional Settings Pages**: Implement backend logic for all configuration pages.
+    - **SEO Enhancement**: Implement a script to auto-generate the sitemap and add meta tags to all pages.
+
+- **Future Tasks (Backlog - P1/P2)**:
+    - Complete the backend refactoring of .
+    - Integrate real Mobile Money (CinetPay/PayDunya).
+    - Integrate a real SMS service (Twilio).
+    - Guide the user on pushing code to their GitHub.
 
 **Completed work in this session**
--   **Backend Fixes & Enhancements**: Fixed numerous critical bugs in the backend, including robot control, irrigation systems, and parcel creation. Significantly enhanced the AgriBot simulation logic. All fixes were validated with the testing agent ().
--   **Frontend Robot UI Fix**: Corrected the  page to use the new backend JSON endpoints and data structures, resolving JavaScript errors and making the page fully functional.
--   **Mobile App Scaffolding**: Created a complete, feature-parallel React Native (Expo) mobile application from scratch in .
--   **PWA Conversion**: Successfully converted the web application into a Progressive Web App (PWA) with a service worker and offline support.
--   **PDF/Word/CSV Export**: Implemented a reusable Export feature and added it to the Parcelles, Capteurs IoT, Analytics, and E-Learning pages.
--   **P2 UI Integration**: Added routes and navigation links for the four P2 feature pages (Mobile Money, Robot Control, Camera IA, Dev Analytics), and verified their functionality with screenshots.
+- **Marketing Website V2**: The multi-page marketing website was fully implemented, tested (manually and with ), and is live.
+- **Phase 1 Functionality**:
+    - Implemented a weather widget, multi-language support skeleton, GDPR-compliant privacy policy, lead capture modal, and an exit-intent popup.
+- **Phase 2 Functionality**:
+    - Built an enhanced Marketplace page with categories and filters.
+    - Created an interactive analysis demo for the marketing site.
+    - Added basic SEO files (, ) and components ().
+    - Created placeholder components for drone video stream and 3D robot visualization.
+- **Critical Bug Fix**: Resolved a recurring  error by correctly implementing  for database calls with .
+- **API and UI Testing**: Manually verified almost all pages of the main application and website are loading and functional via screenshots.
 
 **Earlier issues found/mentioned but not fixed**
--   The core issue of simulated APIs for Mobile Money and Twilio SMS remains.
--   The user's request to push code to their GitHub was not addressed using the .
+- The core requirements for real **Mobile Money** and **Twilio SMS** integration remain unimplemented.
+- The user's request to push the code to their **GitHub** has not been addressed.
 
 **Known issue recurrence from previous fork**
--   **Massive Scope Acceptance**: The agent accepted the user's request to build a mobile app without pushback, immediately diving into implementation which led to the current  blocker.
+- **Massive Scope Acceptance**: The agent continues to accept large, complex feature requests without breaking them into smaller, manageable, and separately approved phases. This increases project risk.
+- **Technical Debt**: The  refactoring is repeatedly postponed in favor of new features.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend**: React, Tailwind CSS, Shadcn/UI, Leaflet.js, PWA
--   **Backend**: FastAPI (Python)
--   **Database**: MongoDB
--   **Mobile**: React Native, Expo
--   **Authentication**: JWT (JSON Web Tokens)
--   **AI Integration**:  for Gemini
+- **Frontend**: React, Tailwind CSS, Shadcn/UI, ** (SEO)**, **, ,  (3D)**
+- **Backend**: FastAPI, ** (Async MongoDB)**
+- **Database**: MongoDB
+- **AI Integration**:  (Gemini)
+- **External APIs**: OpenWeatherMap
 
 **key DB schema**
--   No changes. Schema remains implicitly defined in . Key collections: , , , , , , , , , , .
+- **leads**:  (newly added)
 
 **changes in tech stack**
--   **React Native** and **Expo** were added to create the mobile application.
--   , ,  were added for the file export feature.
+- **Frontend**: Added  and related libraries for 3D rendering, and  for SEO meta tags.
 
 **All files of reference**
--   : Expo app configuration, repeatedly modified to debug build.
--   : Expo Application Services build configuration.
--   : Heavily modified to fix bugs and enhance robot features. Still monolithic.
--   : Updated to be compatible with the new backend API.
--   , , , : Updated to include the new .
--   , , : Created/updated for PWA functionality.
+- All  files listed in the **Code Architecture** tree.
+- : Modified to add new routers and the  endpoint.
+- : Significantly modified to wrap the app in new providers (, ) and add new routes.
+- : Modified to integrate the .
+- : Modified to integrate the  modal.
 
 **Areas that need refactoring**:
--   ****: This is the highest priority for technical debt. It must be broken down into the new structure that was already created.
+- ****: Highest priority. Must be broken down into the modular structure.
+- **Multi-language Support**: The current implementation is a skeleton. All text across the app needs to be replaced with calls to a translation function (e.g., ) and  must be populated.
+- **Component Cleanup**:  should be removed and all links should point to . Similarly,  from the previous session is dead code and should be deleted.
 
 **key api endpoints**
--    (POST, JSON body): Improved and fixed.
--    (POST): New endpoint for complex robot tasks.
--    (POST): New endpoint added for flexibility.
--    (POST): Fixed to handle more flexible input.
+- : Fetches weather data.
+- : Analyzes a geographic zone.
+- : Creates a new lead from the capture form.
+- : Retrieves a list of leads.
+- **Upcoming**: Endpoints for Agremo analysis (e.g., , ).
 
 **Critical Info for New Agent**
--   **IMMEDIATE BLOCKER**: Your top priority is to fix the mobile APK build (). You are logged in with the user's token ( is available). The issue is likely with the non-interactive shell environment. Do not work on anything else until you can produce an APK.
--   **User Priority**: The user's sequence is: 1) Get the mobile APK, 2) Make Mobile Money real, 3) Continue making all other features functional.
--   **Backend Refactoring**: This task was started and then abandoned. It is a major piece of technical debt that should be addressed after the user's immediate priorities are met.
+- **Priority**: Your immediate task is to implement the Agremo-style features. Start by integrating the new  router and building out the service logic.
+- **Async DB Calls**: Be extremely careful with backend database code. The project uses . Every database operation **must** be ed from within an  function.
+- **User-Provided Key**: The OpenWeatherMap API key is in : .
+- **Testing Agent Failure**: In the last session, the agent initiated a test run that never completed or produced a report. Be mindful of this; if the testing agent seems stuck, pivot to manual testing (, screenshots) to maintain momentum.
 
 **documents and test reports created in this job**
--   
--   
--    (Most recent, confirms backend fixes)
--   
--   
--    (updated multiple times)
+- 
+- 
+-  (heavily updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Pending):** Waiting for a resolution on the APK build options presented by the agent.
-2.  **User:** Provided the Expo token: .
-3.  **User:** Confirmed they will add Mobile Money API keys later.
-4.  **User:** Chose the Build APK option.
-5.  **User:** Confirmed they want a separate React Native mobile app (Option B).
-6.  **User:** Finalize this application and work on all the functionalities... also make a mobile version. - A major request to create a mobile app and make all features real.
-7.  **User:** Confirmed they want the export feature added to other pages.
-8.  **User:** Agreed to all proposed next actions (Real Mobile Money, PWA, PDF Export, Backend Refactoring).
-9.  **User:** Replied yes and b to the agent's clarification questions, confirming they want real Mobile Money integration and a hardware-ready architecture for the robot.
-10. **User:** all these tasks are priorities for me.
+1.  **User**: I authorize you to use  as inspiration to improve my application. (COMPLETED)
+2.  **User**: Continue implementing these functions: Plant counting, prescription maps, drone image upload, weed/pest detection, PDF/SHP reports, editable zones, weekly alerts, tractor/drone integration. (IN PROGRESS)
+3.  **User**: Complete phase 2 and 3 and also the interactive demo. Yes, do it. (IN PROGRESS)
+4.  **User**: This plan suits me. Yes, do all the phases. For languages: French, English, Spanish, German, Arabic, and local languages (Foulbe, Bassa, etc.) - just implement what's possible. Here is the API key: . (COMPLETED - Phase 1 started)
+5.  **User**: Provides a massive list of new requirements: Agremo-style zone definition and analysis, enhanced marketplace categories, real-time weather on all dashboards, live drone video feed (IR, LiDAR) with AI analysis, 3D robot visualization, updated co-founder titles, marketing site buttons linking to app features, lead capture form before feature use, exit-intent popup, GDPR privacy policy, multi-language support, pricing sync, updated contact info, and SEO. (IN PROGRESS)
+6.  **User**: Correct all bugs and finish this application. (IN PROGRESS)
+7.  **User**: Finalize this plan, I agree. (COMPLETED)
 
 **Project Health Check:**
--   **Broken**: **Yes**. The mobile app build process is completely broken and blocks delivery of the APK.
--   **Mocked**: **Yes**. Mobile Money payments are still simulated, which is a critical gap between user expectation and reality.
+- **Broken**: No. The application is running and many core features are functional.
+- **Mocked**: Yes. Mobile Money, Twilio SMS, and the newly requested advanced features (real-time video analysis, 3D models, Agremo analytics) are placeholders or not yet built.
 
 **3rd Party Integrations**
--   ** (Gemini)**: Implemented.
--   **Leaflet / OpenStreetMap**: Implemented.
--   **Expo**: Newly added for the mobile app. Currently the source of the main blocker.
--   **Orange Money / MTN MoMo**: Requested. Architecture is being prepared, but real integration is pending.
--   **CinetPay / PayDunya**: Identified as potential providers via . Placeholder keys added to .
+- ** (Gemini)**: Used for AgriBot AI. (Uses Emergent LLM Key).
+- ****: Used for website images.
+- **OpenWeatherMap**: Implemented for the weather widget. (Requires User API Key).
+- **three.js / @react-three/fiber**: Dependencies installed for 3D rendering.
+- **Leaflet / OpenStreetMap**: Implemented for parcel maps.
+- **Expo**: Implemented for mobile app build.
+- **Orange Money / MTN MoMo (via CinetPay/PayDunya)**: Requested, pending implementation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES,  was the last successful run, validating all backend fixes.
--   **Troubleshoot agent used**: NO
--   **Test files created**: None.
--   **Known regressions**: None on the web app. The mobile app has never been successfully built.
+- **Testing agent used after significant changes**: YES. Reports  and  were generated, validating the marketing site and Phase 1 APIs.
+- **Troubleshoot agent used**: NO
+- **Test files created**: None.
+- **Known regressions**: None.
 
 **Credentials to test flow:**
--   **Web App Admin**:  / 
--   **Web App Farmer**:  / 
--   **Expo Token**:  (for user )
+- **Web App Admin**:  / 
+- **Web App Farmer**:  / 
 
 **What agent forgot to execute**
--   The agent started a critical backend refactoring by creating the directory structure but then **abandoned it** without moving any of the logic from the massive  file.</analysis>
+- The full backend refactoring of  is still pending.
+- The multi-language support feature is only a skeleton; no actual translations have been added.
+- The request to guide the user on pushing code to their GitHub repository has not been addressed.
+- Code cleanup: Obsolete files like  and the original  have not been removed.</analysis>

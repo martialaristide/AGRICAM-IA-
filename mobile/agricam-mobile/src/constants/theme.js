@@ -72,4 +72,4 @@ export const SHADOWS = {
   },
 };
 
-export const API_URL = 'https://smartfarm-50.preview.emergentagent.com/api';
+export const API_URL = 'https://drone-analytics-3.preview.emergentagent.com/api';

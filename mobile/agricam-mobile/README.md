@@ -56,7 +56,7 @@ npx eas build --platform ios --profile production
 L'API backend est configurée dans `/src/constants/theme.js`:
 
 ```javascript
-export const API_URL = 'https://smartfarm-50.preview.emergentagent.com/api';
+export const API_URL = 'https://drone-analytics-3.preview.emergentagent.com/api';
 ```
 
 ## 📂 Structure

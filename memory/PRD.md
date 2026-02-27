@@ -55,7 +55,7 @@
 
 ## ✅ APK ANDROID
 **Téléchargement:** https://expo.dev/artifacts/eas/ksmor2dmem9wdHqVe2sZDH.apk
-**URL:** https://smartfarm-50.preview.emergentagent.com
+**URL:** https://drone-analytics-3.preview.emergentagent.com
 
 **Pages créées:**
 1. **Accueil** (`/`) - Hero section impressionnante, statistiques, grille de fonctionnalités, témoignages, CTA
