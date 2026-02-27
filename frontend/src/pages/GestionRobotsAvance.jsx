@@ -16,6 +16,7 @@ import {
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
+import Robot3DViewer from "../components/Robot3DViewer";
 
 const GestionRobotsAvance = () => {
   const [robots, setRobots] = useState([]);
@@ -589,6 +590,10 @@ const GestionRobotsAvance = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+      {/* Robot 3D Viewer */}
+      {selectedRobot && (
+        <Robot3DViewer robotId={selectedRobot.id} robotName={selectedRobot.name || "AgriBot-01"} />
       )}
     </div>
   );
