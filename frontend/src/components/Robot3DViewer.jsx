@@ -301,27 +301,29 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
 
       <CardContent className="space-y-4">
         {/* 3D Canvas */}
-        <div className="h-80 bg-slate-900 rounded-lg overflow-hidden">
-          <Canvas
-            camera={{ position: [8, 8, 8], fov: 50 }}
-            shadows
-            onCreated={(state) => {
-              // Disable error overlay for this canvas
-              state.gl.setClearColor("#1e293b");
-            }}
-            gl={{ antialias: true, alpha: false }}
-          >
-            <Suspense fallback={null}>
-              <Scene 
-                robotPosition={robotPosition}
-                robotRotation={robotRotation}
-                isMoving={isMoving}
-                waypoints={waypoints}
-                taskType={taskType}
-              />
-            </Suspense>
-          </Canvas>
-        </div>
+        <Canvas3DErrorBoundary>
+          <div className="h-80 bg-slate-900 rounded-lg overflow-hidden">
+            <Canvas
+              camera={{ position: [8, 8, 8], fov: 50 }}
+              shadows
+              onCreated={(state) => {
+                // Disable error overlay for this canvas
+                state.gl.setClearColor("#1e293b");
+              }}
+              gl={{ antialias: true, alpha: false }}
+            >
+              <Suspense fallback={null}>
+                <Scene 
+                  robotPosition={robotPosition}
+                  robotRotation={robotRotation}
+                  isMoving={isMoving}
+                  waypoints={waypoints}
+                  taskType={taskType}
+                />
+              </Suspense>
+            </Canvas>
+          </div>
+        </Canvas3DErrorBoundary>
 
         {/* Task Selection */}
         <div className="flex flex-wrap gap-2">
