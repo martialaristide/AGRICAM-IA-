@@ -26,7 +26,8 @@ import {
   Smartphone,
   Bot,
   Camera,
-  Code2
+  Code2,
+  Microscope
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -59,6 +60,7 @@ const getNavItems = (role) => {
       { path: "/robots-avance", icon: Bot, label: "Contrôle Robots", tooltip: "Piloter les robots agricoles avec connexion WiFi et cartographie 3D" },
       { path: "/satellites", icon: Satellite, label: "Images satellites", tooltip: "Analyser les images satellite et indices NDVI de vos cultures" },
       { path: "/agribot-ia", icon: ScanSearch, label: "AgriBot IA", tooltip: "Chat IA agricole puissant avec analyse d'images et prédictions" },
+      { path: "/analyse-avancee", icon: Microscope, label: "Analyse Avancée", tooltip: "Comptage plantes, cartes prescription, détection ravageurs - Style Agremo" },
       { path: "/camera-ia", icon: Camera, label: "Caméra IA", tooltip: "Analyse en temps réel du sol, plantes et environnement" },
       { path: "/irrigation", icon: Droplets, label: "Irrigation Auto", tooltip: "Configurer et contrôler le système d'irrigation automatisé" },
       { path: "/recommandations", icon: Lightbulb, label: "Recommandations IA", tooltip: "Recevoir des conseils personnalisés de l'IA pour vos cultures" },
