@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, Suspense } from "react";
+import React, { useRef, useEffect, useState, Suspense, Component } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Grid, Environment, Text, Box, Cylinder, Sphere } from "@react-three/drei";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -8,9 +8,40 @@ import { Slider } from "./ui/slider";
 import { 
   Bot, Play, Pause, RotateCcw, Eye, 
   ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  Maximize2, ZoomIn, ZoomOut, Move3d
+  Maximize2, ZoomIn, ZoomOut, Move3d, AlertTriangle
 } from "lucide-react";
 import { cn } from "../lib/utils";
+
+// Error Boundary for 3D Canvas
+class Canvas3DErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('Robot3DViewer error caught:', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-80 bg-slate-900 rounded-lg flex items-center justify-center">
+          <div className="text-center text-slate-400">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-2 text-yellow-500" />
+            <p className="text-sm">3D Visualization temporarily unavailable</p>
+            <p className="text-xs mt-1">Robot telemetry data is still being collected</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // 3D Robot Model Component
 const RobotModel = ({ position, rotation, isMoving, taskType }) => {
