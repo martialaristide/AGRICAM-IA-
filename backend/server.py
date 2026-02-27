@@ -3482,6 +3482,36 @@ async def get_leads(limit: int = 100, status: Optional[str] = None):
     leads = await cursor.to_list(length=limit)
     return leads
 
+# ====================================================================
+# CLIMATE NOTIFICATIONS
+# ====================================================================
+@api_router.get("/climate-notifications")
+async def get_climate_notifications(field_id: Optional[str] = None):
+    """Get climate notifications/alerts for parcels"""
+    import random
+    alerts = []
+    alert_types = [
+        {"type": "rain", "severity": "warning", "title": "Fortes pluies prevues", "message": "Precipitations de 45mm attendues dans les 24h. Protegez vos recoltes sensibles."},
+        {"type": "heat", "severity": "critical", "title": "Vague de chaleur", "message": "Temperatures superieures a 38C prevues pour les 3 prochains jours. Augmentez l'irrigation."},
+        {"type": "wind", "severity": "info", "title": "Vents moderes", "message": "Vents de 25-35 km/h attendus. Verifiez les structures et les cultures hautes."},
+        {"type": "drought", "severity": "warning", "title": "Risque de secheresse", "message": "Aucune pluie prevue pour les 10 prochains jours. Planifiez l'irrigation."},
+        {"type": "frost", "severity": "critical", "title": "Gel matinal possible", "message": "Temperatures proches de 0C attendues demain matin. Protegez les jeunes plants."},
+        {"type": "humidity", "severity": "info", "title": "Humidite elevee", "message": "Taux d'humidite > 85%. Risque de maladies fongiques accru. Surveillez vos cultures."},
+    ]
+    num_alerts = random.randint(2, 4)
+    selected = random.sample(alert_types, min(num_alerts, len(alert_types)))
+    for i, alert in enumerate(selected):
+        alerts.append({
+            "id": f"ALERT-{i+1}",
+            "field_id": field_id or "ALL",
+            **alert,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "read": False,
+        })
+    return {"alerts": alerts, "total": len(alerts)}
+
+
+
 
 
 # Import and include advanced routes
