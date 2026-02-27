@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="14" time="82.671" timestamp="2026-02-27T06:33:38.751490+00:00" hostname="agent-env-38e1ca73-36bb-4006-9595-d51c5c21a6ee"><testcase classname="backend.tests.test_agremo_api.TestAgremoPlantCounting" name="test_get_crop_types" time="67.677"><failure message="assert 502 == 200&#10; +  where 502 = &lt;Response [502]&gt;.status_code">backend/tests/test_agremo_api.py:18: in test_get_crop_types
+    assert response.status_code == 200
+E   assert 502 == 200
+E    +  where 502 = &lt;Response [502]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_agremo_api.TestAgremoPlantCounting" name="test_plant_counting_mais" time="0.190" /><testcase classname="backend.tests.test_agremo_api.TestAgremoPlantCounting" name="test_plant_counting_ble" time="13.250"><failure message="requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))">/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:534: in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/connection.py:571: in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:1395: in getresponse
+    response.begin()
+/usr/local/lib/python3.11/http/client.py:325: in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:294: in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+E   http.client.RemoteDisconnected: Remote end closed connection without response
+
+During handling of the above exception, another exception occurred:
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:644: in send
+    resp = conn.urlopen(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:841: in urlopen
+    retries = retries.increment(
+/root/.venv/lib/python3.11/site-packages/urllib3/util/retry.py:490: in increment
+    raise reraise(type(error), error, _stacktrace)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/util/util.py:38: in reraise
+    raise value.with_traceback(tb)
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:534: in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/connection.py:571: in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:1395: in getresponse
+    response.begin()
+/usr/local/lib/python3.11/http/client.py:325: in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:294: in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+E   urllib3.exceptions.ProtocolError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_agremo_api.py:62: in test_plant_counting_ble
+    response = requests.post(
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:589: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:703: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:659: in send
+    raise ConnectionError(err, request=request)
+E   requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))</failure></testcase><testcase classname="backend.tests.test_agremo_api.TestAgremoPrescriptionMap" name="test_generate_prescription_map_herbicide" time="0.171" /><testcase classname="backend.tests.test_agremo_api.TestAgremoPrescriptionMap" name="test_get_prescription_products" time="0.136" /><testcase classname="backend.tests.test_agremo_api.TestAgremoWeedPestDetection" name="test_detect_weeds_pests" time="0.116" /><testcase classname="backend.tests.test_agremo_api.TestAgremoWeeklyReport" name="test_generate_weekly_report" time="0.107" /><testcase classname="backend.tests.test_agremo_api.TestAgremoExport" name="test_get_export_formats" time="0.101" /><testcase classname="backend.tests.test_agremo_api.TestAgremoExport" name="test_export_pdf" time="0.101" /><testcase classname="backend.tests.test_agremo_api.TestAgremoExport" name="test_export_shapefile" time="0.143" /><testcase classname="backend.tests.test_agremo_api.TestAgremoSprayMission" name="test_get_equipment" time="0.107" /><testcase classname="backend.tests.test_agremo_api.TestAgremoSprayMission" name="test_create_spray_mission_drone" time="0.100" /><testcase classname="backend.tests.test_agremo_api.TestAgremoSprayMission" name="test_create_spray_mission_tractor" time="0.108" /><testcase classname="backend.tests.test_agremo_api.TestAgremoHealthCheck" name="test_api_health" time="0.111" /></testsuite></testsuites>
