@@ -315,6 +315,9 @@ const Layout = () => {
               {/* Language Selector */}
               <LanguageSelector variant="ghost" showLabel={true} />
 
+              {/* Notification Bell */}
+              <NotificationBell />
+
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
