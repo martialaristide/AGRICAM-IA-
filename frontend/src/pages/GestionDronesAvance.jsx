@@ -17,6 +17,7 @@ import {
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
+import DroneVideoStream from "../components/DroneVideoStream";
 
 const GestionDronesAvance = () => {
   const [drones, setDrones] = useState([]);
@@ -608,6 +609,10 @@ const GestionDronesAvance = () => {
             )}
           </CardContent>
         </Card>
+      )}
+      {/* Drone Video Stream */}
+      {selectedDrone && (
+        <DroneVideoStream droneId={selectedDrone.id} droneName={selectedDrone.name || "AgriDrone"} />
       )}
     </div>
   );
