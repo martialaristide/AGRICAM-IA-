@@ -4,54 +4,112 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Progress } from "../components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { 
-  Bot, Send, Upload, Camera, FileText, Zap, Leaf, Bug, 
-  Droplets, Thermometer, MapPin, TrendingUp, AlertTriangle,
-  Download, FileSpreadsheet, File, Image, Video, Loader2,
-  CheckCircle, Brain, Sparkles, Globe, Calculator, Target
+import {
+  Bot, Send, Upload, Camera, FileText, Zap, Leaf, Bug,
+  Droplets, Thermometer, TrendingUp, AlertTriangle,
+  Download, FileSpreadsheet, File, Image, Loader2,
+  Brain, Sparkles, Globe, Calculator, Target,
+  Plus, MessageSquare, Trash2, ChevronDown, Copy, Check
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// Markdown-like text renderer
+const RenderMessage = ({ content }) => {
+  if (!content) return null;
+  const parts = content.split(/(\*\*.*?\*\*|\n|```[\s\S]*?```)/g);
+  return (
+    <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**"))
+          return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+        if (part.startsWith("```") && part.endsWith("```"))
+          return <pre key={i} className="bg-slate-800 text-slate-100 p-3 rounded-lg my-2 text-xs overflow-x-auto">{part.slice(3, -3)}</pre>;
+        if (part === "\n") return <br key={i} />;
+        return <span key={i}>{part}</span>;
+      })}
+    </div>
+  );
+};
+
 const AgribotIA = () => {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "👋 Bonjour ! Je suis **AgriBot IA**, votre expert agricole intelligent. Je peux analyser vos images, prédire les rendements, détecter les maladies et vous conseiller sur l'agriculture écologique. Comment puis-je vous aider aujourd'hui ?",
-      timestamp: new Date().toISOString()
-    }
-  ]);
-  const [inputMessage, setInputMessage] = useState("");
+  // Chat state
+  const [conversations, setConversations] = useState(() => {
+    const saved = localStorage.getItem("agricam_conversations");
+    return saved ? JSON.parse(saved) : [{ id: "default", title: "Nouvelle conversation", messages: [
+      { role: "assistant", content: "Bonjour ! Je suis **AgriBot IA**, votre expert agricole intelligent. Je peux analyser vos images, predire les rendements, detecter les maladies et vous conseiller. Comment puis-je vous aider ?", ts: Date.now() }
+    ]}];
+  });
+  const [activeConvId, setActiveConvId] = useState(() => {
+    const saved = localStorage.getItem("agricam_active_conv");
+    return saved || "default";
+  });
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [activeTab, setActiveTab] = useState("chat");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [copiedIdx, setCopiedIdx] = useState(null);
+  const [showTools, setShowTools] = useState(false);
   const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Scroll to bottom on new message
+  const activeConv = conversations.find(c => c.id === activeConvId) || conversations[0];
+  const messages = activeConv?.messages || [];
+
+  // Save conversations to localStorage
+  useEffect(() => {
+    localStorage.setItem("agricam_conversations", JSON.stringify(conversations));
+    localStorage.setItem("agricam_active_conv", activeConvId);
+  }, [conversations, activeConvId]);
+
+  // Auto-scroll on new message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length, loading]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() && !selectedFile) return;
+  const updateConvMessages = (convId, newMessages) => {
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: newMessages } : c));
+  };
 
-    const userMessage = {
-      role: "user",
-      content: inputMessage || "Analysez cette image",
-      hasImage: !!selectedFile,
-      timestamp: new Date().toISOString()
-    };
+  const updateConvTitle = (convId, firstMsg) => {
+    const title = firstMsg.length > 40 ? firstMsg.substring(0, 40) + "..." : firstMsg;
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, title } : c));
+  };
 
-    setMessages(prev => [...prev, userMessage]);
+  const newConversation = () => {
+    const id = `conv_${Date.now()}`;
+    const conv = { id, title: "Nouvelle conversation", messages: [
+      { role: "assistant", content: "Comment puis-je vous aider ?", ts: Date.now() }
+    ]};
+    setConversations(prev => [conv, ...prev]);
+    setActiveConvId(id);
+  };
+
+  const deleteConversation = (id) => {
+    if (conversations.length <= 1) return;
+    const remaining = conversations.filter(c => c.id !== id);
+    setConversations(remaining);
+    if (activeConvId === id) setActiveConvId(remaining[0].id);
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() && !selectedFile) return;
+    const userMsg = { role: "user", content: input || "Analysez cette image", hasImage: !!selectedFile, ts: Date.now() };
+    const newMsgs = [...messages, userMsg];
+    updateConvMessages(activeConvId, newMsgs);
+
+    // Set title from first user message
+    if (messages.filter(m => m.role === "user").length === 0) {
+      updateConvTitle(activeConvId, input || "Analyse d'image");
+    }
+
     setLoading(true);
-    setInputMessage("");
+    setInput("");
 
     try {
       let imageBase64 = null;
@@ -64,594 +122,317 @@ const AgribotIA = () => {
       }
 
       const response = await api.post("/agribot-ai/chat", {
-        message: inputMessage || "Analysez cette image en détail: identifiez les cultures, détectez les maladies, évaluez la santé des plantes et donnez vos recommandations.",
+        message: input || "Analysez cette image en detail: identifiez les cultures, detectez les maladies, evaluez la sante des plantes et donnez vos recommandations.",
         image_base64: imageBase64
       });
 
-      const assistantMessage = {
-        role: "assistant",
-        content: response.data.response || "Désolé, je n'ai pas pu traiter votre demande.",
-        timestamp: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      const assistantMsg = { role: "assistant", content: response.data.response || "Desole, je n'ai pas pu traiter votre demande.", ts: Date.now() };
+      updateConvMessages(activeConvId, [...newMsgs, assistantMsg]);
       setSelectedFile(null);
       setPreviewUrl(null);
-    } catch (error) {
-      toast.error("Erreur lors de la communication avec AgriBot IA");
-      console.error(error);
+    } catch {
+      const errMsg = { role: "assistant", content: "Erreur de connexion. Veuillez reessayer.", ts: Date.now(), isError: true };
+      updateConvMessages(activeConvId, [...newMsgs, errMsg]);
+      toast.error("Erreur de communication avec AgriBot IA");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToolAction = async (action) => {
+    setShowTools(false);
+    setLoading(true);
+    const toolMsg = { role: "user", content: `[${action.label}]`, ts: Date.now(), isTool: true };
+    const newMsgs = [...messages, toolMsg];
+    updateConvMessages(activeConvId, newMsgs);
+
+    try {
+      let response;
+      if (action.type === "predict-yield") {
+        response = await api.post("/agribot-ai/predict-yield", { crop_type: "mais", surface_ha: 5, country: "Cameroun", soil_quality: "moyen", irrigation: false });
+        const p = response.data.prediction || response.data;
+        const content = `**Prediction de Rendement**\n\nCulture: Mais\nSurface: 5 ha\nPays: Cameroun\n\nRendement estime: **${p.estimated_yield_kg_ha || "N/A"} kg/ha**\nProduction totale: **${p.total_production_tonnes || "N/A"} tonnes**\nConfiance: ${p.confidence_level || "85%"}`;
+        updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content, ts: Date.now() }]);
+      } else if (action.type === "ecological") {
+        response = await api.post("/agribot-ai/ecological-advice", { context: "agriculture tropicale" });
+        updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.advice || response.data.response || JSON.stringify(response.data), ts: Date.now() }]);
+      } else if (action.type === "soil") {
+        response = await api.post("/agribot-ai/analyze-soil", { soil_data: { nitrogen: 45, phosphorus: 30, potassium: 50, ph: 6.5, humidity: 60 } });
+        const s = response.data;
+        const content = `**Analyse de Sol**\n\nAzote (N): ${s.nitrogen_level || "Moyen"}\nPhosphore (P): ${s.phosphorus_level || "Bas"}\nPotassium (K): ${s.potassium_level || "Moyen"}\npH: ${s.ph_level || "6.5"}\nHumidite: ${s.humidity_level || "60%"}\n\n${s.recommendations || "Recommandation: Ajouter un engrais NPK 15-15-15"}`;
+        updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content, ts: Date.now() }]);
+      } else if (action.type === "disease") {
+        response = await api.post("/agribot-ai/predict-disease-spread", { disease: "mildiou", region: "Centre Cameroun" });
+        updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.prediction || response.data.response || JSON.stringify(response.data), ts: Date.now() }]);
+      } else {
+        response = await api.post("/agribot-ai/chat", { message: action.prompt || action.label });
+        updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.response || "Resultat genere.", ts: Date.now() }]);
+      }
+    } catch {
+      updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: "Erreur lors de l'execution. Reessayez.", ts: Date.now(), isError: true }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyMessage = (content, idx) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      if (file.type.startsWith("image/")) {
-        setPreviewUrl(URL.createObjectURL(file));
-      }
+      if (file.type.startsWith("image/")) setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleAnalyzeImage = async (analysisType) => {
-    if (!selectedFile) {
-      toast.error("Veuillez sélectionner une image");
-      return;
-    }
+  const tools = [
+    { type: "predict-yield", label: "Prediction Rendement", icon: TrendingUp, color: "text-emerald-600" },
+    { type: "soil", label: "Analyse Sol NPK", icon: Droplets, color: "text-amber-600" },
+    { type: "disease", label: "Prediction Maladies", icon: Bug, color: "text-red-600" },
+    { type: "ecological", label: "Conseils Ecologiques", icon: Leaf, color: "text-green-600" },
+    { type: "chat", label: "Calendrier Plantation", icon: Calculator, prompt: "Quel est le meilleur calendrier de plantation pour le mais au Cameroun ?", color: "text-blue-600" },
+    { type: "chat", label: "Rotation des Cultures", icon: Globe, prompt: "Quelle rotation de cultures recommandez-vous pour enrichir le sol en Afrique tropicale ?", color: "text-violet-600" },
+  ];
 
-    setLoading(true);
-    try {
-      const reader = new FileReader();
-      const imageBase64 = await new Promise((resolve) => {
-        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
-        reader.readAsDataURL(selectedFile);
-      });
-
-      const response = await api.post("/agribot-ai/analyze-image", {
-        image_base64: imageBase64,
-        analysis_type: analysisType
-      });
-
-      setAnalysisResult(response.data);
-      toast.success("Analyse terminée !");
-    } catch (error) {
-      toast.error("Erreur lors de l'analyse");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePredictYield = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    setLoading(true);
-    try {
-      const response = await api.post("/agribot-ai/predict-yield", {
-        crop_type: formData.get("crop_type"),
-        surface_ha: parseFloat(formData.get("surface_ha")),
-        country: formData.get("country"),
-        soil_quality: formData.get("soil_quality"),
-        irrigation: formData.get("irrigation") === "on"
-      });
-
-      setAnalysisResult(response.data);
-      toast.success("Prédiction générée !");
-    } catch (error) {
-      toast.error("Erreur lors de la prédiction");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGenerateReport = async (format) => {
-    if (!analysisResult) {
-      toast.error("Aucun résultat à exporter");
-      return;
-    }
-
-    try {
-      const response = await api.post("/reports/generate", {
-        data: analysisResult,
-        report_type: "analysis",
-        title: "Rapport d'Analyse AgriBot IA",
-        format: format
-      }, { responseType: "blob" });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `rapport_agricam.${format === "word" ? "docx" : format === "excel" ? "xlsx" : format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      toast.success(`Rapport ${format.toUpperCase()} téléchargé !`);
-    } catch (error) {
-      toast.error("Erreur lors de la génération du rapport");
-    }
-  };
-
-  const quickQuestions = [
+  const quickPrompts = [
     "Comment traiter le mildiou sur le cacao ?",
     "Quelle rotation pour enrichir le sol ?",
-    "Signes de carence en azote ?",
     "Agriculture bio en zone tropicale ?",
-    "Calendrier de plantation du maïs ?"
+    "Calendrier de plantation du mais ?",
   ];
 
   return (
-    <div className="space-y-6 animate-slide-in" data-testid="agribot-ia-page">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-8 text-white shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center">
-            <Bot className="h-10 w-10" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold font-[Manrope] flex items-center gap-2">
-              AgriBot IA
-              <Badge className="bg-white/20 text-white">Gemini Pro</Badge>
-            </h1>
-            <p className="text-white/80">Expert agricole IA - Analyse, Prédiction, Conseil écologique</p>
+    <div className="flex h-[calc(100vh-140px)] overflow-hidden rounded-xl border border-slate-200 bg-white" data-testid="agribot-ia-page">
+      {/* Sidebar - Conversation history */}
+      <div className={cn(
+        "border-r border-slate-200 bg-slate-50 flex flex-col transition-all duration-300",
+        sidebarOpen ? "w-64 min-w-[256px]" : "w-0 min-w-0 overflow-hidden"
+      )}>
+        <div className="p-3 border-b border-slate-200">
+          <Button onClick={newConversation} className="w-full bg-emerald-600 hover:bg-emerald-700 text-sm gap-2" data-testid="new-conv-btn">
+            <Plus className="h-4 w-4" /> Nouvelle conversation
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto py-2">
+          {conversations.map(conv => (
+            <div
+              key={conv.id}
+              className={cn(
+                "group flex items-center gap-2 px-3 py-2.5 mx-2 rounded-lg cursor-pointer text-sm transition-colors",
+                conv.id === activeConvId ? "bg-emerald-100 text-emerald-800" : "hover:bg-slate-100 text-slate-600"
+              )}
+              onClick={() => setActiveConvId(conv.id)}
+              data-testid={`conv-${conv.id}`}
+            >
+              <MessageSquare className="h-4 w-4 flex-shrink-0" />
+              <span className="flex-1 truncate">{conv.title}</span>
+              {conversations.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="p-3 border-t border-slate-200 text-center">
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+            <Brain className="h-3.5 w-3.5" />
+            <span>Gemini Pro</span>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="chat" className="flex items-center gap-2">
-            <Bot className="h-4 w-4" /> Chat IA
-          </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-2">
-            <Camera className="h-4 w-4" /> Analyse Image
-          </TabsTrigger>
-          <TabsTrigger value="prediction" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" /> Prédictions
-          </TabsTrigger>
-          <TabsTrigger value="soil" className="flex items-center gap-2">
-            <Droplets className="h-4 w-4" /> Sol & NPK
-          </TabsTrigger>
-        </TabsList>
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(!sidebarOpen)} data-testid="toggle-sidebar">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <Bot className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-slate-800 text-sm">AgriBot IA</h2>
+                <p className="text-xs text-slate-400">Expert agricole intelligent</p>
+              </div>
+            </div>
+          </div>
+          <Badge className="bg-emerald-100 text-emerald-700 text-xs">En ligne</Badge>
+        </div>
 
-        {/* Chat Tab */}
-        <TabsContent value="chat" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Chat Area */}
-            <Card className="lg:col-span-3">
-              <CardContent className="p-4">
-                {/* Messages */}
-                <div className="h-[500px] overflow-y-auto space-y-4 mb-4 p-4 bg-slate-50 rounded-lg">
-                  {messages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={cn(
-                        "flex",
-                        msg.role === "user" ? "justify-end" : "justify-start"
-                      )}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto" data-testid="chat-messages">
+          <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
+            {messages.length <= 1 && !loading && (
+              <div className="text-center py-12">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-4">
+                  <Bot className="h-10 w-10 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-1">AgriBot IA</h3>
+                <p className="text-sm text-slate-500 mb-6">Votre assistant agricole intelligent</p>
+                <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                  {quickPrompts.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                      className="p-3 text-left text-xs border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-emerald-300 transition-colors text-slate-600"
+                      data-testid={`quick-prompt-${i}`}
                     >
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-2xl p-4",
-                          msg.role === "user"
-                            ? "bg-emerald-600 text-white"
-                            : "bg-white border shadow-sm"
-                        )}
-                      >
-                        {msg.hasImage && (
-                          <Badge className="mb-2 bg-emerald-500/20 text-emerald-300">
-                            <Image className="h-3 w-3 mr-1" /> Image jointe
-                          </Badge>
-                        )}
-                        <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                          {msg.content}
-                        </div>
-                        <p className="text-xs mt-2 opacity-60">
-                          {new Date(msg.timestamp).toLocaleTimeString("fr-FR")}
-                        </p>
-                      </div>
-                    </div>
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-500 mb-1" />
+                      {q}
+                    </button>
                   ))}
-                  {loading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border shadow-sm rounded-2xl p-4">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-                          <span className="text-slate-600">AgriBot analyse...</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Image Preview */}
-                {previewUrl && (
-                  <div className="mb-4 p-2 bg-slate-100 rounded-lg">
-                    <img src={previewUrl} alt="Preview" className="h-20 rounded" />
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
-                      className="text-rose-600"
-                    >
-                      Supprimer
-                    </Button>
-                  </div>
-                )}
-
-                {/* Input Area */}
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv"
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    data-testid="upload-btn"
-                  >
-                    <Upload className="h-5 w-5" />
-                  </Button>
-                  <Input
-                    placeholder="Posez votre question agricole..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    className="flex-1"
-                    data-testid="chat-input"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={loading}
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                    data-testid="send-btn"
-                  >
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Questions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  Questions rapides
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {quickQuestions.map((q, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => { setInputMessage(q); }}
-                  >
-                    {q}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Analysis Tab */}
-        <TabsContent value="analysis" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Upload Area */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Camera className="h-5 w-5 text-violet-600" />
-                  Analyse d'Image IA
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div
-                  className={cn(
-                    "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all",
-                    selectedFile ? "border-emerald-500 bg-emerald-50" : "border-slate-200 hover:border-emerald-300"
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
-                  ) : (
-                    <>
-                      <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-slate-600 font-medium">Cliquez pour uploader une image</p>
-                      <p className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP - Max 10 Mo</p>
-                    </>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={() => handleAnalyzeImage("complete")}
-                    disabled={!selectedFile || loading}
-                    className="bg-violet-600 hover:bg-violet-700"
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
-                    Analyse complète
-                  </Button>
-                  <Button
-                    onClick={() => handleAnalyzeImage("disease")}
-                    disabled={!selectedFile || loading}
-                    variant="outline"
-                    className="text-rose-600 border-rose-300"
-                  >
-                    <Bug className="h-4 w-4 mr-2" />
-                    Maladies
-                  </Button>
-                  <Button
-                    onClick={() => handleAnalyzeImage("soil")}
-                    disabled={!selectedFile || loading}
-                    variant="outline"
-                    className="text-amber-600 border-amber-300"
-                  >
-                    <Droplets className="h-4 w-4 mr-2" />
-                    Sol
-                  </Button>
-                  <Button
-                    onClick={() => handleAnalyzeImage("pollution")}
-                    disabled={!selectedFile || loading}
-                    variant="outline"
-                    className="text-slate-600"
-                  >
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Pollution
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Results */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    Résultats d'Analyse
-                  </CardTitle>
-                  {analysisResult && (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleGenerateReport("pdf")}>
-                        <FileText className="h-4 w-4 mr-1" /> PDF
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleGenerateReport("word")}>
-                        <File className="h-4 w-4 mr-1" /> Word
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleGenerateReport("excel")}>
-                        <FileSpreadsheet className="h-4 w-4 mr-1" /> Excel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {analysisResult ? (
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                    <pre className="text-sm bg-slate-50 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">
-                      {JSON.stringify(analysisResult.results || analysisResult, null, 2)}
-                    </pre>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-400">
-                    <Brain className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                    <p>Les résultats d'analyse apparaîtront ici</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Prediction Tab */}
-        <TabsContent value="prediction" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-emerald-600" />
-                  Prédiction de Rendement
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePredictYield} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Culture</Label>
-                      <select name="crop_type" className="w-full p-2 border rounded-lg" required>
-                        <option value="">Sélectionner...</option>
-                        <option value="maïs">Maïs</option>
-                        <option value="cacao">Cacao</option>
-                        <option value="café">Café</option>
-                        <option value="manioc">Manioc</option>
-                        <option value="riz">Riz</option>
-                        <option value="arachide">Arachide</option>
-                        <option value="coton">Coton</option>
-                        <option value="palmier">Palmier à huile</option>
-                        <option value="banane">Banane/Plantain</option>
-                        <option value="tomate">Tomate</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Surface (hectares)</Label>
-                      <Input name="surface_ha" type="number" step="0.1" min="0.1" required placeholder="Ex: 5.5" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Pays</Label>
-                      <select name="country" className="w-full p-2 border rounded-lg" required>
-                        <option value="">Sélectionner...</option>
-                        <option value="Cameroun">Cameroun</option>
-                        <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                        <option value="Sénégal">Sénégal</option>
-                        <option value="Mali">Mali</option>
-                        <option value="Ghana">Ghana</option>
-                        <option value="Nigeria">Nigeria</option>
-                        <option value="Kenya">Kenya</option>
-                        <option value="Éthiopie">Éthiopie</option>
-                        <option value="Burkina Faso">Burkina Faso</option>
-                        <option value="Togo">Togo</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Qualité du sol</Label>
-                      <select name="soil_quality" className="w-full p-2 border rounded-lg">
-                        <option value="moyen">Moyen</option>
-                        <option value="pauvre">Pauvre</option>
-                        <option value="bon">Bon</option>
-                        <option value="excellent">Excellent</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" name="irrigation" id="irrigation" />
-                    <Label htmlFor="irrigation">Irrigation disponible</Label>
-                  </div>
-                  <Button type="submit" className="w-full bg-emerald-600" disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Calculator className="h-4 w-4 mr-2" />}
-                    Prédire le rendement
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-violet-600" />
-                  Résultat Prédiction
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analysisResult?.prediction ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-emerald-50 rounded-lg">
-                      <p className="text-sm text-slate-500">Rendement estimé</p>
-                      <p className="text-3xl font-bold text-emerald-700">
-                        {analysisResult.prediction.estimated_yield_kg_ha || "N/A"} kg/ha
-                      </p>
-                    </div>
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-slate-500">Production totale estimée</p>
-                      <p className="text-2xl font-bold text-blue-700">
-                        {analysisResult.prediction.total_production_tonnes || 
-                         (analysisResult.surface_ha * (analysisResult.prediction.estimated_yield_kg_ha || 0) / 1000).toFixed(1)} tonnes
-                      </p>
-                    </div>
-                    <pre className="text-xs bg-slate-50 p-3 rounded overflow-auto max-h-48">
-                      {JSON.stringify(analysisResult.prediction, null, 2)}
-                    </pre>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-400">
-                    <Globe className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                    <p>Remplissez le formulaire pour obtenir une prédiction</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Soil Tab */}
-        <TabsContent value="soil" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Droplets className="h-5 w-5 text-amber-600" />
-                Analyse de Sol - NPK, Humidité, Stress
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div
-                    className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-amber-300"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Droplets className="h-12 w-12 text-amber-400 mx-auto mb-4" />
-                    <p className="text-slate-600 font-medium">Uploadez une photo du sol</p>
-                    <p className="text-xs text-slate-400 mt-1">L'IA analysera la composition NPK</p>
-                  </div>
-                  <Button
-                    onClick={() => handleAnalyzeImage("soil")}
-                    disabled={!selectedFile || loading}
-                    className="w-full bg-amber-600 hover:bg-amber-700"
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
-                    Analyser le sol
-                  </Button>
-                </div>
-                
-                <div className="p-4 bg-amber-50 rounded-lg">
-                  <h4 className="font-semibold text-amber-800 mb-3">Ce que l'analyse fournit:</h4>
-                  <ul className="space-y-2 text-sm text-amber-700">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Niveau d'Azote (N)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Niveau de Phosphore (P)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Niveau de Potassium (K)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Taux d'humidité
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Niveau de stress du sol
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" /> Recommandations d'amendement
-                    </li>
-                  </ul>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
 
-      {/* Capabilities Card */}
-      <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3">
-              <Leaf className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
-              <p className="font-semibold">50+ Cultures</p>
-              <p className="text-xs text-slate-500">Africaines reconnues</p>
-            </div>
-            <div className="text-center p-3">
-              <Bug className="h-8 w-8 text-rose-600 mx-auto mb-2" />
-              <p className="font-semibold">200+ Maladies</p>
-              <p className="text-xs text-slate-500">Détectables par IA</p>
-            </div>
-            <div className="text-center p-3">
-              <Brain className="h-8 w-8 text-violet-600 mx-auto mb-2" />
-              <p className="font-semibold">Gemini Pro</p>
-              <p className="text-xs text-slate-500">LLM puissant</p>
-            </div>
-            <div className="text-center p-3">
-              <Globe className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="font-semibold">10 Pays</p>
-              <p className="text-xs text-slate-500">Données agricoles</p>
+            {messages.map((msg, idx) => (
+              <div key={idx} className={cn("flex gap-3", msg.role === "user" ? "flex-row-reverse" : "flex-row")} data-testid={`msg-${idx}`}>
+                {/* Avatar */}
+                <div className={cn(
+                  "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                  msg.role === "user" ? "bg-blue-500" : "bg-gradient-to-br from-emerald-500 to-teal-600"
+                )}>
+                  {msg.role === "user" ? <span className="text-white text-xs font-bold">U</span> : <Bot className="h-4 w-4 text-white" />}
+                </div>
+
+                {/* Message bubble */}
+                <div className={cn("group max-w-[75%] min-w-0", msg.role === "user" ? "text-right" : "text-left")}>
+                  <div className={cn(
+                    "inline-block rounded-2xl px-4 py-3 text-left",
+                    msg.role === "user" ? "bg-blue-500 text-white rounded-tr-md" : "bg-slate-100 text-slate-800 rounded-tl-md",
+                    msg.isError && "bg-red-50 text-red-700 border border-red-200"
+                  )}>
+                    {msg.hasImage && (
+                      <div className="flex items-center gap-1.5 text-xs mb-2 opacity-80">
+                        <Image className="h-3 w-3" /> Image jointe
+                      </div>
+                    )}
+                    <RenderMessage content={msg.content} />
+                  </div>
+                  <div className={cn("flex items-center gap-2 mt-1", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    <span className="text-[10px] text-slate-400">{new Date(msg.ts).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    {msg.role === "assistant" && !msg.isError && (
+                      <button
+                        onClick={() => copyMessage(msg.content, idx)}
+                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
+                        data-testid={`copy-msg-${idx}`}
+                      >
+                        {copiedIdx === idx ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex gap-3">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-white" />
+                </div>
+                <div className="bg-slate-100 rounded-2xl rounded-tl-md px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                    <span className="text-xs text-slate-500">AgriBot analyse...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+        </div>
+
+        {/* Tools Panel */}
+        {showTools && (
+          <div className="border-t border-slate-200 bg-white px-4 py-3">
+            <div className="max-w-3xl mx-auto">
+              <p className="text-xs font-medium text-slate-500 mb-2">Outils IA</p>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {tools.map((tool, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleToolAction(tool)}
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors text-center"
+                    data-testid={`tool-${tool.type}-${i}`}
+                  >
+                    <tool.icon className={cn("h-4 w-4", tool.color)} />
+                    <span className="text-[10px] text-slate-600 leading-tight">{tool.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {/* Image Preview */}
+        {previewUrl && (
+          <div className="border-t border-slate-100 bg-slate-50 px-4 py-2">
+            <div className="max-w-3xl mx-auto flex items-center gap-3">
+              <img src={previewUrl} alt="Preview" className="h-16 w-16 object-cover rounded-lg border" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-700 truncate">{selectedFile?.name}</p>
+                <p className="text-xs text-slate-400">{(selectedFile?.size / 1024).toFixed(0)} Ko</p>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }} className="text-red-500 hover:text-red-600">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Input Area */}
+        <div className="border-t border-slate-200 bg-white p-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition-all">
+              <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*,.pdf,.doc,.docx,.csv" className="hidden" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:text-emerald-600" onClick={() => fileInputRef.current?.click()} data-testid="upload-btn">
+                <Upload className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl", showTools ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-emerald-600")} onClick={() => setShowTools(!showTools)} data-testid="tools-btn">
+                <Zap className="h-5 w-5" />
+              </Button>
+              <textarea
+                ref={inputRef}
+                placeholder="Posez votre question agricole..."
+                value={input}
+                onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                className="flex-1 bg-transparent border-0 outline-none resize-none text-sm text-slate-800 placeholder-slate-400 py-2 min-h-[36px] max-h-[120px]"
+                rows={1}
+                data-testid="chat-input"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={loading || (!input.trim() && !selectedFile)}
+                className={cn(
+                  "h-9 w-9 rounded-xl transition-colors",
+                  input.trim() || selectedFile ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-200 text-slate-400"
+                )}
+                size="icon"
+                data-testid="send-btn"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-[10px] text-slate-400 text-center mt-2">AgriBot IA peut faire des erreurs. Verifiez les informations importantes.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
