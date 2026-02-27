@@ -472,7 +472,7 @@ class AgremoStyleAnalysisService:
                     "priority": "high" if current_ndvi < 0.5 else "low"
                 }
             ],
-            "next_report_date": (datetime.now(timezone.utc).replace(day=datetime.now().day + 7)).isoformat()
+            "next_report_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
         }
 
 # Singleton instance
