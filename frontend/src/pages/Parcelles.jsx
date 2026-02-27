@@ -423,6 +423,37 @@ const Parcelles = () => {
                         <option value="attention">Attention requise</option>
                       </select>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Pays</Label>
+                      <select
+                        id="country"
+                        value={newParcel.country || "Cameroun"}
+                        onChange={(e) => setNewParcel({ ...newParcel, country: e.target.value })}
+                        className="w-full h-10 px-3 border rounded-md"
+                        data-testid="parcel-country-select"
+                      >
+                        <option value="Cameroun">Cameroun</option>
+                        <option value="Cote d'Ivoire">Cote d'Ivoire</option>
+                        <option value="Senegal">Senegal</option>
+                        <option value="Mali">Mali</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="Burkina Faso">Burkina Faso</option>
+                        <option value="Togo">Togo</option>
+                        <option value="France">France</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="variety">Variete</Label>
+                      <Input
+                        id="variety"
+                        value={newParcel.variety}
+                        onChange={(e) => setNewParcel({ ...newParcel, variety: e.target.value })}
+                        placeholder="Ex: Hybride, Local"
+                        data-testid="parcel-variety-input"
+                      />
+                    </div>
                   </div>
 
                   {/* Coordinate Import */}
