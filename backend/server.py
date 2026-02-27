@@ -3078,11 +3078,13 @@ async def get_robot_history(robot_id: str, limit: int = 50, user = Depends(get_c
 
 @api_router.post("/camera-ai/analyze-frame")
 async def analyze_camera_frame(
-    image_data: str = Form(...),  # Base64 encoded
-    parcel_id: str = Form(None),
+    request: Request,
     user = Depends(get_current_user)
 ):
     """Real-time camera frame analysis"""
+    body = await request.json()
+    image_data = body.get("image_data", "")
+    parcel_id = body.get("parcel_id")
     analysis = {
         "id": str(uuid.uuid4()),
         "timestamp": datetime.now(timezone.utc).isoformat(),
