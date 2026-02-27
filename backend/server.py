@@ -3492,6 +3492,14 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Advanced routes not loaded: {e}")
 
+# Import and include Agremo-style analysis routes
+try:
+    from routes.agremo_api import router as agremo_router
+    api_router.include_router(agremo_router, tags=["Agremo Analysis"])
+    logger.info("✅ Agremo Analysis routes loaded successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Agremo routes not loaded: {e}")
+
 # Include router and middleware
 app.include_router(api_router)
 
