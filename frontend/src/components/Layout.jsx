@@ -44,6 +44,65 @@ import {
 import { Badge } from "./ui/badge";
 import LanguageSelector from "./LanguageSelector";
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// Notification Bell Component
+const NotificationBell = () => {
+  const [notifications, setNotifications] = React.useState([]);
+  const [open, setOpen] = React.useState(false);
+  const [loaded, setLoaded] = React.useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch(`${API}/api/climate-notifications`);
+      const data = await res.json();
+      setNotifications(data.alerts || []);
+    } catch {}
+    setLoaded(true);
+  };
+
+  React.useEffect(() => { fetchNotifications(); const iv = setInterval(fetchNotifications, 60000); return () => clearInterval(iv); }, []);
+
+  const unread = notifications.filter(n => !n.read).length;
+  const severityIcon = (s) => s === "critical" ? "text-red-500" : s === "warning" ? "text-amber-500" : "text-blue-500";
+
+  return (
+    <div className="relative">
+      <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setOpen(!open)} data-testid="notification-bell">
+        <Bell className="h-4 w-4 text-slate-600" />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center font-bold">{unread}</span>
+        )}
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-lg border border-slate-200 z-50 max-h-96 overflow-hidden" data-testid="notification-panel">
+          <div className="p-3 border-b flex items-center justify-between">
+            <span className="font-semibold text-sm">Alertes Climat</span>
+            <Badge variant="outline" className="text-xs">{notifications.length}</Badge>
+          </div>
+          <div className="max-h-72 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-6">Aucune alerte</p>
+            ) : notifications.map((n, i) => (
+              <div key={i} className="p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { const updated = [...notifications]; updated[i] = {...n, read: true}; setNotifications(updated); }}>
+                <div className="flex items-start gap-2">
+                  <Bell className={cn("h-4 w-4 mt-0.5 flex-shrink-0", severityIcon(n.severity))} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{n.title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{new Date(n.timestamp).toLocaleString("fr-FR")}</p>
+                  </div>
+                  {!n.read && <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
 
 const getNavItems = (role) => {
