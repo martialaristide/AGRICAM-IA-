@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Grid, Environment, Text, Box, Cylinder, Sphere } from "@react-three/drei";
+import { OrbitControls, Grid, Environment, Text, Box, Cylinder, Sphere, Line } from "@react-three/drei";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
