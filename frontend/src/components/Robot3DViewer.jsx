@@ -117,6 +117,9 @@ const RobotModel = ({ position, rotation, isMoving, taskType }) => {
 const RobotPath = ({ waypoints }) => {
   if (!waypoints || waypoints.length < 2) return null;
 
+  // Create points array for Line component
+  const linePoints = waypoints.map(point => [point.x, 0.1, point.z]);
+
   return (
     <>
       {waypoints.map((point, i) => (
@@ -124,24 +127,14 @@ const RobotPath = ({ waypoints }) => {
           <Sphere args={[0.1]} position={[point.x, 0.1, point.z]}>
             <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={0.5} />
           </Sphere>
-          {i < waypoints.length - 1 && (
-            <line>
-              <bufferGeometry>
-                <bufferAttribute
-                  attach="attributes-position"
-                  count={2}
-                  array={new Float32Array([
-                    point.x, 0.1, point.z,
-                    waypoints[i + 1].x, 0.1, waypoints[i + 1].z
-                  ])}
-                  itemSize={3}
-                />
-              </bufferGeometry>
-              <lineBasicMaterial color="#3b82f6" linewidth={2} />
-            </line>
-          )}
         </group>
       ))}
+      {/* Draw path line connecting all waypoints */}
+      <Line
+        points={linePoints}
+        color="#3b82f6"
+        lineWidth={2}
+      />
     </>
   );
 };
