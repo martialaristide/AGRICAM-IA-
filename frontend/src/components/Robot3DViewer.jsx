@@ -117,9 +117,6 @@ const RobotModel = ({ position, rotation, isMoving, taskType }) => {
 const RobotPath = ({ waypoints }) => {
   if (!waypoints || waypoints.length < 2) return null;
 
-  // Create points array for Line component
-  const linePoints = waypoints.map(point => [point.x, 0.1, point.z]);
-
   return (
     <>
       {waypoints.map((point, i) => (
@@ -129,12 +126,6 @@ const RobotPath = ({ waypoints }) => {
           </Sphere>
         </group>
       ))}
-      {/* Draw path line connecting all waypoints */}
-      <Line
-        points={linePoints}
-        color="#3b82f6"
-        lineWidth={2}
-      />
     </>
   );
 };
