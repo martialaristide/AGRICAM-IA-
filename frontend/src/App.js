@@ -35,6 +35,7 @@ import DevAnalytics from "./pages/DevAnalytics";
 import AgribotIA from "./pages/AgribotIA";
 import GestionDronesAvance from "./pages/GestionDronesAvance";
 import GestionRobotsAvance from "./pages/GestionRobotsAvance";
+import AnalyseAvancee from "./pages/AnalyseAvancee";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import LeadCaptureModal from "./components/LeadCaptureModal";
@@ -265,6 +266,7 @@ function App() {
               <Route path="agribot-ia" element={<AgribotIA />} />
               <Route path="drones-avance" element={<GestionDronesAvance />} />
               <Route path="robots-avance" element={<GestionRobotsAvance />} />
+              <Route path="analyse-avancee" element={<AnalyseAvancee />} />
             </Route>
           </Routes>
         </BrowserRouter>
