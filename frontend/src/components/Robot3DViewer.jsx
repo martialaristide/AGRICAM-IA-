@@ -274,6 +274,11 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
           <Canvas
             camera={{ position: [8, 8, 8], fov: 50 }}
             shadows
+            onCreated={(state) => {
+              // Disable error overlay for this canvas
+              state.gl.setClearColor("#1e293b");
+            }}
+            gl={{ antialias: true, alpha: false }}
           >
             <Suspense fallback={null}>
               <Scene 
