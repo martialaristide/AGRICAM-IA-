@@ -16,7 +16,7 @@ import {
   Droplets, Thermometer, MapPin, Calendar, FlaskConical, 
   Plus, Upload, Map, Layers, Navigation, Target, 
   Satellite, FileSpreadsheet, LocateFixed, Trash2, Edit,
-  Eye, Download, RefreshCw, Info, HelpCircle, Crosshair
+  Eye, Download, RefreshCw, Info, HelpCircle, Crosshair, Leaf
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
