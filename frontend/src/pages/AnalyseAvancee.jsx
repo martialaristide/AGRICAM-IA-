@@ -609,12 +609,26 @@ const ExportMissionsTab = () => {
 };
 
 // ==== SHARED COMPONENTS ====
-const StatBox = ({ icon, label, value, color = "slate" }) => (
-  <div className={`p-3 rounded-lg bg-${color}-50 border border-${color}-100`} style={{ backgroundColor: `var(--color-${color}, #f8fafc)` }}>
-    <div className="flex items-center gap-1.5 text-slate-500 mb-1">{icon}<span className="text-xs">{label}</span></div>
-    <p className="font-bold text-slate-800 text-sm">{value}</p>
-  </div>
-);
+const colorMap = {
+  emerald: { bg: "#ecfdf5", border: "#a7f3d0" },
+  blue: { bg: "#eff6ff", border: "#bfdbfe" },
+  teal: { bg: "#f0fdfa", border: "#99f6e4" },
+  amber: { bg: "#fffbeb", border: "#fde68a" },
+  slate: { bg: "#f8fafc", border: "#e2e8f0" },
+  violet: { bg: "#f5f3ff", border: "#ddd6fe" },
+  orange: { bg: "#fff7ed", border: "#fed7aa" },
+  red: { bg: "#fef2f2", border: "#fecaca" },
+};
+
+const StatBox = ({ icon, label, value, color = "slate" }) => {
+  const c = colorMap[color] || colorMap.slate;
+  return (
+    <div className="p-3 rounded-lg" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
+      <div className="flex items-center gap-1.5 text-slate-500 mb-1">{icon}<span className="text-xs">{label}</span></div>
+      <p className="font-bold text-slate-800 text-sm">{value}</p>
+    </div>
+  );
+};
 
 const StressBar = ({ label, value }) => (
   <div>
