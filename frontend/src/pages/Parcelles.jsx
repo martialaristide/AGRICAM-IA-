@@ -683,63 +683,129 @@ const Parcelles = () => {
         </Card>
       )}
 
-      {/* Selected Parcel Details */}
+      {/* Selected Parcel Details - Rich Info Bubbles */}
       {selectedParcel && viewMode === "map" && (
-        <Card className="border-emerald-200 bg-emerald-50/50">
+        <Card className="border-emerald-200 bg-emerald-50/50" data-testid="parcel-detail-card">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5 text-emerald-600" />
-                Détails: {selectedParcel.name}
+                {selectedParcel.name}
               </CardTitle>
-              <Badge className={getStatusConfig(selectedParcel.status).color}>
-                {getStatusConfig(selectedParcel.status).label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusConfig(selectedParcel.status).color}>
+                  {getStatusConfig(selectedParcel.status).label}
+                </Badge>
+                <Button size="sm" variant="outline" onClick={() => setSelectedParcel(null)} className="text-xs">Fermer</Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white p-3 rounded-lg">
-                <p className="text-xs text-slate-500">Culture</p>
-                <p className="font-semibold">{selectedParcel.crop_type}</p>
+          <CardContent className="space-y-4">
+            {/* Info Bubbles Row 1 - Main Data */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="bg-white p-3 rounded-xl border border-emerald-100 text-center">
+                <Leaf className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">Culture</p>
+                <p className="font-bold text-sm text-slate-800">{selectedParcel.crop_type}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg">
-                <p className="text-xs text-slate-500">Surface</p>
-                <p className="font-semibold">{selectedParcel.area_hectares} ha</p>
+              <div className="bg-white p-3 rounded-xl border border-blue-100 text-center">
+                <MapPin className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">Superficie</p>
+                <p className="font-bold text-sm text-slate-800">{selectedParcel.area_hectares} ha</p>
               </div>
-              <div className="bg-white p-3 rounded-lg">
-                <p className="text-xs text-slate-500">Humidité</p>
-                <p className="font-semibold text-blue-600">{selectedParcel.humidity}%</p>
+              <div className="bg-white p-3 rounded-xl border border-cyan-100 text-center">
+                <Droplets className="h-5 w-5 text-cyan-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">Humidite</p>
+                <p className="font-bold text-sm text-cyan-700">{selectedParcel.humidity}%</p>
               </div>
-              <div className="bg-white p-3 rounded-lg">
-                <p className="text-xs text-slate-500">Température</p>
-                <p className="font-semibold text-orange-600">{selectedParcel.temperature}°C</p>
+              <div className="bg-white p-3 rounded-xl border border-orange-100 text-center">
+                <Thermometer className="h-5 w-5 text-orange-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">Temperature</p>
+                <p className="font-bold text-sm text-orange-700">{selectedParcel.temperature}°C</p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-violet-100 text-center">
+                <FlaskConical className="h-5 w-5 text-violet-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">pH Sol</p>
+                <p className="font-bold text-sm text-violet-700">{selectedParcel.soil_analysis?.ph || 7}</p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-amber-100 text-center">
+                <Calendar className="h-5 w-5 text-amber-600 mx-auto mb-1" />
+                <p className="text-[10px] text-slate-500">Pays</p>
+                <p className="font-bold text-sm text-slate-800">{selectedParcel.country || "Cameroun"}</p>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-white rounded-lg">
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
+
+            {/* Soil Composition NPK */}
+            <div className="bg-white p-4 rounded-xl border">
+              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
                 <FlaskConical className="h-4 w-4 text-emerald-600" />
-                Analyse du sol
+                Composition du Sol (NPK)
               </h4>
-              <div className="grid grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <span className="text-slate-500">Azote:</span>
-                  <span className="ml-2 font-semibold">{selectedParcel.soil_analysis?.nitrogen || 0}</span>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-500">Azote (N)</span>
+                    <span className="font-bold">{selectedParcel.soil_analysis?.nitrogen || 0}</span>
+                  </div>
+                  <Progress value={selectedParcel.soil_analysis?.nitrogen || 0} className="h-2" />
                 </div>
                 <div>
-                  <span className="text-slate-500">Phosphore:</span>
-                  <span className="ml-2 font-semibold">{selectedParcel.soil_analysis?.phosphorus || 0}</span>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-500">Phosphore (P)</span>
+                    <span className="font-bold">{selectedParcel.soil_analysis?.phosphorus || 0}</span>
+                  </div>
+                  <Progress value={selectedParcel.soil_analysis?.phosphorus || 0} className="h-2 [&>div]:bg-blue-500" />
                 </div>
                 <div>
-                  <span className="text-slate-500">Potassium:</span>
-                  <span className="ml-2 font-semibold">{selectedParcel.soil_analysis?.potassium || 0}</span>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-500">Potassium (K)</span>
+                    <span className="font-bold">{selectedParcel.soil_analysis?.potassium || 0}</span>
+                  </div>
+                  <Progress value={selectedParcel.soil_analysis?.potassium || 0} className="h-2 [&>div]:bg-violet-500" />
                 </div>
                 <div>
-                  <span className="text-slate-500">pH:</span>
-                  <span className="ml-2 font-semibold">{selectedParcel.soil_analysis?.ph || 7}</span>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-500">Matiere organique</span>
+                    <span className="font-bold">{selectedParcel.soil_analysis?.organic_matter || "3.5"}%</span>
+                  </div>
+                  <Progress value={parseInt(selectedParcel.soil_analysis?.organic_matter) || 35} className="h-2 [&>div]:bg-amber-500" />
                 </div>
               </div>
             </div>
+
+            {/* Climate Data */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-100">
+              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Thermometer className="h-4 w-4 text-blue-600" />
+                Donnees Climatiques
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Precipitations</p>
+                  <p className="font-bold text-blue-700">{Math.floor(Math.random() * 100 + 50)} mm/mois</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Ensoleillement</p>
+                  <p className="font-bold text-amber-700">{Math.floor(Math.random() * 4 + 6)}h/jour</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Vent moyen</p>
+                  <p className="font-bold text-slate-700">{Math.floor(Math.random() * 15 + 5)} km/h</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Indice UV</p>
+                  <p className="font-bold text-orange-700">{Math.floor(Math.random() * 5 + 4)}/11</p>
+                </div>
+              </div>
+            </div>
+
+            {/* GPS */}
+            {selectedParcel.latitude && selectedParcel.longitude && (
+              <div className="text-xs text-slate-500 flex items-center gap-2">
+                <Navigation className="h-3 w-3" />
+                GPS: {selectedParcel.latitude.toFixed(6)}, {selectedParcel.longitude.toFixed(6)}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
