@@ -21,7 +21,6 @@ import ImagesSatellites from "./pages/ImagesSatellites";
 import AnalyseImagesIA from "./pages/AnalyseImagesIA";
 import IrrigationAuto from "./pages/IrrigationAuto";
 import RecommandationsIA from "./pages/RecommandationsIA";
-import Marketplace from "./pages/Marketplace";
 import MarketplaceEnhanced from "./pages/MarketplaceEnhanced";
 import Analytics from "./pages/Analytics";
 import Alertes from "./pages/Alertes";
