@@ -176,11 +176,41 @@ function App() {
     if (!leadCaptured && !token) {
       // Show lead capture after 5 seconds only for non-logged-in visitors
       const timer = setTimeout(() => {
-        setShowLeadCapture(true);
+        // Double-check token before showing (in case user logged in during wait)
+        const currentToken = localStorage.getItem("agricam_token");
+        if (!currentToken) {
+          setShowLeadCapture(true);
+        }
       }, 5000);
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Close lead capture modal when user logs in
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("agricam_token");
+      if (token && showLeadCapture) {
+        setShowLeadCapture(false);
+      }
+    };
+    
+    // Listen for storage changes (e.g., login in another tab)
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also check periodically in case login happens in same tab
+    const interval = setInterval(() => {
+      const token = localStorage.getItem("agricam_token");
+      if (token && showLeadCapture) {
+        setShowLeadCapture(false);
+      }
+    }, 1000);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [showLeadCapture]);
 
   useEffect(() => {
     // Exit intent detection
