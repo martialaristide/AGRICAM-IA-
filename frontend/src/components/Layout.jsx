@@ -203,8 +203,9 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   
-  const navItems = getNavItems(user?.role);
+  const navItems = getNavItems(user?.role, t);
   const roleBadge = getRoleBadge(user?.role);
 
   const handleLogout = () => {
