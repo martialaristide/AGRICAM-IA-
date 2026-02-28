@@ -156,36 +156,32 @@ const getNavItems = (role, t) => {
       { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
   }
-      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
-    ];
-  }
   
   if (role === "supplier") {
     return [
       ...baseItems,
-      { path: "/marketplace", icon: ShoppingCart, label: "Mes Produits", tooltip: "Gérer vos produits en vente" },
-      { path: "/analytics", icon: BarChart3, label: "Ventes", tooltip: "Analyser vos performances commerciales" },
-      { path: "/alertes", icon: Bell, label: "Commandes", tooltip: "Voir les nouvelles commandes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configurer votre boutique" },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
   }
   
   if (role === "financial") {
     return [
       ...baseItems,
-      { path: "/financial", icon: Banknote, label: "Prêts & Crédits", tooltip: "Gérer les demandes de prêts agricoles" },
-      { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Statistiques des prêts et remboursements" },
-      { path: "/alertes", icon: Bell, label: "Demandes", tooltip: "Nouvelles demandes de financement" },
-      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configuration de votre institution" },
+      { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
+      { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
   }
   
-  // Default (partner, investor)
   return [
     ...baseItems,
-    { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Statistiques et performances" },
-    { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Explorer le marché agricole" },
-    { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
+    { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+    { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+    { path: "/parametres", icon: Settings, label: t("nav.settings") },
   ];
 };
 
