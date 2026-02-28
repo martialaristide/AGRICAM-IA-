@@ -233,10 +233,10 @@ const CameraIA = () => {
                   <SelectValue placeholder="Selectionnez un appareil..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {devices.length > 0 ? devices.map(d => (
-                    <SelectItem key={d.deviceId} value={d.deviceId}>{d.label || `Camera ${devices.indexOf(d) + 1}`}</SelectItem>
+                  {devices.length > 0 ? devices.map((d, idx) => (
+                    <SelectItem key={d.deviceId || `cam-${idx}`} value={d.deviceId || `camera-${idx}`}>{d.label || `Camera ${idx + 1}`}</SelectItem>
                   )) : (
-                    <SelectItem value="none" disabled>Aucun appareil detecte</SelectItem>
+                    <SelectItem value="no-device" disabled>Aucun appareil detecte</SelectItem>
                   )}
                 </SelectContent>
               </Select>

@@ -96,7 +96,7 @@ const PlantCountingTab = () => {
               <Select value={cropType} onValueChange={setCropType}>
                 <SelectTrigger data-testid="plant-crop-select"><SelectValue placeholder="Choisir..." /></SelectTrigger>
                 <SelectContent>
-                  {crops.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {crops.filter(c => c.id).map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -576,8 +576,8 @@ const ExportMissionsTab = () => {
               <Select value={missionForm.equipment_model} onValueChange={v => setMissionForm(p => ({...p, equipment_model: v}))}>
                 <SelectTrigger data-testid="mission-equip-model"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {equipment?.drones?.map(d => <SelectItem key={d.model} value={d.model}>{d.model}</SelectItem>)}
-                  {equipment?.tractors?.map(t => <SelectItem key={t.model} value={t.model}>{t.model}</SelectItem>)}
+                  {equipment?.drones?.filter(d => d.model).map(d => <SelectItem key={d.model} value={d.model}>{d.model}</SelectItem>)}
+                  {equipment?.tractors?.filter(t => t.model).map(t => <SelectItem key={t.model} value={t.model}>{t.model}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
