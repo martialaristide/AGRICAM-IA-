@@ -158,7 +158,7 @@ const Login = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => demoLogin("admin@agricam-ia.com", "admin123")}
+                  onClick={() => demoLogin("admin@agricam.ai", "Admin@2026")}
                   disabled={loading}
                   data-testid="demo-admin"
                 >
@@ -167,7 +167,7 @@ const Login = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => demoLogin("agriculteur@demo.com", "farmer123")}
+                  onClick={() => demoLogin("agriculteur@agricam.ai", "Farmer@2026")}
                   disabled={loading}
                   data-testid="demo-farmer"
                 >
@@ -176,7 +176,7 @@ const Login = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => demoLogin("fournisseur@demo.com", "supplier123")}
+                  onClick={() => demoLogin("fournisseur@agricam.ai", "Supplier@2026")}
                   disabled={loading}
                   data-testid="demo-supplier"
                 >
@@ -185,7 +185,7 @@ const Login = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => demoLogin("banque@demo.com", "bank123")}
+                  onClick={() => demoLogin("banque@agricam.ai", "Bank@2026")}
                   disabled={loading}
                   data-testid="demo-financial"
                 >
