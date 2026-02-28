@@ -88,6 +88,8 @@ const Parcelles = () => {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [mapCenter, setMapCenter] = useState([5.9631, 10.1591]); // Cameroon default
+  const [parcelWeather, setParcelWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   // New parcel form state
