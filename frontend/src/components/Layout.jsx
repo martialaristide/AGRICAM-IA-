@@ -107,52 +107,55 @@ const NotificationBell = () => {
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
 
-const getNavItems = (role) => {
+const getNavItems = (role, t) => {
   const baseItems = [
-    { path: "/dashboard", icon: LayoutDashboard, label: "Tableau de bord", tooltip: "Vue d'ensemble de votre exploitation agricole" },
+    { path: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
   ];
   
   if (role === "admin") {
     return [
       ...baseItems,
-      { path: "/admin", icon: Shield, label: "Administration", tooltip: "Gérer les utilisateurs, abonnements et paramètres de la plateforme" },
-      { path: "/parcelles", icon: Map, label: "Parcelles", tooltip: "Visualiser et gérer vos parcelles avec géolocalisation satellite" },
-      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT", tooltip: "Configurer et surveiller vos capteurs connectés (température, humidité, pH)" },
-      { path: "/drones-avance", icon: Plane, label: "Gestion Drones", tooltip: "Configuration, pilotage et programmation de vols automatiques" },
-      { path: "/robots-avance", icon: Bot, label: "Contrôle Robots", tooltip: "Piloter les robots agricoles avec connexion WiFi et cartographie 3D" },
-      { path: "/satellites", icon: Satellite, label: "Images satellites", tooltip: "Analyser les images satellite et indices NDVI de vos cultures" },
-      { path: "/agribot-ia", icon: ScanSearch, label: "AgriBot IA", tooltip: "Chat IA agricole puissant avec analyse d'images et prédictions" },
-      { path: "/analyse-avancee", icon: Microscope, label: "Analyse Avancée", tooltip: "Comptage plantes, cartes prescription, détection ravageurs - Style Agremo" },
-      { path: "/camera-ia", icon: Camera, label: "Caméra IA", tooltip: "Analyse en temps réel du sol, plantes et environnement" },
-      { path: "/irrigation", icon: Droplets, label: "Irrigation Auto", tooltip: "Configurer et contrôler le système d'irrigation automatisé" },
-      { path: "/recommandations", icon: Lightbulb, label: "Recommandations IA", tooltip: "Recevoir des conseils personnalisés de l'IA pour vos cultures" },
-      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Acheter et vendre des produits agricoles" },
-      { path: "/paiements", icon: Smartphone, label: "Mobile Money", tooltip: "Paiements Orange Money et MTN MoMo" },
-      { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Gérer les prêts, crédits et transactions financières" },
-      { path: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Analyser les performances et statistiques de votre exploitation" },
-      { path: "/dev-analytics", icon: Code2, label: "Analytics Dev", tooltip: "Plateforme analytics développeur style Google Analytics" },
-      { path: "/formation", icon: GraduationCap, label: "Formation", tooltip: "Cours et certifications en agriculture de précision" },
-      { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Voir les notifications et alertes importantes" },
-      { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Configurer votre profil et les préférences de l'application" },
+      { path: "/admin", icon: Shield, label: t("nav.admin") || "Administration" },
+      { path: "/parcelles", icon: Map, label: t("nav.parcels") },
+      { path: "/capteurs", icon: Wifi, label: t("nav.sensors") },
+      { path: "/drones-avance", icon: Plane, label: t("nav.drones") },
+      { path: "/robots-avance", icon: Bot, label: t("nav.robots") },
+      { path: "/satellites", icon: Satellite, label: t("nav.satellites") || "Satellites" },
+      { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
+      { path: "/analyse-avancee", icon: Microscope, label: t("nav.advancedAnalysis") || "Analyse Avancee" },
+      { path: "/camera-ia", icon: Camera, label: t("nav.camera") },
+      { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
+      { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/paiements", icon: Smartphone, label: "Mobile Money" },
+      { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
+      { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+      { path: "/dev-analytics", icon: Code2, label: "Analytics Dev" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
   }
   
   if (role === "farmer") {
     return [
       ...baseItems,
-      { path: "/parcelles", icon: Map, label: "Mes Parcelles", tooltip: "Visualiser et gérer vos parcelles avec géolocalisation satellite" },
-      { path: "/capteurs", icon: Wifi, label: "Capteurs IoT", tooltip: "Surveiller vos capteurs en temps réel" },
-      { path: "/drones-avance", icon: Plane, label: "Mes Drones", tooltip: "Configurer et piloter vos drones agricoles" },
-      { path: "/robots-avance", icon: Bot, label: "Mes Robots", tooltip: "Contrôler vos robots agricoles" },
-      { path: "/satellites", icon: Satellite, label: "Images satellites", tooltip: "Analyser vos cultures depuis l'espace" },
-      { path: "/agribot-ia", icon: ScanSearch, label: "AgriBot IA", tooltip: "Assistant IA pour l'agriculture" },
-      { path: "/irrigation", icon: Droplets, label: "Irrigation", tooltip: "Contrôler l'arrosage de vos parcelles" },
-      { path: "/recommandations", icon: Lightbulb, label: "Recommandations", tooltip: "Conseils personnalisés pour vos cultures" },
-      { path: "/marketplace", icon: ShoppingCart, label: "Marketplace", tooltip: "Vendre vos récoltes et acheter des intrants" },
-      { path: "/paiements", icon: Smartphone, label: "Paiements", tooltip: "Paiements Orange Money et MTN MoMo" },
-      { path: "/financial", icon: Banknote, label: "Finances", tooltip: "Demander des prêts agricoles" },
-      { path: "/formation", icon: GraduationCap, label: "Formation", tooltip: "Cours en ligne et certificats" },
-      { path: "/alertes", icon: Bell, label: "Alertes", tooltip: "Notifications importantes" },
+      { path: "/parcelles", icon: Map, label: t("nav.parcels") },
+      { path: "/capteurs", icon: Wifi, label: t("nav.sensors") },
+      { path: "/drones-avance", icon: Plane, label: t("nav.drones") },
+      { path: "/robots-avance", icon: Bot, label: t("nav.robots") },
+      { path: "/satellites", icon: Satellite, label: t("nav.satellites") || "Satellites" },
+      { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
+      { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
+      { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/paiements", icon: Smartphone, label: "Mobile Money" },
+      { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
+    ];
+  }
       { path: "/parametres", icon: Settings, label: "Paramètres", tooltip: "Votre profil et préférences" },
     ];
   }
