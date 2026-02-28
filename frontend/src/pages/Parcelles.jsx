@@ -826,7 +826,7 @@ const Parcelles = () => {
               <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
                 <Thermometer className="h-4 w-4 text-blue-600" />
                 Donnees Climatiques
-                {parcelWeather?.source === "openweathermap" && (
+                {parcelWeather?.success && (
                   <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-normal">LIVE</span>
                 )}
                 {weatherLoading && <span className="text-[9px] text-slate-400">Chargement...</span>}
@@ -834,11 +834,11 @@ const Parcelles = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Description</p>
-                  <p className="font-bold text-blue-700 capitalize">{parcelWeather?.description || selectedParcel.weather_description || "N/A"}</p>
+                  <p className="font-bold text-blue-700 capitalize">{parcelWeather?.description || "N/A"}</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Vent</p>
-                  <p className="font-bold text-slate-700">{parcelWeather?.wind_speed || "N/A"} km/h</p>
+                  <p className="font-bold text-slate-700">{parcelWeather?.wind_speed || "N/A"} m/s</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Pression</p>
@@ -849,8 +849,21 @@ const Parcelles = () => {
                   <p className="font-bold text-orange-700">{parcelWeather?.clouds || "N/A"}%</p>
                 </div>
               </div>
+              {/* Agricultural advice */}
+              {parcelWeather?.agricultural_advice?.advice?.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-blue-100">
+                  <p className="text-[10px] font-semibold text-blue-700 mb-1">Conseils agricoles</p>
+                  {parcelWeather.agricultural_advice.advice.map((a, i) => (
+                    <p key={i} className="text-[10px] text-slate-600 flex items-center gap-1"><Leaf className="h-2.5 w-2.5 text-emerald-500 flex-shrink-0" /> {a}</p>
+                  ))}
+                  <div className="flex gap-2 mt-1.5">
+                    <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">Irrigation: {parcelWeather.agricultural_advice.irrigation_recommendation}</span>
+                    <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Pulverisation: {parcelWeather.agricultural_advice.spray_conditions}</span>
+                  </div>
+                </div>
+              )}
               {parcelWeather?.location && (
-                <p className="text-[10px] text-slate-400 mt-2 text-right">Station: {parcelWeather.location} | Source: {parcelWeather.source}</p>
+                <p className="text-[10px] text-slate-400 mt-2 text-right">Station: {parcelWeather.location}, {parcelWeather.country}</p>
               )}
             </div>
 
