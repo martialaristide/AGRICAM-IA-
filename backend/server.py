@@ -583,7 +583,7 @@ async def send_alert_sms(
 # API ROUTES - Weather (Real API)
 # =============================================================================
 
-@api_router.get("/weather/{location}")
+@api_router.get("/weather/city/{location}")
 async def get_weather(location: str):
     """Get real weather data from OpenWeatherMap"""
     try:
