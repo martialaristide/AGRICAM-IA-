@@ -77,7 +77,10 @@ const NotificationBell = () => {
         <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-lg border border-slate-200 z-50 max-h-96 overflow-hidden" data-testid="notification-panel">
           <div className="p-3 border-b flex items-center justify-between">
             <span className="font-semibold text-sm">Alertes Climat</span>
-            <Badge variant="outline" className="text-xs">{notifications.length}</Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">OpenWeatherMap</Badge>
+              <Badge variant="outline" className="text-xs">{notifications.length}</Badge>
+            </div>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
