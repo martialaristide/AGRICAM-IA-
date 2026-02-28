@@ -156,16 +156,24 @@ async def predict_disease_spread(request: DiseasePredictionRequest):
     )
     return result
 
+class EcologicalAdviceRequest(BaseModel):
+    problem: str = "agriculture tropicale"
+    crop_type: str = "general"
+    context: Optional[str] = None
+
+class QuickQuestionRequest(BaseModel):
+    question: str
+
 @router.post("/agribot-ai/ecological-advice")
-async def get_ecological_advice(problem: str = Form(...), crop_type: str = Form(...)):
+async def get_ecological_advice(request: EcologicalAdviceRequest):
     """Conseils écologiques pour traitement"""
-    result = await agribot_service.get_ecological_advice(problem, crop_type)
+    result = await agribot_service.get_ecological_advice(request.problem or request.context or "agriculture tropicale", request.crop_type)
     return result
 
 @router.post("/agribot-ai/quick-question")
-async def quick_question(question: str = Form(...)):
+async def quick_question(request: QuickQuestionRequest):
     """Question rapide sur l'agriculture"""
-    result = await agribot_service.quick_question(question)
+    result = await agribot_service.quick_question(request.question)
     return result
 
 @router.post("/agribot-ai/upload-analyze")
