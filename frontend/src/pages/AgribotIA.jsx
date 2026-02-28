@@ -165,7 +165,7 @@ const AgribotIA = () => {
         response = await api.post("/agribot-ai/ecological-advice", { problem: "agriculture tropicale", crop_type: "general" });
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.advice || response.data.response || JSON.stringify(response.data), ts: Date.now() }]);
       } else if (action.type === "soil") {
-        response = await api.post("/agribot-ai/analyze-soil", { soil_data: { nitrogen: 45, phosphorus: 30, potassium: 50, ph: 6.5, humidity: 60 } });
+        response = await api.post("/agribot-ai/analyze-soil", { sensor_data: { nitrogen: 45, phosphorus: 30, potassium: 50, ph: 6.5, humidity: 60 } });
         const s = response.data;
         const content = `**Analyse de Sol**\n\nAzote (N): ${s.nitrogen_level || "Moyen"}\nPhosphore (P): ${s.phosphorus_level || "Bas"}\nPotassium (K): ${s.potassium_level || "Moyen"}\npH: ${s.ph_level || "6.5"}\nHumidite: ${s.humidity_level || "60%"}\n\n${s.recommendations || "Recommandation: Ajouter un engrais NPK 15-15-15"}`;
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content, ts: Date.now() }]);
