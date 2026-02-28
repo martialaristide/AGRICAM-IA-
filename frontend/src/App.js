@@ -170,10 +170,11 @@ function App() {
   const [showExitIntent, setShowExitIntent] = useState(false);
 
   useEffect(() => {
-    // Check if lead already captured
+    // Don't show lead capture if user is already logged in
+    const token = localStorage.getItem("agricam_token");
     const leadCaptured = localStorage.getItem("agricam_lead_captured");
-    if (!leadCaptured) {
-      // Show lead capture after 5 seconds
+    if (!leadCaptured && !token) {
+      // Show lead capture after 5 seconds only for non-logged-in visitors
       const timer = setTimeout(() => {
         setShowLeadCapture(true);
       }, 5000);
