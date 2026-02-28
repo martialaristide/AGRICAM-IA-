@@ -39,16 +39,16 @@ class SoilAnalysisRequest(BaseModel):
 
 class YieldPredictionRequest(BaseModel):
     crop_type: str
-    surface_ha: float
-    country: str
+    surface_ha: float = 5.0
+    country: str = "Cameroun"
     soil_quality: str = "moyen"
     irrigation: bool = False
 
 class DiseasePredictionRequest(BaseModel):
-    disease_name: str
-    current_zone: str
-    crop_type: str
-    weather_conditions: Dict
+    disease_name: str = "mildiou"
+    current_zone: str = "Centre Cameroun"
+    crop_type: str = "mais"
+    weather_conditions: Optional[Dict] = None
 
 class ReportRequest(BaseModel):
     data: Dict[str, Any]
