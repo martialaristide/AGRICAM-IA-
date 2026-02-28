@@ -1923,21 +1923,21 @@ async def seed_database():
     
     # Create demo users
     users_data = [
-        {"id": "admin-001", "email": "admin@agricam-ia.com", "password_hash": hash_password("admin123"),
-         "full_name": "Administrateur AGRICAM", "phone": "+237600000000", "role": "admin",
+        {"id": "admin-001", "email": "admin@agricam.ai", "password_hash": hash_password("Admin@2026"),
+         "full_name": "Admin AGRICAM", "phone": "+237600000000", "role": "admin",
          "company_name": "African AI Solutions", "subscription_type": "premium", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()},
-        {"id": "farmer-001", "email": "agriculteur@demo.com", "password_hash": hash_password("farmer123"),
+        {"id": "farmer-001", "email": "agriculteur@agricam.ai", "password_hash": hash_password("Farmer@2026"),
          "full_name": "Jean Dupont", "phone": "+237699999999", "role": "farmer",
-         "culture_type": "Blé, Maïs", "subscription_type": "basic", "is_verified": True, "is_active": True,
+         "culture_type": "Ble, Mais", "subscription_type": "basic", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()},
-        {"id": "supplier-001", "email": "fournisseur@demo.com", "password_hash": hash_password("supplier123"),
+        {"id": "supplier-001", "email": "fournisseur@agricam.ai", "password_hash": hash_password("Supplier@2026"),
          "full_name": "Agro Intrants SARL", "phone": "+237688888888", "role": "supplier",
-         "company_name": "Agro Intrants SARL", "is_verified": True, "is_active": True,
+         "company_name": "Agro Intrants SARL", "subscription_type": "basic", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()},
-        {"id": "financial-001", "email": "banque@demo.com", "password_hash": hash_password("bank123"),
-         "full_name": "Crédit Agricole Cameroun", "phone": "+237677777777", "role": "financial",
-         "company_name": "Crédit Agricole Cameroun", "is_verified": True, "is_active": True,
+        {"id": "financial-001", "email": "banque@agricam.ai", "password_hash": hash_password("Bank@2026"),
+         "full_name": "Credit Agricole Cameroun", "phone": "+237677777777", "role": "financial",
+         "company_name": "Credit Agricole Cameroun", "subscription_type": "premium", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()}
     ]
     await db.users.insert_many(users_data)
