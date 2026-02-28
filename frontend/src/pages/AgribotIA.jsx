@@ -170,7 +170,7 @@ const AgribotIA = () => {
         const content = `**Analyse de Sol**\n\nAzote (N): ${s.nitrogen_level || "Moyen"}\nPhosphore (P): ${s.phosphorus_level || "Bas"}\nPotassium (K): ${s.potassium_level || "Moyen"}\npH: ${s.ph_level || "6.5"}\nHumidite: ${s.humidity_level || "60%"}\n\n${s.recommendations || "Recommandation: Ajouter un engrais NPK 15-15-15"}`;
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content, ts: Date.now() }]);
       } else if (action.type === "disease") {
-        response = await api.post("/agribot-ai/predict-disease-spread", { disease: "mildiou", region: "Centre Cameroun" });
+        response = await api.post("/agribot-ai/predict-disease-spread", { disease_name: "mildiou", current_zone: "Centre Cameroun", crop_type: "mais" });
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.prediction || response.data.response || JSON.stringify(response.data), ts: Date.now() }]);
       } else {
         response = await api.post("/agribot-ai/chat", { message: action.prompt || action.label });
