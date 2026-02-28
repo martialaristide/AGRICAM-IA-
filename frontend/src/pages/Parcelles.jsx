@@ -115,6 +115,21 @@ const Parcelles = () => {
     fetchParcels();
   }, []);
 
+  // Fetch real weather when parcel is selected
+  useEffect(() => {
+    if (selectedParcel) {
+      const lat = selectedParcel.latitude || 5.9631;
+      const lon = selectedParcel.longitude || 10.1591;
+      setWeatherLoading(true);
+      api.get(`/weather/current?lat=${lat}&lon=${lon}`)
+        .then(res => setParcelWeather(res.data))
+        .catch(() => setParcelWeather(null))
+        .finally(() => setWeatherLoading(false));
+    } else {
+      setParcelWeather(null);
+    }
+  }, [selectedParcel]);
+
   const fetchParcels = async () => {
     try {
       const response = await getParcels();
