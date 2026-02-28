@@ -1,0 +1,110 @@
+{
+  "summary": "Iteration 15 Testing: All features tested successfully. Real OpenWeatherMap integration verified for climate notifications and weather endpoints. Camera IA page loads correctly with all controls. Parcelles shows real weather data with LIVE badge. AgriBot IA endpoints accept JSON correctly. FIXED: Parcelles.jsx missing api import, Lead Capture Modal for logged-in users.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "fixed_issues": [
+      {
+        "component": "Parcelles.jsx",
+        "issue": "Missing 'api' import - causing weather fetch to fail on parcel select",
+        "fix": "Changed import to: import api, { getParcels, createParcel, importParcels } from '../services/api';",
+        "status": "FIXED"
+      },
+      {
+        "component": "App.js",
+        "issue": "Lead Capture Modal appearing for logged-in users after login",
+        "fix": "Added storage event listener and periodic check to close modal when token detected",
+        "status": "FIXED"
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration15_weather_camera.py",
+    "/app/test_reports/pytest/pytest_iteration15.xml"
+  ],
+  "features_tested": {
+    "login": {
+      "admin@agricam.ai_Admin@2026": "PASS - Returns 200 with access_token, role=admin"
+    },
+    "weather_current_endpoint": {
+      "GET /api/weather/current?lat=5.9631&lon=10.1591": "PASS - Returns real OpenWeatherMap data with temperature, humidity, wind_speed, description, agricultural_advice",
+      "agricultural_advice_included": "PASS - Contains alerts array and advice array based on conditions"
+    },
+    "weather_city_endpoint": {
+      "GET /api/weather/city/Douala": "PASS - Returns real weather with source='openweathermap'",
+      "GET /api/weather/city/Yaounde": "PASS - Returns real weather"
+    },
+    "climate_notifications": {
+      "GET /api/climate-notifications?lat=5.9631&lon=10.1591": "PASS - Returns real alerts from OpenWeatherMap",
+      "source_field": "PASS - Response has source='openweathermap_live'",
+      "alert_structure": "PASS - Each alert has title, message, severity, source fields",
+      "intelligent_severity": "PASS - Generates heat/humidity/wind/rain alerts based on actual weather conditions"
+    },
+    "weather_route_no_conflict": {
+      "both_endpoints_work": "PASS - /api/weather/current and /api/weather/city/{name} work independently without conflicts"
+    },
+    "camera_ia_page": {
+      "page_loads": "PASS - Camera IA page loads at /camera-ia",
+      "stats_display": "PASS - Shows: 1250 Frames analysées, 230ms Temps moyen, 3 Alertes, 85% Santé moyenne",
+      "device_selector": "PASS - 'Selectionnez un appareil...' dropdown present",
+      "start_button": "PASS - 'Demarrer' button visible and clickable",
+      "analyze_button": "PASS - 'Analyser' button visible",
+      "capture_button": "PASS - 'Capturer & Analyser' button visible",
+      "camera_preview": "PASS - Flux Camera section with video placeholder"
+    },
+    "parcelles_page": {
+      "page_loads": "PASS - Gestion des parcelles with 3 parcels visible",
+      "satellite_map": "PASS - Leaflet map with Esri satellite tiles loaded",
+      "parcel_markers": "PASS - 3 colored markers on map",
+      "parcel_selection": "PASS - Clicking marker shows parcel popup and detail card",
+      "parcel_detail_bubbles": "PASS - Info bubbles: Culture, Superficie, Humidite, Temperature, pH Sol, Pays",
+      "soil_composition": "PASS - NPK values (Azote, Phosphore, Potassium, Matiere organique) displayed",
+      "real_weather_fetch": "PASS - Weather fetched from /api/weather/current on parcel select",
+      "live_weather_badge": "PASS - 'LIVE' badge shows when real weather loaded",
+      "weather_details": "PASS - Description, Vent (wind), Pression, Nuages displayed",
+      "agricultural_advice": "PASS - Conseils agricoles section with irrigation and spray recommendations"
+    },
+    "notification_bell": {
+      "bell_visible": "PASS - Notification bell icon in header",
+      "dropdown_opens": "PASS - Clicking bell opens 'Alertes Climat' dropdown",
+      "openweathermap_badge": "PASS - 'OpenWeatherMap' badge visible in dropdown header",
+      "real_alerts": "PASS - Shows real alerts like 'Air très sec - Bamenda', 'Meteo actuelle - Bamenda'"
+    },
+    "agribot_ia_endpoints": {
+      "POST /api/agribot-ai/predict-yield": "PASS - Accepts JSON body {crop_type:'mais'}, returns 200",
+      "POST /api/agribot-ai/ecological-advice": "PASS - Accepts JSON body {problem, crop_type}, returns 200",
+      "POST /api/agribot-ai/predict-disease-spread": "PASS - Accepts JSON body {disease_name, current_zone, crop_type}, returns 200"
+    },
+    "lead_capture_modal": {
+      "for_logged_in_users": "PASS - Modal does NOT appear after login (FIXED)"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/frontend/src/pages/Parcelles.jsx - Added missing 'api' import for weather fetch",
+    "/app/frontend/src/App.js - Added token check to close lead capture modal after login"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "Admin": "admin@agricam.ai / Admin@2026"
+  },
+  "seed_data_creation": "None required",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All OpenWeatherMap integrations are now REAL (not mocked). Climate notifications, weather endpoints, and parcel weather all use real API with key fd0daa0e326eb7f6a8e569937b7574c3. Camera IA frame analysis results are SIMULATED. AgriBot IA uses Gemini AI (takes 15-30s per call). Lead capture modal properly checks for auth token before appearing.",
+  "mocked_apis": {
+    "climate_notifications": "NOW REAL - Uses OpenWeatherMap API",
+    "weather_endpoints": "NOW REAL - Uses OpenWeatherMap API",
+    "camera_ia_analysis": "SIMULATED - Frame analysis results are mock data",
+    "platform_health_metrics": "SIMULATED - Client-side generated"
+  }
+}
