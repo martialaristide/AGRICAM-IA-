@@ -821,30 +821,37 @@ const Parcelles = () => {
               </div>
             </div>
 
-            {/* Climate Data */}
+            {/* Climate Data - Real OpenWeatherMap */}
             <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-100">
               <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
                 <Thermometer className="h-4 w-4 text-blue-600" />
                 Donnees Climatiques
+                {parcelWeather?.source === "openweathermap" && (
+                  <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-normal">LIVE</span>
+                )}
+                {weatherLoading && <span className="text-[9px] text-slate-400">Chargement...</span>}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div className="bg-white/80 p-2 rounded-lg text-center">
-                  <p className="text-slate-500">Precipitations</p>
-                  <p className="font-bold text-blue-700">{Math.floor(Math.random() * 100 + 50)} mm/mois</p>
+                  <p className="text-slate-500">Description</p>
+                  <p className="font-bold text-blue-700 capitalize">{parcelWeather?.description || selectedParcel.weather_description || "N/A"}</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
-                  <p className="text-slate-500">Ensoleillement</p>
-                  <p className="font-bold text-amber-700">{Math.floor(Math.random() * 4 + 6)}h/jour</p>
+                  <p className="text-slate-500">Vent</p>
+                  <p className="font-bold text-slate-700">{parcelWeather?.wind_speed || "N/A"} km/h</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
-                  <p className="text-slate-500">Vent moyen</p>
-                  <p className="font-bold text-slate-700">{Math.floor(Math.random() * 15 + 5)} km/h</p>
+                  <p className="text-slate-500">Pression</p>
+                  <p className="font-bold text-violet-700">{parcelWeather?.pressure || "N/A"} hPa</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
-                  <p className="text-slate-500">Indice UV</p>
-                  <p className="font-bold text-orange-700">{Math.floor(Math.random() * 5 + 4)}/11</p>
+                  <p className="text-slate-500">Nuages</p>
+                  <p className="font-bold text-orange-700">{parcelWeather?.clouds || "N/A"}%</p>
                 </div>
               </div>
+              {parcelWeather?.location && (
+                <p className="text-[10px] text-slate-400 mt-2 text-right">Station: {parcelWeather.location} | Source: {parcelWeather.source}</p>
+              )}
             </div>
 
             {/* GPS */}
