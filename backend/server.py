@@ -590,39 +590,35 @@ async def get_weather(location: str):
         if OPENWEATHER_API_KEY and OPENWEATHER_API_KEY != 'demo':
             async with httpx.AsyncClient() as client:
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHER_API_KEY}&units=metric&lang=fr"
-                response = await client.get(url)
+                response = await client.get(url, timeout=10)
                 
                 if response.status_code == 200:
                     data = response.json()
                     return {
-                        "location": location,
+                        "location": data.get("name", location),
                         "temperature": data["main"]["temp"],
                         "humidity": data["main"]["humidity"],
                         "pressure": data["main"]["pressure"],
-                        "wind_speed": data["wind"]["speed"],
-                        "wind_direction": str(data["wind"].get("deg", 0)) + "°",
+                        "wind_speed": round(data["wind"]["speed"] * 3.6, 1),
+                        "wind_direction": str(data["wind"].get("deg", 0)) + "deg",
                         "description": data["weather"][0]["description"],
                         "icon": data["weather"][0]["icon"],
                         "feels_like": data["main"]["feels_like"],
+                        "clouds": data.get("clouds", {}).get("all", 0),
                         "source": "openweathermap"
                     }
         
-        # Fallback mock data based on location
+        # Fallback simulated
         return {
             "location": location,
-            "temperature": 28.5,
-            "humidity": 65,
-            "pressure": 1013,
-            "wind_speed": 8.5,
-            "wind_direction": "NE",
-            "description": "Partiellement nuageux",
-            "icon": "02d",
-            "feels_like": 30.2,
+            "temperature": 28.5, "humidity": 65, "pressure": 1013,
+            "wind_speed": 8.5, "wind_direction": "NE",
+            "description": "Partiellement nuageux", "icon": "02d", "feels_like": 30.2,
             "source": "simulated"
         }
     except Exception as e:
         logger.error(f"Weather API error: {e}")
-        return {"location": location, "temperature": 25, "humidity": 60, "error": str(e)}
+        return {"location": location, "temperature": 25, "humidity": 60, "error": str(e), "source": "simulated"}
 
 # =============================================================================
 # API ROUTES - AI Chatbot (Agricultural Expert)
