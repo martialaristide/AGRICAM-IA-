@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   LayoutDashboard,
   Map,
