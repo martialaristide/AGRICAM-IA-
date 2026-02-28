@@ -50,18 +50,17 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const NotificationBell = () => {
   const [notifications, setNotifications] = React.useState([]);
   const [open, setOpen] = React.useState(false);
-  const [loaded, setLoaded] = React.useState(false);
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`${API}/api/climate-notifications`);
+      // Default GPS: Bamenda, Cameroun. Real coords will come from parcels
+      const res = await fetch(`${API}/api/climate-notifications?lat=5.9631&lon=10.1591`);
       const data = await res.json();
       setNotifications(data.alerts || []);
     } catch {}
-    setLoaded(true);
   };
 
-  React.useEffect(() => { fetchNotifications(); const iv = setInterval(fetchNotifications, 60000); return () => clearInterval(iv); }, []);
+  React.useEffect(() => { fetchNotifications(); const iv = setInterval(fetchNotifications, 120000); return () => clearInterval(iv); }, []);
 
   const unread = notifications.filter(n => !n.read).length;
   const severityIcon = (s) => s === "critical" ? "text-red-500" : s === "warning" ? "text-amber-500" : "text-blue-500";
