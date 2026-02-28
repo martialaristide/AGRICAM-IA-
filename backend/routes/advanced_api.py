@@ -152,7 +152,7 @@ async def predict_disease_spread(request: DiseasePredictionRequest):
         disease_name=request.disease_name,
         current_zone=request.current_zone,
         crop_type=request.crop_type,
-        weather_conditions=request.weather_conditions
+        weather_conditions=request.weather_conditions or {"temperature": 28, "humidity": 75, "wind": "modere"}
     )
     return result
 
