@@ -126,7 +126,15 @@ const AgribotIA = () => {
         image_base64: imageBase64
       });
 
-      const assistantMsg = { role: "assistant", content: response.data.response || "Desole, je n'ai pas pu traiter votre demande.", ts: Date.now() };
+      const data = response.data;
+      let content = data.response || "Desole, je n'ai pas pu traiter votre demande.";
+      let isError = false;
+      // Handle budget exceeded
+      if (data.success === false && data.error && data.error.includes("Budget")) {
+        content = "Le quota d'utilisation de l'IA a ete atteint. L'administrateur doit recharger le solde. Allez dans Profil > Cle Universelle > Ajouter du solde.";
+        isError = true;
+      }
+      const assistantMsg = { role: "assistant", content, ts: Date.now(), isError };
       updateConvMessages(activeConvId, [...newMsgs, assistantMsg]);
       setSelectedFile(null);
       setPreviewUrl(null);
