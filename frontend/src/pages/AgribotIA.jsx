@@ -162,7 +162,7 @@ const AgribotIA = () => {
         const content = `**Prediction de Rendement**\n\nCulture: Mais\nSurface: 5 ha\nPays: Cameroun\n\nRendement estime: **${p.estimated_yield_kg_ha || "N/A"} kg/ha**\nProduction totale: **${p.total_production_tonnes || "N/A"} tonnes**\nConfiance: ${p.confidence_level || "85%"}`;
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content, ts: Date.now() }]);
       } else if (action.type === "ecological") {
-        response = await api.post("/agribot-ai/ecological-advice", { context: "agriculture tropicale" });
+        response = await api.post("/agribot-ai/ecological-advice", { problem: "agriculture tropicale", crop_type: "general" });
         updateConvMessages(activeConvId, [...newMsgs, { role: "assistant", content: response.data.advice || response.data.response || JSON.stringify(response.data), ts: Date.now() }]);
       } else if (action.type === "soil") {
         response = await api.post("/agribot-ai/analyze-soil", { soil_data: { nitrogen: 45, phosphorus: 30, potassium: 50, ph: 6.5, humidity: 60 } });
