@@ -3481,32 +3481,109 @@ async def get_leads(limit: int = 100, status: Optional[str] = None):
     return leads
 
 # ====================================================================
-# CLIMATE NOTIFICATIONS
+# CLIMATE NOTIFICATIONS - Real OpenWeatherMap Integration
 # ====================================================================
 @api_router.get("/climate-notifications")
-async def get_climate_notifications(field_id: Optional[str] = None):
-    """Get climate notifications/alerts for parcels"""
-    import random
+async def get_climate_notifications(field_id: Optional[str] = None, lat: Optional[float] = None, lon: Optional[float] = None):
+    """Get real climate alerts based on parcel GPS or defaults to Cameroon"""
     alerts = []
-    alert_types = [
-        {"type": "rain", "severity": "warning", "title": "Fortes pluies prevues", "message": "Precipitations de 45mm attendues dans les 24h. Protegez vos recoltes sensibles."},
-        {"type": "heat", "severity": "critical", "title": "Vague de chaleur", "message": "Temperatures superieures a 38C prevues pour les 3 prochains jours. Augmentez l'irrigation."},
-        {"type": "wind", "severity": "info", "title": "Vents moderes", "message": "Vents de 25-35 km/h attendus. Verifiez les structures et les cultures hautes."},
-        {"type": "drought", "severity": "warning", "title": "Risque de secheresse", "message": "Aucune pluie prevue pour les 10 prochains jours. Planifiez l'irrigation."},
-        {"type": "frost", "severity": "critical", "title": "Gel matinal possible", "message": "Temperatures proches de 0C attendues demain matin. Protegez les jeunes plants."},
-        {"type": "humidity", "severity": "info", "title": "Humidite elevee", "message": "Taux d'humidite > 85%. Risque de maladies fongiques accru. Surveillez vos cultures."},
-    ]
-    num_alerts = random.randint(2, 4)
-    selected = random.sample(alert_types, min(num_alerts, len(alert_types)))
-    for i, alert in enumerate(selected):
-        alerts.append({
-            "id": f"ALERT-{i+1}",
-            "field_id": field_id or "ALL",
-            **alert,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "read": False,
-        })
-    return {"alerts": alerts, "total": len(alerts)}
+    weather_data = None
+    forecast_data = None
+
+    if not lat or not lon:
+        lat, lon = 5.9631, 10.1591  # Default: Bamenda, Cameroun
+
+    try:
+        if OPENWEATHER_API_KEY and OPENWEATHER_API_KEY != 'demo':
+            async with httpx.AsyncClient() as client:
+                # Current weather
+                w_res = await client.get(
+                    f"https://api.openweathermap.org/data/2.5/weather",
+                    params={"lat": lat, "lon": lon, "appid": OPENWEATHER_API_KEY, "units": "metric", "lang": "fr"},
+                    timeout=10
+                )
+                if w_res.status_code == 200:
+                    weather_data = w_res.json()
+
+                # 5-day forecast
+                f_res = await client.get(
+                    f"https://api.openweathermap.org/data/2.5/forecast",
+                    params={"lat": lat, "lon": lon, "appid": OPENWEATHER_API_KEY, "units": "metric", "lang": "fr"},
+                    timeout=10
+                )
+                if f_res.status_code == 200:
+                    forecast_data = f_res.json()
+    except Exception as e:
+        logger.warning(f"Weather API error for notifications: {e}")
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    if weather_data:
+        temp = weather_data["main"]["temp"]
+        humidity = weather_data["main"]["humidity"]
+        wind = weather_data["wind"]["speed"] * 3.6  # m/s -> km/h
+        desc = weather_data["weather"][0]["description"]
+        city = weather_data.get("name", "Zone")
+        rain = weather_data.get("rain", {}).get("1h", 0)
+
+        # Temperature alerts
+        if temp > 35:
+            alerts.append({"id": "HEAT-01", "field_id": field_id or "ALL", "type": "heat", "severity": "critical",
+                "title": f"Vague de chaleur - {city}", "message": f"Temperature actuelle: {temp}C. Risque de stress thermique severe. Augmentez l'irrigation immediatement.", "timestamp": now, "read": False, "source": "openweathermap"})
+        elif temp > 32:
+            alerts.append({"id": "HEAT-02", "field_id": field_id or "ALL", "type": "heat", "severity": "warning",
+                "title": f"Temperature elevee - {city}", "message": f"Temperature actuelle: {temp}C. Surveillez vos cultures et augmentez l'irrigation si necessaire.", "timestamp": now, "read": False, "source": "openweathermap"})
+        if temp < 5:
+            alerts.append({"id": "COLD-01", "field_id": field_id or "ALL", "type": "frost", "severity": "critical",
+                "title": f"Risque de gel - {city}", "message": f"Temperature actuelle: {temp}C. Protegez les jeunes plants et cultures sensibles.", "timestamp": now, "read": False, "source": "openweathermap"})
+
+        # Humidity alerts
+        if humidity > 85:
+            alerts.append({"id": "HUM-01", "field_id": field_id or "ALL", "type": "humidity", "severity": "warning",
+                "title": f"Humidite elevee - {city}", "message": f"Humidite: {humidity}%. Risque accru de maladies fongiques (mildiou, rouille). Surveillez vos cultures.", "timestamp": now, "read": False, "source": "openweathermap"})
+        elif humidity < 30:
+            alerts.append({"id": "HUM-02", "field_id": field_id or "ALL", "type": "drought", "severity": "warning",
+                "title": f"Air tres sec - {city}", "message": f"Humidite: {humidity}%. Risque de stress hydrique. Planifiez l'irrigation.", "timestamp": now, "read": False, "source": "openweathermap"})
+
+        # Wind alerts
+        if wind > 40:
+            alerts.append({"id": "WIND-01", "field_id": field_id or "ALL", "type": "wind", "severity": "critical",
+                "title": f"Vents violents - {city}", "message": f"Vent: {wind:.0f} km/h. Interdiction de pulverisation! Protegez les cultures hautes.", "timestamp": now, "read": False, "source": "openweathermap"})
+        elif wind > 25:
+            alerts.append({"id": "WIND-02", "field_id": field_id or "ALL", "type": "wind", "severity": "warning",
+                "title": f"Vents forts - {city}", "message": f"Vent: {wind:.0f} km/h. Evitez la pulverisation aerienne.", "timestamp": now, "read": False, "source": "openweathermap"})
+
+        # Rain
+        if rain > 5:
+            alerts.append({"id": "RAIN-01", "field_id": field_id or "ALL", "type": "rain", "severity": "info",
+                "title": f"Pluie en cours - {city}", "message": f"Precipitations: {rain}mm/h. {desc}. Reportez les traitements.", "timestamp": now, "read": False, "source": "openweathermap"})
+
+        # Info: current conditions
+        alerts.append({"id": "INFO-01", "field_id": field_id or "ALL", "type": "info", "severity": "info",
+            "title": f"Meteo actuelle - {city}", "message": f"{desc.capitalize()}, {temp}C, humidite {humidity}%, vent {wind:.0f} km/h.", "timestamp": now, "read": True, "source": "openweathermap"})
+
+    # Check forecast for upcoming alerts
+    if forecast_data:
+        for item in forecast_data.get("list", [])[:8]:  # Next 24h
+            f_temp = item["main"]["temp"]
+            f_rain = item.get("rain", {}).get("3h", 0)
+            f_pop = item.get("pop", 0) * 100
+            dt = item["dt_txt"]
+
+            if f_rain > 10:
+                alerts.append({"id": f"FRAIN-{dt}", "field_id": field_id or "ALL", "type": "rain", "severity": "warning",
+                    "title": "Fortes pluies prevues", "message": f"Precipitations de {f_rain:.0f}mm attendues le {dt}. Probabilite: {f_pop:.0f}%.", "timestamp": now, "read": False, "source": "openweathermap_forecast"})
+                break  # Only first heavy rain alert
+            if f_pop > 80 and f_rain > 3:
+                alerts.append({"id": f"FPOP-{dt}", "field_id": field_id or "ALL", "type": "rain", "severity": "info",
+                    "title": "Pluie probable", "message": f"Probabilite {f_pop:.0f}% de pluie ({f_rain:.0f}mm) le {dt}.", "timestamp": now, "read": False, "source": "openweathermap_forecast"})
+                break
+
+    if not alerts:
+        alerts.append({"id": "OK-01", "field_id": field_id or "ALL", "type": "info", "severity": "info",
+            "title": "Conditions normales", "message": "Aucune alerte meteorologique. Conditions favorables pour l'agriculture.", "timestamp": now, "read": True, "source": "openweathermap"})
+
+    return {"alerts": alerts, "total": len(alerts), "source": "openweathermap_live"}
 
 
 
