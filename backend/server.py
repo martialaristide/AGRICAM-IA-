@@ -21,6 +21,7 @@ import io
 import base64
 import csv
 import re
+from cachetools import TTLCache
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -665,13 +666,60 @@ Tu aides les agriculteurs africains avec des conseils personnalisés sur:
 Réponds toujours en français avec des conseils pratiques et adaptés au contexte africain.
 """
 
+# AgriBot Cache - TTL 1 hour, max 500 entries
+agribot_cache = TTLCache(maxsize=500, ttl=3600)
+
+AGRIBOT_FALLBACK_RESPONSES = {
+    "mais": "Le mais necessite 500-800mm d'eau. Semez en mars-avril pour recolter en aout-septembre. Fertilisation recommandee: NPK 120-60-60 kg/ha. Espacez les rangs de 75cm et les plants de 25cm pour une densite optimale de 53000 plants/ha.",
+    "maïs": "Le mais necessite 500-800mm d'eau. Semez en mars-avril pour recolter en aout-septembre. Fertilisation recommandee: NPK 120-60-60 kg/ha. Espacez les rangs de 75cm et les plants de 25cm pour une densite optimale de 53000 plants/ha.",
+    "manioc": "Le manioc se plante par boutures de 20-30cm, en debut de saison des pluies. Recolte apres 9-24 mois selon la variete. Resistant a la secheresse, il prefere les sols legers et draines. Rendement moyen: 10-15 tonnes/ha en Afrique.",
+    "cacao": "Le cacao necessite un ombrage de 50-70% en jeune age, temperature de 18-32C, et 1500-2000mm de pluie/an. Principaux ravageurs: mirides, capsides. Maladies: pourriture brune, swollen shoot. Recolte 2 fois/an.",
+    "cafe": "Le cafe arabica pousse en altitude (600-2000m) avec des temperatures de 15-24C. Le robusta est cultive en plaine (0-800m). Fertilisation: NPK 80-40-80 kg/ha/an. Recolte selective pour une meilleure qualite.",
+    "maladie": "Pour identifier une maladie, observez: taches jaunes sur feuilles (mildiou), pustules orangees (rouille), fletrissement (fusariose), poudre blanche (oidium). Traitez rapidement avec des fongicides a base de cuivre ou des solutions biologiques comme le neem.",
+    "mildiou": "Le mildiou se manifeste par des taches jaunes/brunes. Traitement: fongicides a base de cuivre (bouillie bordelaise 10-20g/L). Prevention: espacement des plants, drainage, varietes resistantes. Eviter l'arrosage par aspersion.",
+    "irrigation": "L'irrigation goutte-a-goutte est la plus efficace (90% d'efficacite). Calcul des besoins: ETc = ET0 x Kc. Pour le mais en phase vegetative, Kc = 0.7-1.2. Programmez l'arrosage tot le matin ou en fin de journee.",
+    "engrais": "Fertilisation de base: Azote (N) pour la croissance vegetative, Phosphore (P) pour les racines et la floraison, Potassium (K) pour la resistance. Compost: 10-20 tonnes/ha ameliore la structure du sol. Appliquez en 2-3 fractionnements.",
+    "sol": "Analyse du sol recommandee chaque 2-3 ans. pH optimal: 6.0-7.0 pour la plupart des cultures. Sols ferrugineux (courants en Afrique): riches en fer, souvent acides. Amendement: chaux agricole pour corriger le pH, matiere organique pour la structure.",
+    "rendement": "Pour optimiser le rendement: 1) Analyse sol et correction NPK, 2) Semences ameliorees, 3) Respect du calendrier cultural, 4) Irrigation adequate, 5) Protection phytosanitaire preventive. Un bon suivi peut augmenter le rendement de 30-50%.",
+    "secheresse": "En cas de secheresse: 1) Mulching (paillage) pour retenir l'humidite, 2) Irrigation d'appoint, 3) Cultures resistantes (manioc, sorgho, mil), 4) Reduction de la densite de plantation, 5) Recolte precoce si necessaire.",
+    "ravageur": "Lutte integree contre les ravageurs: 1) Pieges a pheromones, 2) Insecticides biologiques (Bt, neem), 3) Rotation culturale, 4) Associations de cultures (mais-haricot), 5) Introduction de predateurs naturels. Surveillez regulierement vos parcelles.",
+    "bonjour": "Bonjour ! Je suis AgriBot IA, votre assistant agricole intelligent. Je peux vous aider avec vos cultures, l'irrigation, la detection de maladies, l'analyse du sol et bien plus. Que souhaitez-vous savoir ?",
+    "salut": "Salut ! Je suis AgriBot IA, pret a vous accompagner. Posez-moi vos questions sur l'agriculture, les cultures africaines, les maladies des plantes, ou la gestion de vos parcelles.",
+    "aide": "Je peux vous aider avec: 1) Conseils sur les cultures (mais, manioc, cacao...), 2) Detection de maladies, 3) Optimisation de l'irrigation, 4) Fertilisation et analyse du sol, 5) Prediction de rendement, 6) Lutte contre les ravageurs. Posez votre question !",
+    "merci": "De rien ! N'hesitez pas a me poser d'autres questions. Je suis la pour vous accompagner dans votre activite agricole. Bonne recolte !",
+}
+
+def get_agribot_fallback(message: str) -> str:
+    msg_lower = message.lower()
+    for keyword, response in AGRIBOT_FALLBACK_RESPONSES.items():
+        if keyword in msg_lower:
+            return response
+    return "Je suis AgriBot IA, votre assistant agricole expert. Je peux vous conseiller sur les cultures africaines (mais, manioc, cacao, cafe...), la detection de maladies, l'irrigation, la fertilisation et la gestion de vos parcelles. Posez-moi votre question !"
+
 @api_router.post("/chatbot/message")
 async def chat_with_agribot(data: ChatMessage, user = Depends(get_current_user)):
-    """Interact with agricultural AI chatbot"""
+    """Interact with agricultural AI chatbot - with cache + fallback"""
+    import time
+    start_time = time.time()
+    source = "fallback"
+    
+    # 1. Check cache first
+    cache_key = f"{user['id']}:{data.message.strip().lower()[:100]}"
+    cached = agribot_cache.get(cache_key)
+    if cached:
+        elapsed = round((time.time() - start_time) * 1000)
+        await db.chatbot_logs.insert_one({
+            "id": str(uuid.uuid4()), "user_id": user["id"],
+            "message": data.message, "response": cached,
+            "source": "cache", "response_time_ms": elapsed,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        return {"response": cached, "source": "cache", "response_time_ms": elapsed}
+    
+    # 2. Try Emergent LLM
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         
-        # Build context from user's parcels
         user_parcels = await db.parcels.find({"user_id": user["id"]}, {"_id": 0}).to_list(10)
         parcel_context = ""
         if user_parcels:
@@ -687,35 +735,27 @@ async def chat_with_agribot(data: ChatMessage, user = Depends(get_current_user))
         full_message = f"{data.message}\n{user_context}" if user_context else data.message
         
         response = await chat.send_message(UserMessage(text=full_message))
+        source = "agribot_ai"
         
-        # Log conversation
-        await db.chatbot_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": user["id"],
-            "message": data.message,
-            "response": response,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
+        # Store in cache
+        agribot_cache[cache_key] = response
         
-        return {"response": response, "source": "agribot_ai"}
-        
-    except ImportError:
-        # Fallback responses
-        fallback_responses = {
-            "maïs": "Le maïs nécessite 500-800mm d'eau. Semez en mars-avril pour récolter en août-septembre. Fertilisation recommandée: NPK 120-60-60.",
-            "maladie": "Pour identifier une maladie, envoyez une photo de la plante affectée. Les symptômes courants incluent: taches jaunes (mildiou), pustules orangées (rouille), flétrissement (fusariose).",
-            "irrigation": "L'irrigation goutte-à-goutte est la plus efficace (90%). Calculez vos besoins avec ETc = ET0 × Kc selon votre culture.",
-            "engrais": "La fertilisation de base: Azote pour la croissance, Phosphore pour les racines, Potassium pour la résistance. Compost: 10-20 tonnes/ha.",
-            "default": "Je suis AgriBot, votre assistant agricole. Posez-moi des questions sur les cultures, maladies, irrigation ou fertilisation. Je suis là pour vous aider!"
-        }
-        
-        response = fallback_responses["default"]
-        for key, value in fallback_responses.items():
-            if key in data.message.lower():
-                response = value
-                break
-        
-        return {"response": response, "source": "fallback"}
+    except Exception as e:
+        logger.warning(f"AgriBot LLM error (using fallback): {e}")
+        response = get_agribot_fallback(data.message)
+        source = "fallback"
+    
+    elapsed = round((time.time() - start_time) * 1000)
+    
+    # Log conversation
+    await db.chatbot_logs.insert_one({
+        "id": str(uuid.uuid4()), "user_id": user["id"],
+        "message": data.message, "response": response,
+        "source": source, "response_time_ms": elapsed,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"response": response, "source": source, "response_time_ms": elapsed}
 
 @api_router.get("/chatbot/history")
 async def get_chat_history(user = Depends(get_current_user), limit: int = 20):
@@ -3588,6 +3628,286 @@ async def get_climate_notifications(field_id: Optional[str] = None, lat: Optiona
 
 
 
+
+# =============================================================================
+# ACCESS CONTROL - Trial Management, User Tracking, Exit Intent Offers
+# =============================================================================
+
+class GrantAccessRequest(BaseModel):
+    user_id: str
+    access_level: str = "basic"  # basic, premium
+    trial_days: int = 7
+    note: Optional[str] = None
+
+class UpdateAccessRequest(BaseModel):
+    user_id: str
+    action: str  # revoke, reduce, extend
+    access_level: Optional[str] = None
+    extra_days: Optional[int] = None
+    note: Optional[str] = None
+
+@api_router.post("/admin/access/grant")
+async def grant_trial_access(data: GrantAccessRequest, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin grants trial access to a user"""
+    target = await db.users.find_one({"id": data.user_id}, {"_id": 0, "password_hash": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
+    
+    trial_end = (datetime.now(timezone.utc) + timedelta(days=data.trial_days)).isoformat()
+    
+    await db.users.update_one({"id": data.user_id}, {"$set": {
+        "subscription_type": data.access_level,
+        "subscription_end": trial_end,
+        "trial_granted_by": user["id"],
+        "trial_granted_at": datetime.now(timezone.utc).isoformat(),
+        "access_note": data.note
+    }})
+    
+    # Log access change
+    await db.access_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "admin_id": user["id"],
+        "target_user_id": data.user_id,
+        "target_email": target.get("email"),
+        "action": "grant_trial",
+        "access_level": data.access_level,
+        "trial_days": data.trial_days,
+        "trial_end": trial_end,
+        "note": data.note,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": f"Acces {data.access_level} accorde a {target.get('email')} pour {data.trial_days} jours",
+        "trial_end": trial_end
+    }
+
+@api_router.post("/admin/access/update")
+async def update_user_access(data: UpdateAccessRequest, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin revoke, reduce or extend user access"""
+    target = await db.users.find_one({"id": data.user_id}, {"_id": 0, "password_hash": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
+    
+    update_fields = {"access_updated_at": datetime.now(timezone.utc).isoformat(), "access_note": data.note}
+    
+    if data.action == "revoke":
+        update_fields["subscription_type"] = "freemium"
+        update_fields["subscription_end"] = None
+        update_fields["is_active"] = False
+    elif data.action == "reduce":
+        update_fields["subscription_type"] = data.access_level or "basic"
+    elif data.action == "extend":
+        current_end = target.get("subscription_end")
+        if current_end:
+            try:
+                base = datetime.fromisoformat(current_end.replace("Z", "+00:00"))
+            except:
+                base = datetime.now(timezone.utc)
+        else:
+            base = datetime.now(timezone.utc)
+        new_end = (base + timedelta(days=data.extra_days or 7)).isoformat()
+        update_fields["subscription_end"] = new_end
+    
+    await db.users.update_one({"id": data.user_id}, {"$set": update_fields})
+    
+    await db.access_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "admin_id": user["id"],
+        "target_user_id": data.user_id,
+        "target_email": target.get("email"),
+        "action": data.action,
+        "access_level": data.access_level,
+        "extra_days": data.extra_days,
+        "note": data.note,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "message": f"Acces de {target.get('email')} mis a jour: {data.action}"}
+
+@api_router.get("/admin/access/logs")
+async def get_access_logs(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get all access control logs"""
+    logs = await db.access_logs.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return logs
+
+@api_router.get("/admin/access/expired")
+async def get_expired_trials(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get users whose trial has expired without paying"""
+    now = datetime.now(timezone.utc).isoformat()
+    expired = await db.users.find({
+        "subscription_end": {"$lt": now, "$ne": None},
+        "subscription_type": {"$ne": "freemium"}
+    }, {"_id": 0, "password_hash": 0}).to_list(100)
+    return expired
+
+# --- User Activity Tracking ---
+
+@api_router.post("/tracking/activity")
+async def track_user_activity(request: Request, user = Depends(get_optional_user)):
+    """Track user activity on the platform"""
+    body = await request.json()
+    activity = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"] if user else "anonymous",
+        "email": user.get("email") if user else None,
+        "event": body.get("event", "page_view"),
+        "page": body.get("page", "/"),
+        "metadata": body.get("metadata", {}),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.user_activity.insert_one(activity)
+    return {"success": True}
+
+@api_router.get("/admin/tracking/users-online")
+async def get_online_users(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get users active in the last 15 minutes"""
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=15)).isoformat()
+    pipeline = [
+        {"$match": {"timestamp": {"$gte": cutoff}, "user_id": {"$ne": "anonymous"}}},
+        {"$group": {"_id": "$user_id", "email": {"$last": "$email"}, "last_page": {"$last": "$page"}, "last_seen": {"$max": "$timestamp"}, "page_views": {"$sum": 1}}},
+        {"$sort": {"last_seen": -1}}
+    ]
+    results = await db.user_activity.aggregate(pipeline).to_list(100)
+    return {"online_users": results, "count": len(results)}
+
+@api_router.get("/admin/tracking/user-journey/{user_id}")
+async def get_user_journey(user_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get a specific user's activity journey"""
+    activities = await db.user_activity.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("timestamp", -1).to_list(200)
+    return activities
+
+@api_router.get("/admin/tracking/stats")
+async def get_tracking_stats(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get platform usage statistics"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_ago = (now - timedelta(days=7)).isoformat()
+    
+    today_views = await db.user_activity.count_documents({"timestamp": {"$gte": today}})
+    week_views = await db.user_activity.count_documents({"timestamp": {"$gte": week_ago}})
+    
+    # Most visited pages
+    page_pipeline = [
+        {"$match": {"timestamp": {"$gte": week_ago}}},
+        {"$group": {"_id": "$page", "views": {"$sum": 1}}},
+        {"$sort": {"views": -1}},
+        {"$limit": 10}
+    ]
+    top_pages = await db.user_activity.aggregate(page_pipeline).to_list(10)
+    
+    # Unique users today
+    unique_pipeline = [
+        {"$match": {"timestamp": {"$gte": today}, "user_id": {"$ne": "anonymous"}}},
+        {"$group": {"_id": "$user_id"}},
+        {"$count": "total"}
+    ]
+    unique_result = await db.user_activity.aggregate(unique_pipeline).to_list(1)
+    unique_today = unique_result[0]["total"] if unique_result else 0
+    
+    return {
+        "today_page_views": today_views,
+        "week_page_views": week_views,
+        "unique_users_today": unique_today,
+        "top_pages": top_pages
+    }
+
+# --- Exit Intent & Conversion Campaigns ---
+
+@api_router.get("/campaigns/exit-offers")
+async def get_exit_offers(user = Depends(get_optional_user)):
+    """Get active exit intent offers for the user"""
+    user_sub = user.get("subscription_type", "freemium") if user else "freemium"
+    
+    offers = []
+    if user_sub == "freemium":
+        offers = [
+            {"id": "exit-trial-7", "title": "Essai Premium GRATUIT - 7 jours", "description": "Testez toutes les fonctionnalites premium pendant 7 jours sans engagement!", "discount_percent": 100, "cta": "Activer l'essai gratuit", "type": "free_trial"},
+            {"id": "exit-50off", "title": "-50% sur le forfait Basic", "description": "Offre speciale: votre premier mois a seulement 2500 FCFA au lieu de 5000 FCFA!", "discount_percent": 50, "original_price": 5000, "offer_price": 2500, "cta": "Profiter de l'offre", "type": "discount"},
+        ]
+    elif user_sub == "basic":
+        offers = [
+            {"id": "exit-upgrade", "title": "Passez au Premium - 1er mois offert", "description": "Debloquez l'analyse IA avancee, les drones et la camera IA. Premier mois offert!", "discount_percent": 100, "cta": "Passer au Premium", "type": "upgrade"},
+        ]
+    
+    return {"offers": offers, "user_subscription": user_sub}
+
+@api_router.post("/campaigns/claim-offer")
+async def claim_exit_offer(request: Request, user = Depends(get_current_user)):
+    """User claims an exit intent offer"""
+    body = await request.json()
+    offer_id = body.get("offer_id")
+    
+    claim = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "email": user.get("email"),
+        "offer_id": offer_id,
+        "claimed_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # If free trial, activate it
+    if offer_id == "exit-trial-7":
+        trial_end = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+        await db.users.update_one({"id": user["id"]}, {"$set": {
+            "subscription_type": "premium",
+            "subscription_end": trial_end,
+            "trial_source": "exit_intent"
+        }})
+        claim["result"] = "premium_trial_7_days"
+    
+    await db.campaign_claims.insert_one(claim)
+    
+    return {"success": True, "message": "Offre activee avec succes!", "claim_id": claim["id"]}
+
+@api_router.get("/admin/campaigns/stats")
+async def get_campaign_stats(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get campaign conversion stats"""
+    total_claims = await db.campaign_claims.count_documents({})
+    trial_claims = await db.campaign_claims.count_documents({"offer_id": "exit-trial-7"})
+    discount_claims = await db.campaign_claims.count_documents({"offer_id": "exit-50off"})
+    upgrade_claims = await db.campaign_claims.count_documents({"offer_id": "exit-upgrade"})
+    
+    # Conversion rate
+    total_users = await db.users.count_documents({})
+    paying = await db.users.count_documents({"subscription_type": {"$ne": "freemium"}})
+    
+    return {
+        "total_claims": total_claims,
+        "trial_claims": trial_claims,
+        "discount_claims": discount_claims,
+        "upgrade_claims": upgrade_claims,
+        "total_users": total_users,
+        "paying_users": paying,
+        "conversion_rate": round((paying / max(total_users, 1)) * 100, 1)
+    }
+
+# --- Database Access (Admin Only) ---
+
+@api_router.get("/admin/database/collections")
+async def list_db_collections(user = Depends(require_roles([UserRole.ADMIN]))):
+    """List all database collections with document counts"""
+    collection_names = await db.list_collection_names()
+    collections = []
+    for name in sorted(collection_names):
+        count = await db[name].count_documents({})
+        collections.append({"name": name, "count": count})
+    return {"database": db.name, "collections": collections}
+
+@api_router.get("/admin/database/browse/{collection_name}")
+async def browse_collection(collection_name: str, skip: int = 0, limit: int = 20, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Browse a database collection - admin only"""
+    collection_names = await db.list_collection_names()
+    if collection_name not in collection_names:
+        raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' non trouvee")
+    
+    total = await db[collection_name].count_documents({})
+    docs = await db[collection_name].find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    
+    return {"collection": collection_name, "total": total, "skip": skip, "limit": limit, "documents": docs}
 
 # Import and include advanced routes
 try:

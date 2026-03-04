@@ -35,6 +35,8 @@ import AgribotIA from "./pages/AgribotIA";
 import GestionDronesAvance from "./pages/GestionDronesAvance";
 import GestionRobotsAvance from "./pages/GestionRobotsAvance";
 import AnalyseAvancee from "./pages/AnalyseAvancee";
+import AccessControl from "./pages/AccessControl";
+import DatabaseBrowser from "./pages/DatabaseBrowser";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import LeadCaptureModal from "./components/LeadCaptureModal";
@@ -297,6 +299,16 @@ function App() {
               <Route path="drones-avance" element={<GestionDronesAvance />} />
               <Route path="robots-avance" element={<GestionRobotsAvance />} />
               <Route path="analyse-avancee" element={<AnalyseAvancee />} />
+              <Route path="access-control" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AccessControl />
+                </ProtectedRoute>
+              } />
+              <Route path="database" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DatabaseBrowser />
+                </ProtectedRoute>
+              } />
             </Route>
           </Routes>
         </BrowserRouter>

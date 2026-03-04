@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
 import { useLanguage } from "../contexts/LanguageContext";
+import ExitIntentModal from "./ExitIntentModal";
 import {
   LayoutDashboard,
   Map,
@@ -28,7 +29,9 @@ import {
   Bot,
   Camera,
   Code2,
-  Microscope
+  Microscope,
+  KeyRound,
+  Database
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -131,7 +134,9 @@ const getNavItems = (role, t) => {
       { path: "/paiements", icon: Smartphone, label: "Mobile Money" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
-      { path: "/dev-analytics", icon: Code2, label: "Analytics Dev" },
+      { path: "/dev-analytics", icon: Code2, label: t("nav.analytics") + " Dev" },
+      { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Controle Acces" },
+      { path: "/database", icon: Database, label: t("nav.database") || "Base de Donnees" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
       { path: "/parametres", icon: Settings, label: t("nav.settings") },
@@ -208,6 +213,38 @@ const Layout = () => {
   
   const navItems = getNavItems(user?.role, t);
   const roleBadge = getRoleBadge(user?.role);
+  
+  // Exit intent detection
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [exitShown, setExitShown] = useState(false);
+
+  useEffect(() => {
+    if (exitShown || user?.subscription_type === "premium") return;
+    const handleMouseLeave = (e) => {
+      if (e.clientY <= 0 && !exitShown) {
+        setShowExitModal(true);
+        setExitShown(true);
+      }
+    };
+    document.addEventListener("mouseleave", handleMouseLeave);
+    return () => document.removeEventListener("mouseleave", handleMouseLeave);
+  }, [exitShown, user?.subscription_type]);
+
+  // Track page views
+  React.useEffect(() => {
+    const trackActivity = async () => {
+      try {
+        const token = localStorage.getItem("agricam_token");
+        if (!token) return;
+        await fetch(`${API}/api/tracking/activity`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ event: "page_view", page: location.pathname })
+        });
+      } catch {}
+    };
+    trackActivity();
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -429,6 +466,7 @@ const Layout = () => {
           </div>
         </footer>
       </main>
+      <ExitIntentModal isOpen={showExitModal} onClose={() => setShowExitModal(false)} />
     </div>
   );
 };
