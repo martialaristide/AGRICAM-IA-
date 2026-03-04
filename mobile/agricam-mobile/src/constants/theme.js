@@ -72,4 +72,4 @@ export const SHADOWS = {
   },
 };
 
-export const API_URL = 'https://agricam-ia-preview.preview.emergentagent.com/api';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8001/api';
