@@ -5,14 +5,24 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { 
   Satellite, Camera, TrendingUp, AlertTriangle, 
-  Download, Info, Calendar
+  Download, Info, Calendar, Clock, MapPin, Plus
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 const ImagesSatellites = () => {
   const [images, setImages] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [scheduledCaptures, setScheduledCaptures] = useState([
+    { id: 1, parcel: "Parcelle Nord - Mais", date: "2026-03-10", time: "10:00", source: "satellite", status: "planifie", resolution: "30cm" },
+    { id: 2, parcel: "Parcelle Sud - Cacao", date: "2026-03-12", time: "14:00", source: "drone", status: "planifie", resolution: "5cm" }
+  ]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,6 +172,65 @@ const ImagesSatellites = () => {
           </Card>
         ))}
       </div>
+
+      {/* Scheduled Captures */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-lg">
+            <span className="flex items-center gap-2"><Clock className="h-5 w-5 text-orange-600" /> Captures programmees</span>
+            <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-orange-600 hover:bg-orange-700" data-testid="schedule-capture-btn"><Plus className="h-4 w-4 mr-1" /> Programmer</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Programmer une capture satellite</DialogTitle></DialogHeader>
+                <div className="space-y-3">
+                  <div><Label>Parcelle</Label><Input placeholder="Nom de la parcelle" data-testid="schedule-parcel" /></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>Date</Label><Input type="date" data-testid="schedule-date" /></div>
+                    <div><Label>Heure</Label><Input type="time" defaultValue="10:00" data-testid="schedule-time" /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>Source</Label>
+                      <Select defaultValue="satellite"><SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="satellite">Satellite</SelectItem><SelectItem value="drone">Drone</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                    <div><Label>Resolution</Label>
+                      <Select defaultValue="30cm"><SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="5cm">5cm (Drone)</SelectItem><SelectItem value="30cm">30cm (Standard)</SelectItem><SelectItem value="10m">10m (Large)</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-orange-600 hover:bg-orange-700" onClick={() => {
+                    setScheduledCaptures(prev => [...prev, { id: Date.now(), parcel: "Nouvelle parcelle", date: "2026-03-15", time: "10:00", source: "satellite", status: "planifie", resolution: "30cm" }]);
+                    toast.success("Capture programmee !");
+                    setShowScheduleDialog(false);
+                  }}><Calendar className="h-4 w-4 mr-1" /> Confirmer la programmation</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {scheduledCaptures.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", c.source === "satellite" ? "bg-amber-100" : "bg-emerald-100")}>
+                    {c.source === "satellite" ? <Satellite className="h-5 w-5 text-amber-600" /> : <Camera className="h-5 w-5 text-emerald-600" />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{c.parcel}</p>
+                    <p className="text-xs text-slate-500">{c.date} a {c.time} - Resolution: {c.resolution}</p>
+                  </div>
+                </div>
+                <Badge className={c.status === "planifie" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}>{c.status}</Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* New Capture Section */}
       <div className="gradient-alerts rounded-2xl p-6 text-white shadow-lg">

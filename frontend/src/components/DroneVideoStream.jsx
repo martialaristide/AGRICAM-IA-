@@ -45,8 +45,38 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
   const [analysisData, setAnalysisData] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [zoom, setZoom] = useState(1);
+  const [useRealCamera, setUseRealCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
   const canvasRef = useRef(null);
+  const videoRef = useRef(null);
   const animationRef = useRef(null);
+
+  // Connect to real camera (WiFi drone camera or device camera)
+  const connectCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }
+      });
+      setCameraStream(stream);
+      setUseRealCamera(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      toast.success("Camera connectee !");
+    } catch (err) {
+      toast.error("Impossible de connecter la camera: " + err.message);
+    }
+  };
+
+  const disconnectCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      setCameraStream(null);
+    }
+    setUseRealCamera(false);
+    toast.info("Camera deconnectee");
+  };
 
   // Video stream backgrounds based on view mode
   const videoBackgrounds = {
@@ -360,14 +390,13 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
           </TabsList>
         </Tabs>
 
-        {/* Video Canvas */}
-        <div className="relative rounded-lg overflow-hidden bg-slate-900" style={{ transform: `scale(${zoom})` }}>
-          <canvas
-            ref={canvasRef}
-            width={640}
-            height={360}
-            className="w-full"
-          />
+        {/* Video Canvas / Real Camera */}
+        <div className="relative rounded-lg overflow-hidden bg-slate-900" style={{ transform: `scale(${zoom})`, transformOrigin: "top left" }}>
+          {useRealCamera ? (
+            <video ref={videoRef} className="w-full" autoPlay playsInline muted style={{ maxHeight: "360px", objectFit: "cover" }} />
+          ) : (
+            <canvas ref={canvasRef} width={640} height={360} className="w-full" />
+          )}
           
           {/* HUD Overlay */}
           <div className="absolute top-2 left-2 text-white text-xs font-mono bg-black/50 px-2 py-1 rounded">
@@ -416,6 +445,10 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
           </Button>
           <Button variant="outline" size="sm" onClick={() => setZoom(Math.max(zoom - 0.2, 0.5))}>
             <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button variant={useRealCamera ? "destructive" : "outline"} size="sm" onClick={useRealCamera ? disconnectCamera : connectCamera} data-testid="connect-camera-btn">
+            <Camera className="h-4 w-4 mr-1" />
+            {useRealCamera ? "Deconnecter" : "Camera reelle"}
           </Button>
         </div>
 

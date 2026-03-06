@@ -663,7 +663,8 @@ Tu aides les agriculteurs africains avec des conseils personnalisés sur:
 - Pleine saison: Entretien, traitement
 - Fin pluies: Récolte, stockage
 
-Réponds toujours en français avec des conseils pratiques et adaptés au contexte africain.
+Réponds toujours dans la langue demandée par l'utilisateur. Par défaut en français. Adapte tes conseils au contexte africain.
+Tu t'appelles AGRI GENIUS, l'assistant agricole intelligent d'AGRICAM IA.
 """
 
 # AgriBot Cache - TTL 1 hour, max 500 entries
@@ -683,8 +684,8 @@ AGRIBOT_FALLBACK_RESPONSES = {
     "rendement": "Pour optimiser le rendement: 1) Analyse sol et correction NPK, 2) Semences ameliorees, 3) Respect du calendrier cultural, 4) Irrigation adequate, 5) Protection phytosanitaire preventive. Un bon suivi peut augmenter le rendement de 30-50%.",
     "secheresse": "En cas de secheresse: 1) Mulching (paillage) pour retenir l'humidite, 2) Irrigation d'appoint, 3) Cultures resistantes (manioc, sorgho, mil), 4) Reduction de la densite de plantation, 5) Recolte precoce si necessaire.",
     "ravageur": "Lutte integree contre les ravageurs: 1) Pieges a pheromones, 2) Insecticides biologiques (Bt, neem), 3) Rotation culturale, 4) Associations de cultures (mais-haricot), 5) Introduction de predateurs naturels. Surveillez regulierement vos parcelles.",
-    "bonjour": "Bonjour ! Je suis AgriBot IA, votre assistant agricole intelligent. Je peux vous aider avec vos cultures, l'irrigation, la detection de maladies, l'analyse du sol et bien plus. Que souhaitez-vous savoir ?",
-    "salut": "Salut ! Je suis AgriBot IA, pret a vous accompagner. Posez-moi vos questions sur l'agriculture, les cultures africaines, les maladies des plantes, ou la gestion de vos parcelles.",
+    "bonjour": "Bonjour ! Je suis AGRI GENIUS, votre assistant agricole intelligent. Je peux vous aider avec vos cultures, l'irrigation, la detection de maladies, l'analyse du sol et bien plus. Que souhaitez-vous savoir ?",
+    "salut": "Salut ! Je suis AGRI GENIUS, pret a vous accompagner. Posez-moi vos questions sur l'agriculture, les cultures africaines, les maladies des plantes, ou la gestion de vos parcelles.",
     "aide": "Je peux vous aider avec: 1) Conseils sur les cultures (mais, manioc, cacao...), 2) Detection de maladies, 3) Optimisation de l'irrigation, 4) Fertilisation et analyse du sol, 5) Prediction de rendement, 6) Lutte contre les ravageurs. Posez votre question !",
     "merci": "De rien ! N'hesitez pas a me poser d'autres questions. Je suis la pour vous accompagner dans votre activite agricole. Bonne recolte !",
 }
@@ -694,7 +695,7 @@ def get_agribot_fallback(message: str) -> str:
     for keyword, response in AGRIBOT_FALLBACK_RESPONSES.items():
         if keyword in msg_lower:
             return response
-    return "Je suis AgriBot IA, votre assistant agricole expert. Je peux vous conseiller sur les cultures africaines (mais, manioc, cacao, cafe...), la detection de maladies, l'irrigation, la fertilisation et la gestion de vos parcelles. Posez-moi votre question !"
+    return "Je suis AGRI GENIUS, votre assistant agricole expert. Je peux vous conseiller sur les cultures africaines (mais, manioc, cacao, cafe...), la detection de maladies, l'irrigation, la fertilisation et la gestion de vos parcelles. Posez-moi votre question !"
 
 @api_router.post("/chatbot/message")
 async def chat_with_agribot(data: ChatMessage, user = Depends(get_current_user)):
@@ -3908,6 +3909,129 @@ async def browse_collection(collection_name: str, skip: int = 0, limit: int = 20
     docs = await db[collection_name].find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
     return {"collection": collection_name, "total": total, "skip": skip, "limit": limit, "documents": docs}
+
+# =============================================================================
+# CRM - Customer Relationship Management
+# =============================================================================
+
+@api_router.get("/admin/crm/contacts")
+async def get_crm_contacts(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get all CRM contacts (users + leads)"""
+    users_list = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(500)
+    leads = await db.leads.find({}, {"_id": 0}).to_list(500)
+    
+    contacts = []
+    for u in users_list:
+        contacts.append({
+            "id": u.get("id"), "type": "user", "email": u.get("email"),
+            "name": u.get("full_name"), "role": u.get("role"),
+            "subscription": u.get("subscription_type", "freemium"),
+            "subscription_end": u.get("subscription_end"),
+            "created_at": u.get("created_at"), "last_login": u.get("last_login")
+        })
+    for l in leads:
+        contacts.append({
+            "id": l.get("id"), "type": "lead", "email": l.get("email"),
+            "name": l.get("name"), "phone": l.get("phone"),
+            "subscription": "none", "created_at": l.get("created_at")
+        })
+    return contacts
+
+@api_router.get("/admin/crm/transactions")
+async def get_transactions(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get transaction flow"""
+    transactions = await db.transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    if not transactions:
+        # Seed some demo transactions
+        transactions = [
+            {"id": str(uuid.uuid4()), "user_email": "agriculteur@agricam.ai", "type": "subscription", "amount": 5000, "currency": "XOF", "plan": "basic", "status": "completed", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "user_email": "fournisseur@agricam.ai", "type": "subscription", "amount": 15000, "currency": "XOF", "plan": "premium", "status": "completed", "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+        await db.transactions.insert_many(transactions)
+        transactions = await db.transactions.find({}, {"_id": 0}).to_list(200)
+    return transactions
+
+@api_router.get("/admin/crm/revenue-stats")
+async def get_revenue_stats(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get revenue statistics"""
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$amount"}, "count": {"$sum": 1}}}]
+    result = await db.transactions.aggregate(pipeline).to_list(1)
+    total_revenue = result[0]["total"] if result else 0
+    total_transactions = result[0]["count"] if result else 0
+    
+    total_users = await db.users.count_documents({})
+    paying = await db.users.count_documents({"subscription_type": {"$ne": "freemium"}})
+    
+    return {
+        "total_revenue": total_revenue, "total_transactions": total_transactions,
+        "total_users": total_users, "paying_users": paying,
+        "arpu": round(total_revenue / max(paying, 1), 0),
+        "conversion_rate": round((paying / max(total_users, 1)) * 100, 1)
+    }
+
+# =============================================================================
+# FORMATIONS (Training)
+# =============================================================================
+
+class FormationCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    category: str = "agriculture"
+    level: str = "debutant"
+    price: float = 0
+    type: str = "video"
+    duration: Optional[str] = ""
+
+@api_router.post("/formations")
+async def create_formation(data: FormationCreate, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Create a new formation/course"""
+    formation = {
+        "id": str(uuid.uuid4()), "title": data.title, "description": data.description,
+        "category": data.category, "level": data.level, "price": data.price,
+        "type": data.type, "duration": data.duration, "instructor": user.get("full_name", "Admin"),
+        "students": 0, "rating": 0, "status": "published",
+        "created_by": user["id"], "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.formations.insert_one(formation)
+    formation.pop("_id", None)
+    return formation
+
+@api_router.get("/formations")
+async def get_formations(user = Depends(get_optional_user)):
+    """Get all published formations"""
+    formations = await db.formations.find({"status": "published"}, {"_id": 0}).to_list(100)
+    return formations
+
+# =============================================================================
+# DATA EXPORT
+# =============================================================================
+
+@api_router.get("/admin/export/{collection_name}")
+async def export_collection(collection_name: str, format: str = "csv", user = Depends(require_roles([UserRole.ADMIN]))):
+    """Export a collection as CSV or JSON"""
+    collection_names = await db.list_collection_names()
+    if collection_name not in collection_names:
+        raise HTTPException(status_code=404, detail="Collection non trouvee")
+    
+    docs = await db[collection_name].find({}, {"_id": 0}).to_list(10000)
+    
+    if format == "json":
+        return {"data": docs, "count": len(docs), "collection": collection_name}
+    
+    if not docs:
+        return {"data": "", "count": 0}
+    
+    # CSV format
+    headers = list(docs[0].keys())
+    rows = [",".join(headers)]
+    for doc in docs:
+        row = []
+        for h in headers:
+            val = doc.get(h, "")
+            row.append(f'"{val}"' if isinstance(val, str) else str(val or ""))
+        rows.append(",".join(row))
+    
+    return {"data": "\n".join(rows), "count": len(docs), "format": "csv", "collection": collection_name}
 
 # Import and include advanced routes
 try:

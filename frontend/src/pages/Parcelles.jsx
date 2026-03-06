@@ -259,6 +259,51 @@ const Parcelles = () => {
     }
   };
 
+  const exportParcelData = (format) => {
+    const p = selectedParcel;
+    const w = parcelWeather || {};
+    const data = {
+      nom: p.name, culture: p.crop_type, variete: p.variety || "",
+      surface_ha: p.area_hectares, statut: p.status, pays: p.country || "Cameroun",
+      latitude: p.latitude, longitude: p.longitude,
+      humidite_sol: p.humidity, temperature_sol: p.temperature,
+      ph_sol: p.soil_analysis?.ph, azote: p.soil_analysis?.nitrogen,
+      phosphore: p.soil_analysis?.phosphorus, potassium: p.soil_analysis?.potassium,
+      temp_climat: w.temperature, humidite_climat: w.humidity,
+      vent_vitesse: w.wind_speed, vent_direction: w.wind_direction,
+      pression: w.pressure, nuages: w.clouds, description: w.description,
+      date_plantation: p.planting_date
+    };
+    
+    let content, filename, type;
+    if (format === "csv") {
+      const headers = Object.keys(data).join(",");
+      const values = Object.values(data).map(v => `"${v || ""}"`).join(",");
+      content = headers + "\n" + values;
+      filename = `parcelle_${p.name}.csv`;
+      type = "text/csv";
+    } else if (format === "excel") {
+      const headers = Object.keys(data).join("\t");
+      const values = Object.values(data).map(v => v || "").join("\t");
+      content = headers + "\n" + values;
+      filename = `parcelle_${p.name}.xls`;
+      type = "application/vnd.ms-excel";
+    } else if (format === "geojson") {
+      content = JSON.stringify({ type: "Feature", geometry: p.geometry || { type: "Point", coordinates: [p.longitude, p.latitude] }, properties: data }, null, 2);
+      filename = `parcelle_${p.name}.geojson`;
+      type = "application/json";
+    } else {
+      content = JSON.stringify(data, null, 2);
+      filename = `parcelle_${p.name}.json`;
+      type = "application/json";
+    }
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Export ${format.toUpperCase()} telecharge`);
+  };
+
   const getStatusConfig = (status) => {
     switch (status) {
       case "excellent":
@@ -595,12 +640,15 @@ const Parcelles = () => {
               <MapContainer
                 center={mapCenter}
                 zoom={13}
+                maxZoom={21}
                 style={{ height: "100%", width: "100%" }}
                 className="z-0"
               >
                 <TileLayer
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  attribution="&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                  attribution="&copy; Esri"
+                  maxZoom={21}
+                  maxNativeZoom={19}
                 />
                 
                 <MapClickHandler onMapClick={handleMapClick} isDrawing={isDrawing} />
@@ -839,14 +887,31 @@ const Parcelles = () => {
                 <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Vent</p>
                   <p className="font-bold text-slate-700">{parcelWeather?.wind_speed || "N/A"} m/s</p>
+                  <p className="text-[9px] text-slate-400">Dir: {parcelWeather?.wind_direction || "N/A"}°</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Pression</p>
                   <p className="font-bold text-violet-700">{parcelWeather?.pressure || "N/A"} hPa</p>
                 </div>
                 <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Visibilite</p>
+                  <p className="font-bold text-orange-700">{parcelWeather?.visibility ? (parcelWeather.visibility / 1000).toFixed(1) + " km" : "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
                   <p className="text-slate-500">Nuages</p>
-                  <p className="font-bold text-orange-700">{parcelWeather?.clouds || "N/A"}%</p>
+                  <p className="font-bold text-slate-700">{parcelWeather?.clouds || "N/A"}%</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Lever soleil</p>
+                  <p className="font-bold text-amber-700">{parcelWeather?.sunrise || "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Coucher soleil</p>
+                  <p className="font-bold text-orange-700">{parcelWeather?.sunset || "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg text-center">
+                  <p className="text-slate-500">Ressenti</p>
+                  <p className="font-bold text-red-700">{parcelWeather?.feels_like || "N/A"}°C</p>
                 </div>
               </div>
               {/* Agricultural advice */}
@@ -874,6 +939,22 @@ const Parcelles = () => {
                 GPS: {selectedParcel.latitude.toFixed(6)}, {selectedParcel.longitude.toFixed(6)}
               </div>
             )}
+
+            {/* Export parcel data */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-100">
+              <Button size="sm" variant="outline" className="text-xs" data-testid="export-csv" onClick={() => exportParcelData("csv")}>
+                <Download className="h-3 w-3 mr-1" /> CSV
+              </Button>
+              <Button size="sm" variant="outline" className="text-xs" data-testid="export-excel" onClick={() => exportParcelData("excel")}>
+                <FileSpreadsheet className="h-3 w-3 mr-1" /> Excel
+              </Button>
+              <Button size="sm" variant="outline" className="text-xs" data-testid="export-json" onClick={() => exportParcelData("json")}>
+                <Download className="h-3 w-3 mr-1" /> JSON
+              </Button>
+              <Button size="sm" variant="outline" className="text-xs" data-testid="export-geojson" onClick={() => exportParcelData("geojson")}>
+                <Map className="h-3 w-3 mr-1" /> GeoJSON
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import {
   Shield, Users, Clock, Eye, UserCheck, UserX, Gift,
   Activity, TrendingUp, BarChart3, Loader2, RefreshCw,
-  ChevronRight, AlertTriangle, CheckCircle2, Ban
+  ChevronRight, AlertTriangle, CheckCircle2, Ban,
+  DollarSign, Download, Mail, Phone
 } from "lucide-react";
 import api from "../services/api";
 
@@ -21,6 +22,9 @@ const AccessControl = () => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [trackingStats, setTrackingStats] = useState(null);
   const [campaignStats, setCampaignStats] = useState(null);
+  const [crmContacts, setCrmContacts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [revenueStats, setRevenueStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState("");
 
@@ -30,13 +34,16 @@ const AccessControl = () => {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [usersRes, logsRes, expiredRes, onlineRes, statsRes, campRes] = await Promise.all([
+      const [usersRes, logsRes, expiredRes, onlineRes, statsRes, campRes, crmRes, txRes, revRes] = await Promise.all([
         api.get("/admin/users"),
         api.get("/admin/access/logs"),
         api.get("/admin/access/expired"),
         api.get("/admin/tracking/users-online"),
         api.get("/admin/tracking/stats"),
-        api.get("/admin/campaigns/stats")
+        api.get("/admin/campaigns/stats"),
+        api.get("/admin/crm/contacts").catch(() => ({data: []})),
+        api.get("/admin/crm/transactions").catch(() => ({data: []})),
+        api.get("/admin/crm/revenue-stats").catch(() => ({data: {}}))
       ]);
       setUsers(usersRes.data || []);
       setAccessLogs(logsRes.data || []);
@@ -44,6 +51,9 @@ const AccessControl = () => {
       setOnlineUsers(onlineRes.data?.online_users || []);
       setTrackingStats(statsRes.data);
       setCampaignStats(campRes.data);
+      setCrmContacts(crmRes.data || []);
+      setTransactions(txRes.data || []);
+      setRevenueStats(revRes.data);
     } catch (e) {
       toast.error("Erreur de chargement");
     }
@@ -122,11 +132,13 @@ const AccessControl = () => {
       </div>
 
       <Tabs defaultValue="manage" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger value="manage" className="text-xs" data-testid="tab-manage"><Shield className="h-3.5 w-3.5 mr-1" /> Gestion acces</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6 h-auto">
+          <TabsTrigger value="manage" className="text-xs" data-testid="tab-manage"><Shield className="h-3.5 w-3.5 mr-1" /> Acces</TabsTrigger>
+          <TabsTrigger value="crm" className="text-xs" data-testid="tab-crm"><Users className="h-3.5 w-3.5 mr-1" /> CRM</TabsTrigger>
+          <TabsTrigger value="revenue" className="text-xs" data-testid="tab-revenue"><DollarSign className="h-3.5 w-3.5 mr-1" /> Revenus</TabsTrigger>
           <TabsTrigger value="online" className="text-xs" data-testid="tab-online"><Eye className="h-3.5 w-3.5 mr-1" /> En ligne</TabsTrigger>
           <TabsTrigger value="campaigns" className="text-xs" data-testid="tab-campaigns"><Gift className="h-3.5 w-3.5 mr-1" /> Campagnes</TabsTrigger>
-          <TabsTrigger value="logs" className="text-xs" data-testid="tab-logs"><Clock className="h-3.5 w-3.5 mr-1" /> Historique</TabsTrigger>
+          <TabsTrigger value="logs" className="text-xs" data-testid="tab-logs"><Clock className="h-3.5 w-3.5 mr-1" /> Logs</TabsTrigger>
         </TabsList>
 
         {/* Tab: Manage Access */}
@@ -261,6 +273,103 @@ const AccessControl = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Tab: CRM */}
+        <TabsContent value="crm" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-600" /> Contacts CRM ({crmContacts.length})</span>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const csv = "Nom,Email,Type,Abonnement,Date\n" + crmContacts.map(c => `"${c.name}","${c.email}","${c.type}","${c.subscription}","${c.created_at}"`).join("\n");
+                  const blob = new Blob([csv], {type: "text/csv"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_contacts.csv"; a.click();
+                  toast.success("Contacts exportes en CSV");
+                }} data-testid="export-crm"><Download className="h-3.5 w-3.5 mr-1" /> Exporter</Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {crmContacts.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg" data-testid={`crm-${c.id}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${c.type === "user" ? "bg-blue-500" : "bg-amber-500"}`}>
+                        {c.name?.charAt(0) || "?"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{c.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Mail className="h-3 w-3" />{c.email}
+                          {c.phone && <><Phone className="h-3 w-3 ml-2" />{c.phone}</>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge className={c.type === "user" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}>{c.type === "user" ? "Utilisateur" : "Lead"}</Badge>
+                      {getSubBadge(c.subscription)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Revenue */}
+        <TabsContent value="revenue" className="space-y-6">
+          {revenueStats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Card><CardContent className="p-4 text-center">
+                <DollarSign className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-emerald-700">{(revenueStats.total_revenue || 0).toLocaleString()} FCFA</p>
+                <p className="text-xs text-slate-500">Revenu total</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <TrendingUp className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-blue-700">{revenueStats.total_transactions}</p>
+                <p className="text-xs text-slate-500">Transactions</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <Users className="h-5 w-5 text-violet-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-violet-700">{revenueStats.paying_users}/{revenueStats.total_users}</p>
+                <p className="text-xs text-slate-500">Payants / Total</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <BarChart3 className="h-5 w-5 text-amber-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-amber-700">{(revenueStats.arpu || 0).toLocaleString()} FCFA</p>
+                <p className="text-xs text-slate-500">ARPU</p>
+              </CardContent></Card>
+            </div>
+          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>Transactions recentes</span>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const csv = "Email,Type,Montant,Devise,Plan,Statut,Date\n" + transactions.map(t => `"${t.user_email}","${t.type}","${t.amount}","${t.currency}","${t.plan}","${t.status}","${t.created_at}"`).join("\n");
+                  const blob = new Blob([csv], {type: "text/csv"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "transactions.csv"; a.click();
+                  toast.success("Transactions exportees");
+                }}><Download className="h-3.5 w-3.5 mr-1" /> CSV</Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {transactions.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium">{t.user_email}</p>
+                      <p className="text-xs text-slate-500">{t.type} - {t.plan}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-emerald-700">{t.amount?.toLocaleString()} {t.currency}</p>
+                      <Badge className={t.status === "completed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>{t.status}</Badge>
+                    </div>
+                  </div>
+                ))}
+                {transactions.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Aucune transaction</p>}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Tab: Online Users */}

@@ -6,9 +6,10 @@ import {
   Bot, Play, Pause, RotateCcw, Eye,
   ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
   Maximize2, Move3d, Wifi, Battery, Thermometer,
-  Navigation, Activity, Droplets, Leaf
+  Navigation, Activity, Droplets, Leaf, Camera, Video, Scan
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { toast } from "sonner";
 
 const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
   const [isMoving, setIsMoving] = useState(false);
@@ -16,11 +17,43 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
   const [controlMode, setControlMode] = useState("auto");
   const [robotAngle, setRobotAngle] = useState(0);
   const [robotPos, setRobotPos] = useState({ x: 50, y: 50 });
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
+  const [aiDetections, setAiDetections] = useState([]);
+  const videoRef = useRef(null);
   const [telemetry, setTelemetry] = useState({
     battery: 87, speed: 0, temperature: 42, signal: 95,
     latitude: 5.9631, longitude: 10.1591, heading: 0
   });
   const animRef = useRef(null);
+
+  const connectRobotCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }
+      });
+      setCameraStream(stream);
+      setShowCamera(true);
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+      toast.success("Camera robot connectee !");
+      // Start AI detection simulation
+      const interval = setInterval(() => {
+        setAiDetections([
+          { label: "Mais (Zea mays)", conf: 94, x: 15, y: 20, w: 25, h: 30, color: "#22c55e" },
+          { label: "Ravageur detecte", conf: 78, x: 55, y: 35, w: 15, h: 15, color: "#ef4444" },
+          { label: "Sol fertile", conf: 88, x: 10, y: 65, w: 35, h: 20, color: "#3b82f6" },
+          { label: "Feuille saine", conf: 91, x: 65, y: 55, w: 20, h: 25, color: "#22c55e" },
+        ].map(d => ({...d, conf: Math.min(99, d.conf + Math.floor(Math.random() * 5 - 2))})));
+      }, 2000);
+      return () => clearInterval(interval);
+    } catch { toast.error("Camera non disponible"); }
+  };
+
+  const disconnectRobotCamera = () => {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); setCameraStream(null); }
+    setShowCamera(false);
+    setAiDetections([]);
+  };
 
   // Animate robot movement
   useEffect(() => {
@@ -211,8 +244,48 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
               <div className="flex justify-between p-1.5 bg-slate-50 rounded"><span className="text-slate-500">Temperature</span><span className="font-bold">{telemetry.temperature}C</span></div>
               <div className="flex justify-between p-1.5 bg-slate-50 rounded"><span className="text-slate-500">Signal</span><span className="font-bold">{telemetry.signal}%</span></div>
             </div>
+
+            {/* Camera Toggle */}
+            <Button className={cn("w-full", showCamera ? "bg-red-500 hover:bg-red-600" : "bg-blue-600 hover:bg-blue-700")} size="sm" onClick={showCamera ? disconnectRobotCamera : connectRobotCamera} data-testid="robot-camera-btn">
+              <Camera className="h-4 w-4 mr-1" /> {showCamera ? "Deconnecter camera" : "Connecter camera robot"}
+            </Button>
           </div>
         </div>
+
+        {/* Robot Camera Feed with AI Detection */}
+        {showCamera && (
+          <div className="relative rounded-lg overflow-hidden bg-black mt-4" data-testid="robot-camera-feed">
+            <video ref={videoRef} className="w-full" autoPlay playsInline muted style={{ maxHeight: "320px", objectFit: "cover" }} />
+            {/* AI Detection Overlays */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {aiDetections.map((d, i) => (
+                <g key={i}>
+                  <rect x={`${d.x}%`} y={`${d.y}%`} width={`${d.w}%`} height={`${d.h}%`} fill="none" stroke={d.color} strokeWidth="2" strokeDasharray="4" rx="4" />
+                  <rect x={`${d.x}%`} y={`${d.y - 4}%`} width={`${d.w}%`} height="4%" fill={d.color} opacity="0.8" rx="2" />
+                  <text x={`${d.x + 0.5}%`} y={`${d.y - 1}%`} fill="white" fontSize="10" fontWeight="bold">{d.label} ({d.conf}%)</text>
+                </g>
+              ))}
+            </svg>
+            <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-2">
+              <Scan className="h-3 w-3 text-emerald-400 animate-pulse" /> IA Active - {aiDetections.length} detections
+            </div>
+            <div className="absolute bottom-2 right-2 flex gap-1">
+              <Button size="sm" variant="outline" className="bg-black/50 text-white border-white/20 text-xs h-7" onClick={() => {
+                if (videoRef.current) {
+                  const canvas = document.createElement("canvas");
+                  canvas.width = videoRef.current.videoWidth;
+                  canvas.height = videoRef.current.videoHeight;
+                  canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
+                  const a = document.createElement("a");
+                  a.href = canvas.toDataURL("image/png");
+                  a.download = `robot_capture_${Date.now()}.png`;
+                  a.click();
+                  toast.success("Capture exportee !");
+                }
+              }}><Camera className="h-3 w-3 mr-1" /> Capture</Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

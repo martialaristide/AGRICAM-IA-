@@ -14,6 +14,7 @@ import {
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -36,11 +37,12 @@ const RenderMessage = ({ content }) => {
 };
 
 const AgribotIA = () => {
+  const { language } = useLanguage();
   // Chat state
   const [conversations, setConversations] = useState(() => {
     const saved = localStorage.getItem("agricam_conversations");
     return saved ? JSON.parse(saved) : [{ id: "default", title: "Nouvelle conversation", messages: [
-      { role: "assistant", content: "Bonjour ! Je suis **AgriBot IA**, votre expert agricole intelligent. Je peux analyser vos images, predire les rendements, detecter les maladies et vous conseiller. Comment puis-je vous aider ?", ts: Date.now() }
+      { role: "assistant", content: "Bonjour ! Je suis **AGRI GENIUS**, votre expert agricole intelligent. Je peux analyser vos images, predire les rendements, detecter les maladies et vous conseiller. Comment puis-je vous aider ?", ts: Date.now() }
     ]}];
   });
   const [activeConvId, setActiveConvId] = useState(() => {
@@ -123,7 +125,8 @@ const AgribotIA = () => {
 
       const response = await api.post("/agribot-ai/chat", {
         message: input || "Analysez cette image en detail: identifiez les cultures, detectez les maladies, evaluez la sante des plantes et donnez vos recommandations.",
-        image_base64: imageBase64
+        image_base64: imageBase64,
+        context: `Respond in language: ${language}`
       });
 
       const data = response.data;
@@ -252,7 +255,7 @@ const AgribotIA = () => {
         <div className="p-3 border-t border-slate-200 text-center">
           <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
             <Brain className="h-3.5 w-3.5" />
-            <span>Gemini Pro</span>
+            <span>AGRI GENIUS</span>
           </div>
         </div>
       </div>
@@ -270,7 +273,7 @@ const AgribotIA = () => {
                 <Bot className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="font-semibold text-slate-800 text-sm">AgriBot IA</h2>
+                <h2 className="font-semibold text-slate-800 text-sm">AGRI GENIUS</h2>
                 <p className="text-xs text-slate-400">Expert agricole intelligent</p>
               </div>
             </div>
@@ -286,7 +289,7 @@ const AgribotIA = () => {
                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-4">
                   <Bot className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-1">AgriBot IA</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-1">AGRI GENIUS</h3>
                 <p className="text-sm text-slate-500 mb-6">Votre assistant agricole intelligent</p>
                 <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                   {quickPrompts.map((q, i) => (

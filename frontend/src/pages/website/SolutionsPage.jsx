@@ -21,7 +21,7 @@ const SolutionsPage = () => {
       icon: Bot,
       title: "AgriBot IA",
       subtitle: "Votre Expert Agricole 24/7",
-      description: "Un assistant intelligent propulsé par Gemini Pro qui comprend l'agriculture africaine. Posez vos questions, uploadez des images, et recevez des conseils experts instantanément.",
+      description: "Un assistant intelligent propulsé par AGRI GENIUS qui comprend l'agriculture africaine. Posez vos questions, uploadez des images, et recevez des conseils experts instantanément.",
       image: IMAGES.heroAI,
       color: "emerald",
       features: [

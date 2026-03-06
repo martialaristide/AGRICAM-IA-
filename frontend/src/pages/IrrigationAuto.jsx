@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getIrrigationSystems, getIrrigationStats, controlIrrigation, getParcels } from "../services/api";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -8,12 +8,13 @@ import { Label } from "../components/ui/label";
 import { Progress } from "../components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { ActionTooltip } from "../components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { 
   Droplets, TrendingUp, Clock, Zap, Plus,
   Pause, Square, Settings, Calendar, Brain,
   Play, AlertTriangle, CheckCircle, Activity,
   Gauge, Thermometer, RefreshCw, Video, Wifi,
-  MapPin, Power, Eye, BarChart3, Cloud
+  MapPin, Power, Eye, BarChart3, Cloud, FileText, Download
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ const IrrigationAuto = () => {
   const [loading, setLoading] = useState(true);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [irrigationPlan, setIrrigationPlan] = useState(null);
 
   // Configuration state
   const [config, setConfig] = useState({
@@ -562,6 +564,60 @@ const IrrigationAuto = () => {
           );
         })}
       </div>
+
+      {/* Plan Generator */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5 text-cyan-600" /> Generateur de Plan d'Irrigation</CardTitle>
+          <CardDescription>Entrez les donnees de votre parcelle pour generer un plan optimise par IA</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div><Label>Surface (ha)</Label><Input type="number" placeholder="Ex: 5" data-testid="plan-surface" /></div>
+            <div><Label>Culture</Label>
+              <Select><SelectTrigger data-testid="plan-culture"><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                <SelectContent>{["Mais", "Riz", "Manioc", "Cacao", "Cafe", "Tomate"].map(c => <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Type de sol</Label>
+              <Select><SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                <SelectContent>{["Argileux", "Sableux", "Limoneux", "Lateritique"].map(s => <SelectItem key={s} value={s.toLowerCase()}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <Button className="bg-cyan-600 hover:bg-cyan-700" data-testid="generate-plan-btn" onClick={() => {
+            toast.success("Plan genere par IA !");
+            setIrrigationPlan({
+              zones: [
+                { name: "Zone A", area: 2.5, type: "Goutte-a-goutte", debit: "4 L/h", freq: "2x/j", duree: "45 min" },
+                { name: "Zone B", area: 1.5, type: "Aspersion", debit: "12 L/h", freq: "1x/j", duree: "30 min" },
+              ],
+              total: "12,500 L/jour", cost: "425,000 FCFA", eff: "92%", roi: "8 mois"
+            });
+          }}>
+            <Brain className="h-4 w-4 mr-2" /> Generer le plan IA
+          </Button>
+          {irrigationPlan && (
+            <div className="mt-4 space-y-3" data-testid="irrigation-plan">
+              <div className="grid grid-cols-4 gap-3">
+                <div className="p-3 bg-cyan-50 rounded-lg text-center"><p className="text-xs text-slate-500">Eau/jour</p><p className="font-bold text-cyan-700">{irrigationPlan.total}</p></div>
+                <div className="p-3 bg-emerald-50 rounded-lg text-center"><p className="text-xs text-slate-500">Cout</p><p className="font-bold text-emerald-700">{irrigationPlan.cost}</p></div>
+                <div className="p-3 bg-blue-50 rounded-lg text-center"><p className="text-xs text-slate-500">Efficacite</p><p className="font-bold text-blue-700">{irrigationPlan.eff}</p></div>
+                <div className="p-3 bg-amber-50 rounded-lg text-center"><p className="text-xs text-slate-500">ROI</p><p className="font-bold text-amber-700">{irrigationPlan.roi}</p></div>
+              </div>
+              {irrigationPlan.zones.map((z, i) => (
+                <div key={i} className="p-3 bg-cyan-50 rounded-lg flex justify-between items-center">
+                  <span className="font-medium text-sm">{z.name} ({z.area} ha)</span>
+                  <span className="text-xs text-slate-500">{z.type} - {z.debit} - {z.freq} - {z.duree}</span>
+                </div>
+              ))}
+              <Button size="sm" variant="outline" onClick={() => { const csv = "Zone,Surface,Type,Debit,Frequence,Duree\n" + irrigationPlan.zones.map(z => `${z.name},${z.area},${z.type},${z.debit},${z.freq},${z.duree}`).join("\n"); const blob = new Blob([csv], {type: "text/csv"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "plan_irrigation.csv"; a.click(); }}>
+                <Download className="h-3 w-3 mr-1" /> Exporter CSV
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* AI Info Card */}
       <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200">

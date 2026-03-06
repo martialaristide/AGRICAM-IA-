@@ -603,7 +603,7 @@ const AnalyseImagesIA = () => {
                 <Badge className="bg-white/20 text-white">Vision par ordinateur</Badge>
                 <Badge className="bg-white/20 text-white">Deep Learning</Badge>
                 <Badge className="bg-white/20 text-white">Analyse spectrale</Badge>
-                <Badge className="bg-white/20 text-white">Gemini AI</Badge>
+                <Badge className="bg-white/20 text-white">AGRI GENIUS AI</Badge>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <div className="bg-white/10 rounded-lg p-3 text-center">

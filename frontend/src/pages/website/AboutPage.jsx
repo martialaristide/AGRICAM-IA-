@@ -60,7 +60,7 @@ const AboutPage = () => {
   const milestones = [
     { year: "2022", event: "Création d'African AI Solutions" },
     { year: "2023", event: "Lancement de la plateforme AGRICAM IA" },
-    { year: "2023", event: "Intégration de l'IA Gemini Pro" },
+    { year: "2023", event: "Intégration de l'IA AGRI GENIUS" },
     { year: "2024", event: "Expansion dans 10 pays africains" },
     { year: "2024", event: "Prix Innovation Agricole" },
     { year: "2025", event: "Lancement des modules Drones et Robots" }

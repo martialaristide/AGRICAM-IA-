@@ -32,7 +32,7 @@ const HomePage = () => {
     {
       icon: Bot,
       title: "AgriBot IA",
-      description: "Assistant intelligent propulsé par Gemini Pro. Analyse d'images, détection de maladies, prédiction de rendement et conseils personnalisés.",
+      description: "Assistant intelligent propulsé par AGRI GENIUS. Analyse d'images, détection de maladies, prédiction de rendement et conseils personnalisés.",
       image: IMAGES.heroAI,
       color: "emerald",
       link: "/solutions/agribot-ia"
@@ -169,7 +169,7 @@ const HomePage = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-300 text-sm mb-8 backdrop-blur-sm">
               <Zap className="h-4 w-4" />
-              Propulsé par Gemini Pro AI
+              Propulsé par AGRI GENIUS AI
               <Badge className="bg-emerald-500 text-white text-xs">Nouveau</Badge>
             </div>
 

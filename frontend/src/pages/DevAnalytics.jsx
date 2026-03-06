@@ -177,7 +177,7 @@ const DevAnalytics = () => {
               <CardContent className="space-y-3">
                 {[
                   { name: "API Backend", status: "online" }, { name: "Base de donnees", status: "online" },
-                  { name: "Service IA (Gemini)", status: "online" }, { name: "Service Meteo", status: "online" },
+                  { name: "Service IA (AGRI GENIUS)", status: "online" }, { name: "Service Meteo", status: "online" },
                   { name: "Service SMS", status: "degraded" }, { name: "Service Paiement", status: "offline" },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-slate-50">

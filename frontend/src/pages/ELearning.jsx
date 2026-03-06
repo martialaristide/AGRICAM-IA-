@@ -9,11 +9,17 @@ import ExportButton from "../components/ExportButton";
 import { 
   GraduationCap, BookOpen, Clock, Star, Award,
   Play, CheckCircle, Users, FileText, Video,
-  Download, ChevronRight, Trophy, Sparkles
+  Download, ChevronRight, Trophy, Sparkles,
+  Plus, Upload, ShoppingCart, Edit2, Eye
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Textarea } from "../components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 const ELearning = () => {
   const [courses, setCourses] = useState([]);
@@ -22,6 +28,8 @@ const ELearning = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCertificateDialog, setShowCertificateDialog] = useState(false);
   const [certificate, setCertificate] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newCourse, setNewCourse] = useState({ title: "", description: "", category: "agriculture", level: "debutant", price: 0, type: "video", duration: "" });
 
   useEffect(() => {
     fetchData();
@@ -122,6 +130,9 @@ const ELearning = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+            <Button className="bg-white text-indigo-600 hover:bg-white/90" onClick={() => setShowCreateDialog(true)} data-testid="add-course-btn">
+              <Plus className="h-4 w-4 mr-2" /> Creer une formation
+            </Button>
             {/* Export Button */}
             <ExportButton 
               data={courses} 
@@ -425,6 +436,69 @@ const ELearning = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Course Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-indigo-600" /> Creer une formation</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Titre *</Label><Input value={newCourse.title} onChange={e => setNewCourse(p => ({...p, title: e.target.value}))} placeholder="Ex: Agriculture de precision" data-testid="course-title" /></div>
+            <div><Label>Description</Label><Textarea value={newCourse.description} onChange={e => setNewCourse(p => ({...p, description: e.target.value}))} placeholder="Description du cours..." rows={3} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Categorie</Label>
+                <Select value={newCourse.category} onValueChange={v => setNewCourse(p => ({...p, category: v}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["agriculture", "technologie", "gestion", "elevage", "irrigation", "drones"].map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Niveau</Label>
+                <Select value={newCourse.level} onValueChange={v => setNewCourse(p => ({...p, level: v}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="debutant">Debutant</SelectItem>
+                    <SelectItem value="intermediaire">Intermediaire</SelectItem>
+                    <SelectItem value="avance">Avance</SelectItem>
+                    <SelectItem value="expert">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><Label>Type</Label>
+                <Select value={newCourse.type} onValueChange={v => setNewCourse(p => ({...p, type: v}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="ebook">eBook</SelectItem>
+                    <SelectItem value="powerpoint">PowerPoint</SelectItem>
+                    <SelectItem value="live">Formation Live</SelectItem>
+                    <SelectItem value="mixed">Mixte</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Duree</Label><Input value={newCourse.duration} onChange={e => setNewCourse(p => ({...p, duration: e.target.value}))} placeholder="Ex: 4h" /></div>
+              <div><Label>Prix (FCFA)</Label><Input type="number" value={newCourse.price} onChange={e => setNewCourse(p => ({...p, price: parseInt(e.target.value) || 0}))} /></div>
+            </div>
+            <div><Label>Fichiers (videos, documents, images)</Label>
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors cursor-pointer">
+                <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm text-slate-500">Glissez vos fichiers ici ou cliquez</p>
+                <p className="text-xs text-slate-400 mt-1">PDF, PPTX, MP4, MOV, JPEG, PNG (max 500MB)</p>
+                <input type="file" className="hidden" multiple accept=".pdf,.pptx,.mp4,.mov,.jpg,.jpeg,.png,.epub" />
+              </div>
+            </div>
+            <Button className="w-full bg-indigo-600 hover:bg-indigo-700" data-testid="create-course-btn" onClick={() => {
+              if (!newCourse.title) { toast.error("Titre requis"); return; }
+              setCourses(prev => [...prev, { ...newCourse, id: `course_${Date.now()}`, instructor: "Admin", students: 0, rating: 0, progress: 0, created_at: new Date().toISOString() }]);
+              toast.success("Formation creee avec succes !");
+              setShowCreateDialog(false);
+              setNewCourse({ title: "", description: "", category: "agriculture", level: "debutant", price: 0, type: "video", duration: "" });
+            }}><Plus className="h-4 w-4 mr-2" /> Publier la formation</Button>
+          </div>
         </DialogContent>
       </Dialog>
 

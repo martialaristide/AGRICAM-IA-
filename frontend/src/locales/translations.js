@@ -554,16 +554,123 @@ export const translations = {
       humidity: "湿度",
       wind: "风速"
     }
+  },
+
+  // African Languages
+  ff: {
+    nav: {
+      home: "Jaɓɓorgo", solutions: "Peeje", pricing: "Njuɓɓudi", about: "Baɗte amen",
+      contact: "Jokkondiral", login: "Naatgu", register: "Winnditaago", logout: "Yaltugu",
+      dashboard: "Taabal njiimaandi", admin: "Njiimaandi", parcels: "Gese", sensors: "Ƴeewirɗe IoT",
+      drones: "Drones", robots: "Robots", satellites: "Natal weeyo", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Ƴeewndal toownngal", camera: "Camera IA", irrigation: "Ndiyam ngesa",
+      recommendations: "Wasiyaaji IA", marketplace: "Luumo", alerts: "Jeertine",
+      settings: "Teelte", analytics: "Ƴeewndal", financial: "Jawdi", accessControl: "Njiimaandi naatgu",
+      database: "Dokkorde keɓe"
+    },
+    common: { loading: "Ina loowa...", save: "Mooftu", cancel: "Haaytu", delete: "Momtu", edit: "Waɗɗitu", add: "Ɓeydu", search: "Yiilo" },
+    weather: { title: "Weeyo", temperature: "Ngulndam", humidity: "Ɗuƴƴe", wind: "Hendu" }
+  },
+  ew: {
+    nav: {
+      home: "Nda", solutions: "Minsili", pricing: "Akuma", about: "Bia ene",
+      contact: "Keka ene", login: "Ke nkɔ", register: "Ŋwala", logout: "Fi nkɔ",
+      dashboard: "Akontaban", admin: "Nkontrol", parcels: "Afub", sensors: "Bisensɔ",
+      drones: "Drones", robots: "Robots", satellites: "Foto Esibi", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Analiz abui", camera: "Camera IA", irrigation: "Nsui afub",
+      recommendations: "Minkpaman IA", marketplace: "Makat", alerts: "Nkwa",
+      settings: "Mintetenan", analytics: "Analitik", financial: "Moni", accessControl: "Nkontrol nkɔ",
+      database: "Datos"
+    },
+    common: { loading: "Eza lod...", save: "Kigan", cancel: "Bele", delete: "Wos", edit: "Timba", add: "Bɔd", search: "Sɛtɛ" },
+    weather: { title: "Mvul", temperature: "Afianan", humidity: "Nsui", wind: "Fefɛ" }
+  },
+  bam: {
+    nav: {
+      home: "So", solutions: "Furakɛli", pricing: "Sɔngɔ", about: "An ka kow",
+      contact: "An sɔrɔ", login: "Don", register: "Tɔgɔ sɛbɛn", logout: "Bɔ",
+      dashboard: "Daɲɛgafe", admin: "Kafow", parcels: "Foro", sensors: "Sensɛri IoT",
+      drones: "Drones", robots: "Robots", satellites: "Sankolo jaa", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Sɛgɛsɛgɛli", camera: "Camera IA", irrigation: "Ji kɛ foro la",
+      recommendations: "Ladilikan IA", marketplace: "Sugu", alerts: "Laadili",
+      settings: "Labɛnni", analytics: "Jateminɛ", financial: "Wari ko", accessControl: "Doncogo kontɔrɔli",
+      database: "Donko marayɔrɔ"
+    },
+    common: { loading: "A bɛ se la...", save: "Mara", cancel: "A dabila", delete: "Bɔ", edit: "Yɛlɛma", add: "Fara a kan", search: "Ɲini" },
+    weather: { title: "Waati", temperature: "Funteni", humidity: "Jikura", wind: "Fɲɛ" }
+  },
+  ha: {
+    nav: {
+      home: "Gida", solutions: "Hanyoyi", pricing: "Farashi", about: "Game da mu",
+      contact: "Tuntuɓe mu", login: "Shiga", register: "Yi rajista", logout: "Fita",
+      dashboard: "Dashboard", admin: "Gudanarwa", parcels: "Gonaki", sensors: "Na'urorin IoT",
+      drones: "Jiragen sama", robots: "Robots", satellites: "Hotunan tauraro dan adam", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Nazari mai zurfi", camera: "Camera IA", irrigation: "Ban ruwa",
+      recommendations: "Shawarwarin IA", marketplace: "Kasuwa", alerts: "Faɗakarwa",
+      settings: "Saituna", analytics: "Nazari", financial: "Kuɗi", accessControl: "Kula da shiga",
+      database: "Ma'ajin bayanai"
+    },
+    common: { loading: "Ana lodi...", save: "Ajiye", cancel: "Soke", delete: "Goge", edit: "Gyara", add: "Ƙara", search: "Bincika" },
+    weather: { title: "Yanayi", temperature: "Zafi", humidity: "Danshi", wind: "Iska" }
+  },
+  sw: {
+    nav: {
+      home: "Nyumbani", solutions: "Suluhisho", pricing: "Bei", about: "Kuhusu",
+      contact: "Wasiliana", login: "Ingia", register: "Jisajili", logout: "Toka",
+      dashboard: "Dashibodi", admin: "Usimamizi", parcels: "Mashamba", sensors: "Sensorer za IoT",
+      drones: "Ndege zisizo na rubani", robots: "Roboti", satellites: "Picha za setilaiti", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Uchambuzi wa hali ya juu", camera: "Kamera ya AI", irrigation: "Umwagiliaji",
+      recommendations: "Mapendekezo ya AI", marketplace: "Soko", alerts: "Tahadhari",
+      settings: "Mipangilio", analytics: "Uchambuzi", financial: "Fedha", accessControl: "Udhibiti wa ufikiaji",
+      database: "Hifadhidata"
+    },
+    common: { loading: "Inapakia...", save: "Hifadhi", cancel: "Ghairi", delete: "Futa", edit: "Hariri", add: "Ongeza", search: "Tafuta" },
+    weather: { title: "Hali ya hewa", temperature: "Joto", humidity: "Unyevu", wind: "Upepo" }
+  },
+  wo: {
+    nav: {
+      home: "Kër", solutions: "Njariñ", pricing: "Njëg", about: "Ci sunu biir",
+      contact: "Jokko", login: "Dugg", register: "Bindu sa turu", logout: "Génn",
+      dashboard: "Panoo", admin: "Yonent", parcels: "Tool", sensors: "Jëkkalëkaay IoT",
+      drones: "Drones", robots: "Robots", satellites: "Nataal Asamaan", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Seet bu xóot", camera: "Camera IA", irrigation: "Ndox tool",
+      recommendations: "Digal IA", marketplace: "Marse", alerts: "Moytuwaayu",
+      settings: "Topp", analytics: "Saytu", financial: "Xaalis", accessControl: "Duggu kontrol",
+      database: "Baasu njoxe"
+    },
+    common: { loading: "Yegge naa...", save: "Denc", cancel: "Bàyyi", delete: "Far", edit: "Soppi", add: "Yokk", search: "Wut" },
+    weather: { title: "Wer", temperature: "Tangaay", humidity: "Naxam", wind: "Ngelaw" }
+  },
+  yo: {
+    nav: {
+      home: "Ile", solutions: "Ojutu", pricing: "Iye owo", about: "Nipa wa",
+      contact: "Pe wa", login: "Wọle", register: "Forukọsilẹ", logout: "Jade",
+      dashboard: "Dasibodu", admin: "Alakoso", parcels: "Oko", sensors: "Ero IoT",
+      drones: "Drones", robots: "Robots", satellites: "Aworan satẹlaiti", agribot: "AGRI GENIUS",
+      advancedAnalysis: "Itupalẹ ilọsiwaju", camera: "Kamẹra AI", irrigation: "Irigeshọn",
+      recommendations: "Igbimọran AI", marketplace: "Ọja", alerts: "Ikilọ",
+      settings: "Eto", analytics: "Itupalẹ", financial: "Owo", accessControl: "Ṣakoso iwọle",
+      database: "Ibi ipamọ data"
+    },
+    common: { loading: "N tẹsiwaju...", save: "Fi pamọ", cancel: "Fagile", delete: "Paarẹ", edit: "Ṣatunkọ", add: "Fi kun", search: "Wa" },
+    weather: { title: "Oju ojo", temperature: "Iwọn ooru", humidity: "Ọrinrin", wind: "Afẹfẹ" }
   }
 };
 
 export const supportedLanguages = [
-  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "fr", name: "Francais", flag: "🇫🇷" },
   { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "es", name: "Espanol", flag: "🇪🇸" },
   { code: "de", name: "Deutsch", flag: "🇩🇪" },
   { code: "ar", name: "العربية", flag: "🇸🇦", rtl: true },
-  { code: "zh", name: "中文", flag: "🇨🇳" }
+  { code: "zh", name: "中文", flag: "🇨🇳" },
+  { code: "sw", name: "Kiswahili", flag: "🇰🇪" },
+  { code: "ha", name: "Hausa", flag: "🇳🇬" },
+  { code: "yo", name: "Yoruba", flag: "🇳🇬" },
+  { code: "wo", name: "Wolof", flag: "🇸🇳" },
+  { code: "bam", name: "Bambara", flag: "🇲🇱" },
+  { code: "ff", name: "Fulfulde", flag: "🇨🇲" },
+  { code: "ew", name: "Ewondo", flag: "🇨🇲" }
 ];
 
 export default translations;
