@@ -20,6 +20,7 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
   const [aiDetections, setAiDetections] = useState([]);
+  const [env3d, setEnv3d] = useState(null);
   const videoRef = useRef(null);
   const [telemetry, setTelemetry] = useState({
     battery: 87, speed: 0, temperature: 42, signal: 95,
@@ -286,6 +287,85 @@ const Robot3DViewer = ({ robotId, robotName = "AgriBot-01" }) => {
             </div>
           </div>
         )}
+
+        {/* 3D Environment Reconstruction */}
+        <div className="mt-4" data-testid="3d-reconstruction">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-semibold flex items-center gap-2"><Move3d className="h-4 w-4 text-violet-600" /> Reconstruction 3D IA</h4>
+            <Button size="sm" variant="outline" className="text-xs" onClick={async () => {
+              try {
+                const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ai/3d-reconstruct`, {
+                  method: "POST", headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({source: "robot"})
+                });
+                const data = await res.json();
+                setEnv3d(data.environment);
+                toast.success("Environnement 3D reconstruit !");
+              } catch { toast.error("Erreur reconstruction"); }
+            }} data-testid="reconstruct-3d-btn">
+              <Scan className="h-3 w-3 mr-1" /> Reconstruire
+            </Button>
+          </div>
+          {env3d ? (
+            <div className="bg-slate-900 rounded-lg p-4 text-white">
+              <svg viewBox="0 0 400 200" className="w-full">
+                {/* Ground */}
+                <defs>
+                  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4a7c59" />
+                    <stop offset="100%" stopColor="#2d5a3a" />
+                  </linearGradient>
+                  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1a365d" />
+                    <stop offset="100%" stopColor="#2d3748" />
+                  </linearGradient>
+                </defs>
+                <rect width="400" height="120" fill="url(#sky)" />
+                <rect y="120" width="400" height="80" fill="url(#ground)" />
+                {/* Grid for 3D effect */}
+                {[0,1,2,3,4,5,6,7,8].map(i => <line key={`h${i}`} x1="0" y1={120+i*10} x2="400" y2={120+i*10} stroke="#ffffff15" />)}
+                {[0,1,2,3,4,5,6,7,8,9,10].map(i => <line key={`v${i}`} x1={i*40} y1="120" x2={200+(i-5)*80} y2="200" stroke="#ffffff15" />)}
+                {/* Vegetation */}
+                {env3d.vegetation?.map((v, i) => {
+                  const x = 50 + i * 120;
+                  const h = v.avg_height_m * 12;
+                  const color = v.health === "excellent" ? "#22c55e" : v.health === "good" ? "#4ade80" : "#facc15";
+                  return (
+                    <g key={i}>
+                      <rect x={x-2} y={120-h} width={4} height={h} fill="#8B4513" />
+                      <circle cx={x} cy={120-h-8} r={10+v.count/200} fill={color} opacity="0.8" />
+                      <text x={x} y={120-h-20} textAnchor="middle" fill="white" fontSize="8">{v.type}</text>
+                      <text x={x} y={120-h+35} textAnchor="middle" fill="#a0aec0" fontSize="7">{v.count} plants</text>
+                    </g>
+                  );
+                })}
+                {/* Obstacles */}
+                {env3d.obstacles?.map((o, i) => (
+                  <g key={`o${i}`}>
+                    <circle cx={o.position[0]*3+50} cy={140+i*15} r={o.radius_m*5} fill="#64748b" opacity="0.7" />
+                    <text x={o.position[0]*3+50} y={140+i*15+3} textAnchor="middle" fill="white" fontSize="7">{o.type}</text>
+                  </g>
+                ))}
+                {/* Water */}
+                {env3d.water_sources?.map((w, i) => (
+                  <ellipse key={`w${i}`} cx={w.position[0]*3+50} cy={150} rx={w.volume_estimate_m3/3} ry={8} fill="#3b82f6" opacity="0.6" />
+                ))}
+                {/* Robot position */}
+                <circle cx={robotPos.x*4} cy={140} r={6} fill="#f59e0b" stroke="white" strokeWidth="2" />
+                <text x={robotPos.x*4} y={160} textAnchor="middle" fill="#f59e0b" fontSize="8">Robot</text>
+              </svg>
+              <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                <div className="bg-white/10 p-2 rounded"><span className="text-slate-400">Terrain:</span> {env3d.terrain?.area_m2?.toLocaleString()} m2</div>
+                <div className="bg-white/10 p-2 rounded"><span className="text-slate-400">Pente:</span> {env3d.terrain?.slope_degrees}°</div>
+                <div className="bg-white/10 p-2 rounded"><span className="text-slate-400">Sol:</span> {env3d.terrain?.soil_type}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-100 rounded-lg p-6 text-center text-sm text-slate-400">
+              Cliquez sur "Reconstruire" pour generer la vue 3D de l'environnement
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

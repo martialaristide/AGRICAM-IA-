@@ -107,7 +107,17 @@ const AccessControl = () => {
     <div className="space-y-6" data-testid="access-control-page">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2"><Shield className="h-6 w-6 text-emerald-600" /> Controle d'Acces</h1>
-        <p className="text-slate-500 text-sm">Gerez les acces, suivez l'activite et convertissez les utilisateurs</p>
+        <div className="flex items-center gap-3">
+          <p className="text-slate-500 text-sm">Gerez les acces, suivez l'activite et convertissez les utilisateurs</p>
+          <Button size="sm" variant="outline" className="text-xs" data-testid="send-expiry-alerts" onClick={async () => {
+            try {
+              const res = await api.post("/admin/notifications/trial-expiry");
+              toast.success(`${res.data.notifications_sent} notification(s) envoyee(s) sur ${res.data.expiring_users} utilisateur(s) expirant`);
+            } catch { toast.error("Erreur d'envoi"); }
+          }}>
+            <AlertTriangle className="h-3 w-3 mr-1" /> Envoyer alertes expiration
+          </Button>
+        </div>
       </div>
 
       {/* Stats cards */}

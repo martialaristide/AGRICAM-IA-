@@ -4037,9 +4037,16 @@ async def export_collection(collection_name: str, format: str = "csv", user = De
 try:
     from routes.advanced_api import router as advanced_router
     api_router.include_router(advanced_router, tags=["Advanced"])
-    logger.info("✅ Advanced API routes loaded successfully")
+    logger.info("Advanced API routes loaded")
 except ImportError as e:
-    logger.warning(f"⚠️ Advanced routes not loaded: {e}")
+    logger.warning(f"Advanced routes not loaded: {e}")
+
+try:
+    from routes.admin_extended import router as admin_ext_router
+    api_router.include_router(admin_ext_router, tags=["AdminExtended"])
+    logger.info("Admin Extended routes loaded")
+except ImportError as e:
+    logger.warning(f"Admin Extended routes not loaded: {e}")
 
 # Import and include Agremo-style analysis routes
 try:

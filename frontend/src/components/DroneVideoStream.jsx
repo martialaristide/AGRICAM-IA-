@@ -47,6 +47,7 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
   const [zoom, setZoom] = useState(1);
   const [useRealCamera, setUseRealCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
+  const [videoDetections, setVideoDetections] = useState([]);
   const canvasRef = useRef(null);
   const videoRef = useRef(null);
   const animationRef = useRef(null);
@@ -327,12 +328,20 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
   const startAnalysis = () => {
     setIsAnalyzing(true);
     setAnalysisData(generateAnalysisData());
-    toast.success("Analyse IA démarrée");
+    // Call AI video recognition API
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ai/video-recognize`, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({source: "drone"})
+    }).then(r => r.json()).then(data => {
+      setVideoDetections(data.detections || []);
+    }).catch(() => {});
+    toast.success("Analyse IA demarree - reconnaissance video active");
   };
 
   const stopAnalysis = () => {
     setIsAnalyzing(false);
-    toast.info("Analyse IA arrêtée");
+    setVideoDetections([]);
+    toast.info("Analyse IA arretee");
   };
 
   const takeSnapshot = () => {
@@ -494,6 +503,25 @@ const DroneVideoStream = ({ droneId, droneName = "AgriDrone Alpha" }) => {
               <span className="font-bold">{analysisData.overallHealth.toFixed(1)}%</span>
             </div>
             <Progress value={analysisData.overallHealth} className="h-2" />
+          </div>
+        )}
+        {/* Video AI Detections */}
+        {videoDetections.length > 0 && (
+          <div className="space-y-2" data-testid="video-detections">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Eye className="h-4 w-4 text-violet-600" /> Reconnaissance Video IA ({videoDetections.length} detections)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {videoDetections.map((d, i) => (
+                <div key={i} className={`p-2 rounded-lg border text-xs ${d.category === "ravageur" ? "bg-red-50 border-red-200" : d.category === "culture" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{d.label}</span>
+                    <span className={`font-bold ${d.confidence > 85 ? "text-emerald-600" : "text-amber-600"}`}>{d.confidence}%</span>
+                  </div>
+                  <p className="text-slate-500 mt-0.5">{d.info}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>

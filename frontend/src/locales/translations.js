@@ -200,6 +200,78 @@ export const translations = {
         cookies: "Cookies",
         contact: "Contact"
       }
+    },
+    // Pages
+    pages: {
+      dashboard: {
+        title: "Tableau de bord",
+        welcome: "Bienvenue sur AGRICAM IA",
+        overview: "Vue d'ensemble",
+        quickActions: "Actions rapides",
+        recentActivity: "Activite recente"
+      },
+      irrigation: {
+        title: "Irrigation Automatique",
+        systems: "Systemes d'irrigation",
+        planGenerator: "Generateur de plan",
+        generatePlan: "Generer le plan IA",
+        surface: "Surface (ha)",
+        culture: "Culture",
+        soilType: "Type de sol",
+        waterSource: "Source d'eau",
+        budget: "Budget",
+        mode: "Mode",
+        auto: "Automatique",
+        manual: "Manuel",
+        semiAuto: "Semi-automatique"
+      },
+      formation: {
+        title: "Formation",
+        createCourse: "Creer une formation",
+        myCourses: "Mes formations",
+        category: "Categorie",
+        level: "Niveau",
+        price: "Prix",
+        duration: "Duree",
+        students: "Etudiants",
+        instructor: "Formateur",
+        certificate: "Certificat",
+        publish: "Publier"
+      },
+      accessControl: {
+        title: "Controle d'Acces",
+        grantAccess: "Accorder l'acces",
+        revokeAccess: "Revoquer l'acces",
+        extendAccess: "Prolonger l'acces",
+        trialDays: "Jours d'essai",
+        expired: "Expire",
+        active: "Actif",
+        onlineUsers: "Utilisateurs en ligne",
+        campaigns: "Campagnes",
+        crm: "CRM",
+        revenue: "Revenus",
+        transactions: "Transactions"
+      },
+      satellite: {
+        title: "Images Satellites",
+        scheduledCaptures: "Captures programmees",
+        scheduleCapture: "Programmer une capture",
+        resolution: "Resolution",
+        source: "Source"
+      },
+      camera: {
+        title: "Camera IA",
+        startCamera: "Demarrer la camera",
+        stopCamera: "Arreter la camera",
+        analyze: "Analyser",
+        export: "Exporter"
+      },
+      agribot: {
+        title: "AGRI GENIUS",
+        welcome: "Votre assistant agricole intelligent",
+        placeholder: "Posez votre question...",
+        analyzing: "Analyse en cours..."
+      }
     }
   },
   
@@ -389,6 +461,15 @@ export const translations = {
         cookies: "Cookies",
         contact: "Contact"
       }
+    },
+    pages: {
+      dashboard: { title: "Dashboard", welcome: "Welcome to AGRICAM IA", overview: "Overview", quickActions: "Quick Actions", recentActivity: "Recent Activity" },
+      irrigation: { title: "Auto Irrigation", systems: "Irrigation Systems", planGenerator: "Plan Generator", generatePlan: "Generate AI Plan", surface: "Surface (ha)", culture: "Crop", soilType: "Soil Type", waterSource: "Water Source", budget: "Budget", mode: "Mode", auto: "Automatic", manual: "Manual", semiAuto: "Semi-automatic" },
+      formation: { title: "Training", createCourse: "Create Course", myCourses: "My Courses", category: "Category", level: "Level", price: "Price", duration: "Duration", students: "Students", instructor: "Instructor", certificate: "Certificate", publish: "Publish" },
+      accessControl: { title: "Access Control", grantAccess: "Grant Access", revokeAccess: "Revoke Access", extendAccess: "Extend Access", trialDays: "Trial Days", expired: "Expired", active: "Active", onlineUsers: "Online Users", campaigns: "Campaigns", crm: "CRM", revenue: "Revenue", transactions: "Transactions" },
+      satellite: { title: "Satellite Images", scheduledCaptures: "Scheduled Captures", scheduleCapture: "Schedule Capture", resolution: "Resolution", source: "Source" },
+      camera: { title: "AI Camera", startCamera: "Start Camera", stopCamera: "Stop Camera", analyze: "Analyze", export: "Export" },
+      agribot: { title: "AGRI GENIUS", welcome: "Your intelligent agricultural assistant", placeholder: "Ask your question...", analyzing: "Analyzing..." }
     }
   },
   
