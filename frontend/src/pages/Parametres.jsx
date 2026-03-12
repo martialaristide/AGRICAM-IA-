@@ -14,9 +14,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "../services/api";
+import { useLanguage } from "../contexts/LanguageContext";
+import { supportedLanguages } from "../locales/translations";
 
 const Parametres = () => {
   const navigate = useNavigate();
+  const { language, setLanguage } = useLanguage();
   const [drones, setDrones] = useState([]);
   const [robots, setRobots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -422,9 +425,10 @@ const Parametres = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Langue</Label>
-                <select className="w-full p-2 border rounded-lg" data-testid="select-language">
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
+                <select className="w-full p-2 border rounded-lg" data-testid="select-language" value={language} onChange={e => { setLanguage(e.target.value); toast.success("Langue changee !"); }}>
+                  {supportedLanguages.map(l => (
+                    <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-2">

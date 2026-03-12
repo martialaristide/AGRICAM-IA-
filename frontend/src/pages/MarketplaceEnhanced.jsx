@@ -178,7 +178,8 @@ const MarketplaceEnhanced = () => {
       seller: "Mon Entreprise",
       rating: 0,
       reviews: 0,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"
+      image: newProduct.image || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
+      quality: newProduct.quality || "standard"
     };
 
     try {
@@ -309,6 +310,30 @@ const MarketplaceEnhanced = () => {
                   placeholder="Décrivez votre produit..."
                   rows={3}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Qualite</Label>
+                  <Select value={newProduct.quality || "standard"} onValueChange={v => setNewProduct({...newProduct, quality: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="economique">Economique</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Image du produit</Label>
+                  <Input type="file" accept="image/*" className="text-xs" onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = ev => setNewProduct(p => ({...p, image: ev.target.result}));
+                      reader.readAsDataURL(file);
+                    }
+                  }} />
+                </div>
               </div>
               <Button onClick={handleAddProduct} className="w-full bg-emerald-600">
                 Publier le produit

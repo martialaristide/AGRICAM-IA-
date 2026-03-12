@@ -101,7 +101,12 @@ const RecommandationsIA = () => {
           <Lightbulb className="h-8 w-8" />
           <h1 className="text-3xl font-bold font-[Manrope]">Recommandations IA</h1>
         </div>
-        <p className="text-white/80">Intelligence artificielle pour optimiser vos rendements</p>
+        <p className="text-white/80">Intelligence artificielle integrant les donnees capteurs, drones, robots et AgriBot en temps reel</p>
+        <div className="flex gap-2 mt-3">
+          {["Capteurs IoT", "Drones", "Robots", "AGRI GENIUS", "Meteo"].map(s => (
+            <Badge key={s} className="bg-white/20 text-white text-xs">{s}</Badge>
+          ))}
+        </div>
       </div>
 
       {/* Stats Cards */}

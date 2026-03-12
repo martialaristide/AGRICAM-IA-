@@ -19,79 +19,98 @@ Enterprise-level precision agriculture platform "AGRICAM IA" with drone/robot ma
 
 ## What's Been Implemented
 
-### Core Features (Completed)
+### Core Platform Features (Completed)
 - Full marketing landing page with lead capture
-- Multi-page app: Dashboard, Parcels, Drones, Robots, Satellites, AgriBot, Camera IA, Irrigation, Marketplace, Alerts
+- Multi-page app: Dashboard, Parcels, Drones, Robots, Satellites, AGRI GENIUS, Camera IA, Irrigation, Marketplace, Alerts, Settings
 - Real-time weather integration (OpenWeatherMap)
 - Real-time climate notifications
-- AgriBot IA with ChatGPT-style UI
-- Analyse Avancee (Agremo-style analytics)
-- Camera IA with WebRTC
-- Dev Analytics (Tour de Controle)
-- Multi-language system (FR, EN, ES, DE, AR, ZH)
 - 4 user roles (Admin, Farmer, Supplier, Bank)
+- WebRTC Camera IA
 
-### P0 Fixes (Completed - March 4, 2026)
-1. **AgriBot Fallback System**: TTLCache (500 entries, 1h TTL) + keyword-based fallback with 15+ agricultural responses. Cache hit = 0ms, AI = ~12s, fallback = instant. Response source logged to MongoDB.
-2. **Admin Access Control System**:
-   - Grant trial access with customizable duration and level (basic/premium)
-   - Revoke, reduce, or extend access
-   - Expired trial detection
-   - Full access audit log
-3. **User Activity Tracking**:
-   - Page view tracking per user
-   - Online users (15min window)
-   - Platform usage statistics (today, weekly, top pages)
-4. **Exit Intent Conversion System**:
-   - Auto-detect mouse leaving viewport
-   - Dynamic offers based on subscription (freemium → free trial/discount, basic → upgrade)
-   - Claim tracking and campaign stats
-5. **Database Browser**: Admin-only endpoint to list collections and browse documents with pagination
-6. **Translation Fixes**: Added missing nav keys (admin, financial, advancedAnalysis, accessControl, database)
+### Phase 1 - P0 Corrections (Completed)
+1. **AgriBot Fallback System**: TTLCache (500 entries, 1h TTL) + 15+ agricultural keyword fallback responses
+2. **Admin Access Control System**: Grant/revoke/reduce/extend trial access with audit logs
+3. **User Activity Tracking**: Page views, online users, platform stats
+4. **Exit Intent Conversion**: Auto-detect mouse leave → personalized offers
+5. **Database Browser**: Admin-only collection browsing with pagination
+6. **Translation Keys Fixed**: All nav keys resolved
 
-## API Endpoints
+### Phase 1 - Feature Enhancement (Completed)
+1. **AGRI GENIUS Rebrand**: Removed all "Gemini Pro" mentions, renamed AgriBot to "AGRI GENIUS" across entire app (sidebar, chat, footer)
+2. **13 Languages**: FR, EN, ES, DE, AR, ZH + 7 African: Fulfulde (🇨🇲), Ewondo (🇨🇲), Bambara (🇲🇱), Hausa (🇳🇬), Swahili (🇰🇪), Wolof (🇸🇳), Yoruba (🇳🇬)
+3. **Parcelles Enhanced**: Satellite map with maxZoom 21, wind direction, pressure, visibility, sunrise/sunset, feels_like data. Export to CSV, Excel, JSON, GeoJSON
+4. **AGRI GENIUS Language-Aware**: Responds in the app's active language
+5. **Admin CRM Platform**: Contacts (users + leads), transactions, revenue stats (ARPU, conversion rate), CSV export
+6. **Drone Camera Connection**: Real WebRTC camera connection via WiFi, zoom in/out, AI analysis
+7. **Robot Camera + AI Detection**: Camera connection, AI detection overlays (crops, pests, soil, leaves with confidence %), screenshot export
+8. **Irrigation Plan Generator**: IA-powered plan with zones, water calculations, material lists, CSV/JSON export
+9. **Satellite Capture Scheduling**: Schedule captures by date/time/source/resolution
+10. **Formation/Training System**: Create courses (video, ebook, PowerPoint, live), categories, levels, pricing
+11. **Marketplace Product Images**: Upload product images + quality grade selection
+12. **Settings Language Integration**: Full language selector with all 13 languages connected to LanguageContext
+13. **AI Recommendations**: Enhanced with real-time data source indicators (Capteurs, Drones, Robots, AGRI GENIUS, Meteo)
 
-### Access Control
+### Backend API Endpoints
+
+#### Access Control
 - `POST /api/admin/access/grant` - Grant trial access
 - `POST /api/admin/access/update` - Revoke/reduce/extend
-- `GET /api/admin/access/logs` - Access history
+- `GET /api/admin/access/logs` - Access audit log
 - `GET /api/admin/access/expired` - Expired trials
 
-### User Tracking
+#### User Tracking
 - `POST /api/tracking/activity` - Track page views
-- `GET /api/admin/tracking/users-online` - Online users
-- `GET /api/admin/tracking/stats` - Usage stats
+- `GET /api/admin/tracking/users-online` - Online users (15min)
+- `GET /api/admin/tracking/stats` - Platform stats
 
-### Campaigns
-- `GET /api/campaigns/exit-offers` - Get offers for user
-- `POST /api/campaigns/claim-offer` - Claim an offer
+#### CRM
+- `GET /api/admin/crm/contacts` - All contacts (users + leads)
+- `GET /api/admin/crm/transactions` - Transaction flow
+- `GET /api/admin/crm/revenue-stats` - Revenue KPIs
+
+#### Campaigns
+- `GET /api/campaigns/exit-offers` - User-specific offers
+- `POST /api/campaigns/claim-offer` - Claim offer
 - `GET /api/admin/campaigns/stats` - Campaign metrics
 
-### Database
+#### Database
 - `GET /api/admin/database/collections` - List collections
-- `GET /api/admin/database/browse/{name}` - Browse collection
+- `GET /api/admin/database/browse/{name}` - Browse with pagination
 
-### AgriBot
-- `POST /api/chatbot/message` - Chat (cache → AI → fallback)
+#### Formations
+- `POST /api/formations` - Create course
+- `GET /api/formations` - List published courses
+
+#### Export
+- `GET /api/admin/export/{collection}?format=csv|json` - Export any collection
+
+#### AgriBot
+- `POST /api/chatbot/message` - Chat (cache → AI → fallback, logs source)
 
 ## Remaining Tasks
 
-### P1 - In Progress
-- Complete multi-language (wrap ALL text with t() across all pages)
+### P1 - Important
+- Complete multi-language coverage across ALL page text (not just nav)
+- Backend refactoring (server.py → modular routes)
 - Advanced SEO implementation
-- User behavior analytics in DevAnalytics
 
 ### P2 - Backlog
-- Backend refactoring (server.py → modular routes)
-- Real Mobile Money integration (CinetPay/PayDunya)
-- Real SMS integration (Twilio)
-- Cart abandonment nudges
-- Push to GitHub (via "Save to Github" feature)
+- Real Mobile Money integration (CinetPay/PayDunya) - needs API keys
+- Real SMS integration (Twilio) - needs API keys
+- Full 3D environment reconstruction AI
+- Video AI recognition (fruits/leaves/pests identification)
+- Push to GitHub (via "Save to Github")
 
 ## Key Files
 - `/app/backend/server.py` - Main backend (monolith)
-- `/app/frontend/src/pages/AccessControl.jsx` - Admin access control
+- `/app/frontend/src/pages/AccessControl.jsx` - Admin platform (6 tabs)
 - `/app/frontend/src/pages/DatabaseBrowser.jsx` - DB browser
+- `/app/frontend/src/pages/Parcelles.jsx` - Enhanced parcels with export
+- `/app/frontend/src/pages/AgribotIA.jsx` - AGRI GENIUS chat
+- `/app/frontend/src/pages/IrrigationAuto.jsx` - Irrigation plan generator
+- `/app/frontend/src/pages/ImagesSatellites.jsx` - Satellite scheduling
+- `/app/frontend/src/pages/ELearning.jsx` - Formation system
+- `/app/frontend/src/components/DroneVideoStream.jsx` - Drone camera
+- `/app/frontend/src/components/Robot3DViewer.jsx` - Robot camera + AI
 - `/app/frontend/src/components/ExitIntentModal.jsx` - Exit intent
-- `/app/frontend/src/components/Layout.jsx` - Main layout with tracking
-- `/app/frontend/src/locales/translations.js` - Translation keys
+- `/app/frontend/src/locales/translations.js` - 13 languages
