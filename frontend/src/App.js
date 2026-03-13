@@ -26,6 +26,8 @@ import Analytics from "./pages/Analytics";
 import Alertes from "./pages/Alertes";
 import Parametres from "./pages/Parametres";
 import Financial from "./pages/Financial";
+import SupplierDashboard from "./pages/SupplierDashboard";
+import BankDashboard from "./pages/BankDashboard";
 import ELearning from "./pages/ELearning";
 import MobileMoneyPayment from "./pages/MobileMoneyPayment";
 import RobotControl from "./pages/RobotControl";
@@ -276,6 +278,16 @@ function App() {
               <Route path="analytics" element={<Analytics />} />
               <Route path="alertes" element={<Alertes />} />
               <Route path="financial" element={<Financial />} />
+              <Route path="supplier-dashboard" element={
+                <ProtectedRoute allowedRoles={["admin", "supplier"]}>
+                  <SupplierDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="bank-dashboard" element={
+                <ProtectedRoute allowedRoles={["admin", "financial"]}>
+                  <BankDashboard />
+                </ProtectedRoute>
+              } />
               <Route path="parametres" element={<Parametres />} />
               <Route path="formation" element={<ELearning />} />
               <Route path="paiements" element={<MobileMoneyPayment />} />

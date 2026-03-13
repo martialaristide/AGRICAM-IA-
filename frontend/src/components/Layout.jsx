@@ -31,7 +31,8 @@ import {
   Code2,
   Microscope,
   KeyRound,
-  Database
+  Database,
+  Package
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -168,6 +169,7 @@ const getNavItems = (role, t) => {
   if (role === "supplier") {
     return [
       ...baseItems,
+      { path: "/supplier-dashboard", icon: Package, label: t("roles.supplier.title") || "Dashboard Fournisseur" },
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
       { path: "/paiements", icon: Smartphone, label: "Paiements" },
@@ -181,6 +183,7 @@ const getNavItems = (role, t) => {
   if (role === "financial") {
     return [
       ...baseItems,
+      { path: "/bank-dashboard", icon: Banknote, label: t("roles.bank.title") || "Dashboard Banque" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
       { path: "/paiements", icon: Smartphone, label: "Paiements" },
