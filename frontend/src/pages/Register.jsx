@@ -96,30 +96,31 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-300 rounded-full filter blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-300 rounded-full filter blur-3xl"></div>
+    <div className="min-h-screen bg-[#060a13] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-cyan-500/5 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 grid-bg opacity-40" />
       </div>
 
-      <div className="relative w-full max-w-lg">
-        {/* Back Button */}
-        <Link to="/" className="inline-flex items-center gap-2 text-slate-600 hover:text-emerald-600 mb-6 transition-colors">
+      <div className="relative w-full max-w-lg z-10">
+        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-400 mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" />
-          <span>Retour à l'accueil</span>
+          <span>Retour</span>
         </Link>
 
-        <Card className="shadow-2xl border-0">
+        <Card className="bg-[#0b1120]/80 backdrop-blur-xl border-emerald-900/30 shadow-[0_0_40px_rgba(16,185,129,0.06)]">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-4">
-              <img src={LOGO_URL} alt="African AI Solutions" className="h-16 w-auto" />
+              <div className="p-3 rounded-2xl bg-emerald-900/20 ring-1 ring-emerald-500/20">
+                <img src={LOGO_URL} alt="African AI Solutions" className="h-14 w-auto" />
+              </div>
             </div>
-            <CardTitle className="text-2xl font-bold font-[Manrope]">
-              Créer un compte <span className="text-emerald-600">AGRICAM IA</span>
+            <CardTitle className="text-2xl font-bold font-[Manrope] text-white">
+              Creer un compte <span className="text-emerald-400">AGRICAM IA</span>
             </CardTitle>
-            <CardDescription>
-              Étape {step} sur 3
+            <CardDescription className="text-slate-500">
+              Etape {step} sur 3
             </CardDescription>
             
             {/* Progress Bar */}
@@ -311,10 +312,10 @@ const Register = () => {
                     />
                   </div>
 
-                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <p className="text-sm text-emerald-700">
-                      En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
-                      Votre compte sera en mode <strong>Freemium</strong> par défaut.
+                  <div className="p-4 bg-emerald-900/15 rounded-xl border border-emerald-800/30">
+                    <p className="text-sm text-emerald-400/80">
+                      En creant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialite.
+                      Votre compte sera en mode <strong>Freemium</strong> par defaut.
                     </p>
                   </div>
                 </>
@@ -327,9 +328,9 @@ const Register = () => {
                     type="button"
                     variant="outline"
                     onClick={() => setStep(step - 1)}
-                    className="flex-1"
+                    className="flex-1 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30"
                   >
-                    Précédent
+                    Precedent
                   </Button>
                 )}
                 
@@ -337,7 +338,7 @@ const Register = () => {
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                     data-testid="register-next"
                   >
                     Suivant
@@ -345,7 +346,7 @@ const Register = () => {
                 ) : (
                   <Button
                     type="submit"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                     disabled={loading}
                     data-testid="register-submit"
                   >
@@ -362,20 +363,18 @@ const Register = () => {
               </div>
             </form>
 
-            <p className="text-center text-sm text-slate-600">
-              Déjà un compte ?{" "}
-              <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+            <p className="text-center text-sm text-slate-500">
+              Deja un compte ?{" "}
+              <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-semibold">
                 Se connecter
               </Link>
             </p>
           </CardContent>
         </Card>
 
-        {/* Developer Credit */}
-        <p className="text-center text-sm text-slate-500 mt-6">
-          Développé par <span className="font-semibold text-emerald-600">Barra Martial Aristide</span>
-          <br />
-          <span className="text-slate-400">African AI Solutions</span>
+        <p className="text-center text-sm text-slate-600 mt-6">
+          Developpe par <span className="font-semibold text-emerald-400">Barra Martial Aristide</span>
+          <br /><span className="text-slate-700">African AI Solutions</span>
         </p>
       </div>
     </div>

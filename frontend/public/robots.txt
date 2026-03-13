@@ -4,7 +4,7 @@ Disallow: /dashboard
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://agricam-ia-preview.preview.emergentagent.com/sitemap.xml
+Sitemap: https://agricam-dark.preview.emergentagent.com/sitemap.xml
 
 # AGRICAM IA - Agriculture de Précision
 # Contact: contact@agricam-ia.com

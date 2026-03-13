@@ -99,8 +99,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#060a13]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
@@ -126,41 +126,28 @@ const SplashScreen = ({ onComplete }) => {
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 flex flex-col items-center justify-center z-50">
-      {/* Logo */}
-      <div className="animate-pulse mb-8">
-        <img
-          src="https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png"
-          alt="African AI Solutions"
-          className="h-32 w-auto drop-shadow-2xl"
-        />
-      </div>
-      
-      {/* App Name */}
-      <h1 className="text-5xl font-bold text-white mb-4 font-[Manrope] tracking-tight">
-        AGRICAM <span className="text-emerald-400">IA</span>
-      </h1>
-      
-      {/* Tagline */}
-      <p className="text-xl text-emerald-200 mb-8">
-        Agriculture de précision intelligente
-      </p>
-      
-      {/* Loading Animation */}
-      <div className="flex space-x-2">
-        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-      </div>
-      
-      {/* Developer Credit */}
-      <div className="absolute bottom-8 text-center">
-        <p className="text-emerald-300/60 text-sm">
-          Développé par <span className="font-semibold text-emerald-300">Barra Martial Aristide</span>
-        </p>
-        <p className="text-emerald-400/80 text-sm mt-1 font-semibold">
-          African AI Solutions
-        </p>
+    <div className="fixed inset-0 bg-[#060a13] flex flex-col items-center justify-center z-50">
+      <div className="absolute inset-0 grid-bg opacity-30" />
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="animate-pulse mb-8">
+          <img src="https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png"
+            alt="African AI Solutions" className="h-32 w-auto drop-shadow-2xl" />
+        </div>
+        <h1 className="text-5xl font-bold text-white mb-4 font-[Manrope] tracking-tight">
+          AGRICAM <span className="text-emerald-400">IA</span>
+        </h1>
+        <p className="text-xl text-slate-400 mb-8">Agriculture de precision intelligente</p>
+        <div className="flex space-x-2">
+          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+        </div>
+        <div className="absolute bottom-[-120px] text-center">
+          <p className="text-slate-600 text-sm">
+            Developpe par <span className="font-semibold text-emerald-400">Barra Martial Aristide</span>
+          </p>
+          <p className="text-emerald-500/60 text-sm mt-1 font-semibold">African AI Solutions</p>
+        </div>
       </div>
     </div>
   );

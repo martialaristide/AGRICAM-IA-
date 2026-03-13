@@ -72,33 +72,33 @@ const NotificationBell = () => {
   return (
     <div className="relative">
       <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setOpen(!open)} data-testid="notification-bell">
-        <Bell className="h-4 w-4 text-slate-600" />
+        <Bell className="h-4 w-4 text-slate-400" />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center font-bold">{unread}</span>
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-lg border border-slate-200 z-50 max-h-96 overflow-hidden" data-testid="notification-panel">
-          <div className="p-3 border-b flex items-center justify-between">
-            <span className="font-semibold text-sm">Alertes Climat</span>
+        <div className="absolute right-0 top-10 w-80 bg-[#111827] rounded-xl shadow-lg border border-slate-800 z-50 max-h-96 overflow-hidden" data-testid="notification-panel">
+          <div className="p-3 border-b border-slate-800 flex items-center justify-between">
+            <span className="font-semibold text-sm text-white">Alertes Climat</span>
             <div className="flex items-center gap-1.5">
-              <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">OpenWeatherMap</Badge>
-              <Badge variant="outline" className="text-xs">{notifications.length}</Badge>
+              <Badge className="bg-emerald-900/40 text-emerald-400 text-[9px]">OpenWeatherMap</Badge>
+              <Badge variant="outline" className="text-xs border-slate-700 text-slate-400">{notifications.length}</Badge>
             </div>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-6">Aucune alerte</p>
+              <p className="text-sm text-slate-500 text-center py-6">Aucune alerte</p>
             ) : notifications.map((n, i) => (
-              <div key={i} className="p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { const updated = [...notifications]; updated[i] = {...n, read: true}; setNotifications(updated); }}>
+              <div key={i} className="p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => { const updated = [...notifications]; updated[i] = {...n, read: true}; setNotifications(updated); }}>
                 <div className="flex items-start gap-2">
                   <Bell className={cn("h-4 w-4 mt-0.5 flex-shrink-0", severityIcon(n.severity))} />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">{n.title}</p>
+                    <p className="text-sm font-medium text-white">{n.title}</p>
                     <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{new Date(n.timestamp).toLocaleString("fr-FR")}</p>
+                    <p className="text-[10px] text-slate-600 mt-1">{new Date(n.timestamp).toLocaleString("fr-FR")}</p>
                   </div>
-                  {!n.read && <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />}
+                  {!n.read && <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 mt-1" />}
                 </div>
               </div>
             ))}
@@ -252,22 +252,22 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-[#0a0f1a] grid-bg scan-line">
       {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed top-4 left-4 z-50 lg:hidden text-emerald-400"
         onClick={() => setMobileOpen(!mobileOpen)}
         data-testid="mobile-menu-btn"
       >
         {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      {/* Sidebar */}
+      {/* Sidebar - Dark Futuristic */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 bg-white border-r border-slate-200 shadow-sm transition-all duration-300",
+          "fixed lg:static inset-y-0 left-0 z-40 bg-[#0b1120] border-r border-emerald-900/30 shadow-2xl transition-all duration-300",
           collapsed ? "w-20" : "w-64",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -275,7 +275,7 @@ const Layout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className={cn(
-            "flex items-center gap-3 p-4 border-b border-slate-100",
+            "flex items-center gap-3 p-4 border-b border-emerald-900/20",
             collapsed ? "justify-center" : "px-6"
           )}>
             <img 
@@ -285,8 +285,8 @@ const Layout = () => {
             />
             {!collapsed && (
               <div>
-                <h1 className="font-bold text-lg text-slate-900 font-[Manrope]">
-                  AGRICAM <span className="text-emerald-600">IA</span>
+                <h1 className="font-bold text-lg text-white font-[Manrope]">
+                  AGRICAM <span className="text-emerald-400">IA</span>
                 </h1>
                 <p className="text-xs text-slate-500">Agriculture de précision</p>
               </div>
@@ -295,13 +295,13 @@ const Layout = () => {
 
           {/* User Info */}
           {!collapsed && user && (
-            <div className="p-4 border-b border-slate-100">
+            <div className="p-4 border-b border-emerald-900/20">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <User className="h-5 w-5 text-emerald-600" />
+                <div className="h-10 w-10 rounded-full bg-emerald-900/40 flex items-center justify-center ring-2 ring-emerald-500/30">
+                  <User className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 truncate">{user.full_name}</p>
+                  <p className="font-medium text-white truncate">{user.full_name}</p>
                   <Badge className={cn("text-xs text-white", roleBadge.color)}>
                     {roleBadge.label}
                   </Badge>
@@ -323,16 +323,16 @@ const Layout = () => {
                     data-testid={`nav-${item.path.slice(1)}`}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                      "hover:bg-emerald-50 hover:text-emerald-700",
+                      "hover:bg-emerald-900/30 hover:text-emerald-400",
                       isActive
-                        ? "bg-emerald-50 text-emerald-700 border-l-3 border-emerald-500 font-medium"
-                        : "text-slate-600",
+                        ? "bg-emerald-900/30 text-emerald-400 border-l-3 border-emerald-400 font-medium shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                        : "text-slate-400",
                       collapsed && "justify-center px-2"
                     )}
                   >
                     <item.icon className={cn(
                       "h-5 w-5 flex-shrink-0",
-                      isActive ? "text-emerald-600" : "text-slate-400"
+                      isActive ? "text-emerald-400" : "text-slate-500"
                     )} />
                     {!collapsed && (
                       <span className="text-sm">{item.label}</span>
@@ -354,31 +354,29 @@ const Layout = () => {
           </ScrollArea>
 
           {/* Bottom Actions */}
-          <div className="p-3 border-t border-slate-100 space-y-2">
-            {/* Logout Button */}
-            <ActionTooltip content="Se déconnecter de votre compte AGRICAM IA" side="right">
+          <div className="p-3 border-t border-emerald-900/20 space-y-2">
+            <ActionTooltip content="Se deconnecter" side="right">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
                 className={cn(
-                  "w-full text-red-600 hover:text-red-700 hover:bg-red-50",
+                  "w-full text-red-400 hover:text-red-300 hover:bg-red-900/20",
                   collapsed ? "justify-center" : "justify-start"
                 )}
                 data-testid="logout-btn"
               >
                 <LogOut className="h-5 w-5" />
-                {!collapsed && <span className="ml-2">Déconnexion</span>}
+                {!collapsed && <span className="ml-2">Deconnexion</span>}
               </Button>
             </ActionTooltip>
 
-            {/* Collapse Button (Desktop only) */}
-            <ActionTooltip content={collapsed ? "Agrandir le menu latéral" : "Réduire le menu latéral"} side="right">
+            <ActionTooltip content={collapsed ? "Agrandir" : "Reduire"} side="right">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setCollapsed(!collapsed)}
-                className="w-full justify-center text-slate-500 hover:text-slate-700 hidden lg:flex"
+                className="w-full justify-center text-slate-500 hover:text-emerald-400 hidden lg:flex"
                 data-testid="collapse-sidebar-btn"
               >
                 {collapsed ? (
@@ -386,7 +384,7 @@ const Layout = () => {
                 ) : (
                   <>
                     <ChevronLeft className="h-5 w-5 mr-2" />
-                    <span>Réduire</span>
+                    <span>Reduire</span>
                   </>
                 )}
               </Button>
@@ -398,15 +396,15 @@ const Layout = () => {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Top Header Bar */}
-        <header className="bg-white border-b border-slate-200 px-4 lg:px-8 py-4 sticky top-0 z-20">
+      <main className="flex-1 overflow-auto bg-[#0a0f1a]">
+        {/* Top Header Bar - Dark Glass */}
+        <header className="bg-[#0b1120]/90 backdrop-blur-xl border-b border-emerald-900/20 px-4 lg:px-8 py-4 sticky top-0 z-20">
           <div className="flex items-center justify-between">
             <div className="lg:hidden w-10"></div>
             
@@ -420,33 +418,33 @@ const Layout = () => {
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2" data-testid="user-menu-btn">
-                    <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-emerald-600" />
+                  <Button variant="ghost" className="flex items-center gap-2 text-slate-300 hover:text-emerald-400" data-testid="user-menu-btn">
+                    <div className="h-8 w-8 rounded-full bg-emerald-900/40 flex items-center justify-center ring-1 ring-emerald-500/30">
+                      <User className="h-4 w-4 text-emerald-400" />
                     </div>
                     <span className="hidden md:inline text-sm font-medium">{user?.full_name}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-[#111827] border-slate-700">
                   <DropdownMenuLabel>
                     <div>
-                      <p className="font-medium">{user?.full_name}</p>
-                      <p className="text-xs text-slate-500">{user?.email}</p>
+                      <p className="font-medium text-white">{user?.full_name}</p>
+                      <p className="text-xs text-slate-400">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/parametres")}>
+                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuItem onClick={() => navigate("/parametres")} className="text-slate-300 hover:text-white focus:text-white focus:bg-slate-800">
                     <Settings className="mr-2 h-4 w-4" />
-                    Paramètres
+                    Parametres
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/alertes")}>
+                  <DropdownMenuItem onClick={() => navigate("/alertes")} className="text-slate-300 hover:text-white focus:text-white focus:bg-slate-800">
                     <Bell className="mr-2 h-4 w-4" />
                     Alertes
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-900/20">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Déconnexion
+                    Deconnexion
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -458,11 +456,11 @@ const Layout = () => {
           <Outlet />
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-slate-200 px-4 lg:px-8 py-4">
+        {/* Footer - Dark */}
+        <footer className="bg-[#0b1120] border-t border-emerald-900/20 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between text-sm text-slate-500">
             <p>© 2024 African AI Solutions</p>
-            <p>Développé par <span className="font-semibold text-emerald-600">Barra Martial Aristide</span></p>
+            <p>Developpe par <span className="font-semibold text-emerald-400">Barra Martial Aristide</span></p>
           </div>
         </footer>
       </main>
