@@ -5,6 +5,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../App";
 import {
   Zap, Droplets, Thermometer, AlertTriangle, MapPin, TrendingUp,
   Clock, Leaf, Activity, BarChart3, ShieldCheck, QrCode,
@@ -12,14 +13,24 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import WeatherWidget from "../components/WeatherWidget";
+import OnboardingWizard from "../components/OnboardingWizard";
 
 const Dashboard = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [parcels, setParcels] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Check if farmer needs onboarding
+    if (user?.role === "farmer" && !localStorage.getItem("agricam_onboarding_done")) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,6 +65,10 @@ const Dashboard = () => {
   ];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" /></div>;
+
+  if (showOnboarding) {
+    return <OnboardingWizard user={user} onComplete={() => { setShowOnboarding(false); localStorage.setItem("agricam_onboarding_done", "true"); }} />;
+  }
 
   return (
     <div className="space-y-6 animate-slide-in" data-testid="dashboard-page">

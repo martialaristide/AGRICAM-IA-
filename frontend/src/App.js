@@ -59,22 +59,23 @@ export const useAuth = () => {
 };
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("agricam_token"));
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("agricam_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("agricam_token"));
+  const [loading, setLoading] = useState(false);
 
+  // Listen for forced logout from API interceptor
   useEffect(() => {
-    const checkAuth = async () => {
-      const savedToken = localStorage.getItem("agricam_token");
-      const savedUser = localStorage.getItem("agricam_user");
-      
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      }
-      setLoading(false);
+    const handleForcedLogout = () => {
+      setUser(null);
+      setToken(null);
     };
-    checkAuth();
+    window.addEventListener("agricam-logout", handleForcedLogout);
+    return () => window.removeEventListener("agricam-logout", handleForcedLogout);
   }, []);
 
   const login = (userData, accessToken) => {
@@ -159,7 +160,10 @@ const SplashScreen = ({ onComplete }) => {
 };
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash once per browser session
+    return !sessionStorage.getItem("agricam_splash_shown");
+  });
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [showExitIntent, setShowExitIntent] = useState(false);
 
@@ -188,22 +192,8 @@ function App() {
         setShowLeadCapture(false);
       }
     };
-    
-    // Listen for storage changes (e.g., login in another tab)
     window.addEventListener("storage", handleStorageChange);
-    
-    // Also check periodically in case login happens in same tab
-    const interval = setInterval(() => {
-      const token = localStorage.getItem("agricam_token");
-      if (token && showLeadCapture) {
-        setShowLeadCapture(false);
-      }
-    }, 1000);
-    
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [showLeadCapture]);
 
   useEffect(() => {
@@ -224,7 +214,7 @@ function App() {
   }, []);
 
   if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    return <SplashScreen onComplete={() => { setShowSplash(false); sessionStorage.setItem("agricam_splash_shown", "true"); }} />;
   }
 
   return (
@@ -297,11 +287,7 @@ function App() {
                   <RobotControl />
                 </ProtectedRoute>
               } />
-              <Route path="camera-ia" element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <CameraIA />
-                </ProtectedRoute>
-              } />
+              <Route path="camera-ia" element={<CameraIA />} />
               <Route path="dev-analytics" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <DevAnalytics />

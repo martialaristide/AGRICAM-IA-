@@ -1081,6 +1081,179 @@ async def import_parcels(
         raise HTTPException(status_code=500, detail=f"Erreur d'import: {str(e)}")
 
 # =============================================================================
+# API ROUTES - Intelligent Camera Module with AI Failover
+# =============================================================================
+
+class CameraAnalysisRequest(BaseModel):
+    image_base64: str
+    analysis_mode: str = "general"  # general, disease, pest, nutrition, soil
+    role: str = "farmer"
+    language: str = "fr"
+
+AI_MODELS_CHAIN = [
+    ("gemini", "gemini-2.5-flash"),
+    ("openai", "gpt-4o-mini"),
+    ("gemini", "gemini-2.0-flash"),
+]
+
+def get_camera_system_prompt(mode: str, language: str) -> str:
+    lang_instruction = "Reponds en francais." if language == "fr" else f"Respond in language code: {language}."
+    base = f"""Tu es un expert agronome et phytopathologiste de renommee mondiale, specialise dans l'agriculture africaine.
+{lang_instruction}
+Analyse l'image fournie avec precision. Reponds TOUJOURS en JSON valide avec cette structure exacte:
+{{
+  "health_status": "excellent|bon|attention|critique",
+  "confidence": 0-100,
+  "crop_type": "type de culture detecte",
+  "summary": "resume court de l'analyse",
+  "detections": [
+    {{"name": "nom", "type": "disease|pest|deficiency|healthy", "severity": "low|medium|high", "confidence": 0-100, "description": "description"}}
+  ],
+  "recommendations": ["action 1", "action 2"],
+  "ar_zones": [
+    {{"label": "zone", "color": "red|yellow|green", "area_percent": 0-100, "description": "desc"}}
+  ]
+}}"""
+    if mode == "disease":
+        base += "\nConcentre-toi sur la detection de maladies: rouille, mildiou, cercosporiose, anthracnose, fusariose, bacteriose."
+    elif mode == "pest":
+        base += "\nConcentre-toi sur les ravageurs: chenilles, pucerons, cochenilles, criquets, mineuses, nematodes."
+    elif mode == "nutrition":
+        base += "\nConcentre-toi sur les carences nutritionnelles: azote (jaunissement), phosphore (coloration violette), potassium (necrose), fer (chlorose)."
+    elif mode == "soil":
+        base += "\nAnalyse le sol: texture, couleur, humidite apparente, presence de matiere organique, compaction."
+    return base
+
+@api_router.post("/camera/analyze")
+async def camera_ai_analyze(data: CameraAnalysisRequest, user = Depends(get_current_user)):
+    """Intelligent camera analysis with AI model failover chain"""
+    import time
+    start = time.time()
+    
+    # Try each AI model in the chain
+    for provider, model_name in AI_MODELS_CHAIN:
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+            
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"camera-{user['id']}-{uuid.uuid4()}",
+                system_message=get_camera_system_prompt(data.analysis_mode, data.language)
+            ).with_model(provider, model_name)
+            
+            image_content = ImageContent(image_base64=data.image_base64)
+            response = await chat.send_message(UserMessage(
+                text=f"Analyse cette image. Mode: {data.analysis_mode}. Role utilisateur: {data.role}.",
+                file_contents=[image_content]
+            ))
+            
+            # Parse JSON response
+            try:
+                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                if json_match:
+                    result = json.loads(json_match.group())
+                else:
+                    result = {"summary": response, "health_status": "bon", "confidence": 70, "detections": [], "recommendations": [response], "ar_zones": []}
+            except:
+                result = {"summary": response, "health_status": "bon", "confidence": 70, "detections": [], "recommendations": [response], "ar_zones": []}
+            
+            elapsed = round((time.time() - start) * 1000)
+            
+            # Save scan
+            scan_doc = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "role": data.role,
+                "mode": data.analysis_mode,
+                "result": result,
+                "model": f"{provider}/{model_name}",
+                "response_time_ms": elapsed,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.camera_scans.insert_one(scan_doc)
+            
+            return {"success": True, "result": result, "model": f"{provider}/{model_name}", "response_time_ms": elapsed, "scan_id": scan_doc["id"]}
+            
+        except Exception as e:
+            logger.warning(f"Camera AI model {provider}/{model_name} failed: {e}")
+            continue
+    
+    # All models failed - return smart fallback
+    elapsed = round((time.time() - start) * 1000)
+    fallback = {
+        "health_status": "attention",
+        "confidence": 40,
+        "crop_type": "Non determine",
+        "summary": "L'analyse IA est temporairement indisponible. Veuillez reessayer dans quelques instants.",
+        "detections": [],
+        "recommendations": ["Reessayez l'analyse dans quelques minutes", "Verifiez la qualite de l'image (luminosite, nettete)", "Consultez un agronome local si le probleme persiste"],
+        "ar_zones": []
+    }
+    return {"success": True, "result": fallback, "model": "fallback", "response_time_ms": elapsed}
+
+@api_router.get("/camera/scans")
+async def get_camera_scans(user = Depends(get_current_user), limit: int = 20):
+    """Get user's camera scan history"""
+    scans = await db.camera_scans.find(
+        {"user_id": user["id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(limit)
+    return scans
+
+@api_router.post("/camera/satellite-analyze")
+async def satellite_zone_analyze(data: CameraAnalysisRequest, user = Depends(get_current_user)):
+    """Analyze satellite/map capture of an agricultural zone"""
+    import time
+    start = time.time()
+    
+    system_prompt = f"""Tu es un expert en teledetection agricole et analyse d'images satellites.
+Analyse cette capture de zone agricole et fournis:
+1. Type de vegetation detecte
+2. Indice de vegetation estime (NDVI)
+3. Zones de stress hydrique
+4. Recommandations de gestion
+
+Reponds en JSON:
+{{
+  "vegetation_type": "type",
+  "ndvi_estimate": 0.0-1.0,
+  "zone_health": "excellent|bon|moyen|critique",
+  "stress_zones": [{{"area": "description", "severity": "low|medium|high"}}],
+  "land_use": "description de l'utilisation du sol",
+  "recommendations": ["rec1", "rec2"],
+  "estimated_area_ha": 0,
+  "summary": "resume"
+}}"""
+    
+    for provider, model_name in AI_MODELS_CHAIN:
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"satellite-{user['id']}-{uuid.uuid4()}",
+                system_message=system_prompt
+            ).with_model(provider, model_name)
+            
+            image_content = ImageContent(image_base64=data.image_base64)
+            response = await chat.send_message(UserMessage(
+                text="Analyse cette image satellite/carte de zone agricole.",
+                file_contents=[image_content]
+            ))
+            
+            try:
+                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                result = json.loads(json_match.group()) if json_match else {"summary": response, "zone_health": "bon"}
+            except:
+                result = {"summary": response, "zone_health": "bon"}
+            
+            elapsed = round((time.time() - start) * 1000)
+            return {"success": True, "result": result, "model": f"{provider}/{model_name}", "response_time_ms": elapsed}
+        except Exception as e:
+            logger.warning(f"Satellite analysis {provider}/{model_name} failed: {e}")
+            continue
+    
+    return {"success": True, "result": {"summary": "Analyse temporairement indisponible", "zone_health": "attention"}, "model": "fallback"}
+
+# =============================================================================
 # API ROUTES - Image/Video Upload & AI Analysis
 # =============================================================================
 
@@ -1117,38 +1290,48 @@ async def upload_and_analyze_image(
         try:
             from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
             
-            chat = LlmChat(
-                api_key=EMERGENT_LLM_KEY,
-                session_id=f"image-analysis-{uuid.uuid4()}",
-                system_message="""Tu es un expert agronome spécialisé dans la détection des maladies des plantes.
-                Analyse l'image et identifie:
-                1. Type de culture visible
-                2. État de santé (excellent/bon/attention/critique)
-                3. Maladies détectées avec niveau de confiance
-                4. Traitements recommandés
-                Réponds en JSON avec: crop_type, health_status, diseases (array), treatments (array), confidence"""
-            ).with_model("gemini", "gemini-2.0-flash")
+            ai_done = False
+            for ai_provider, ai_model in AI_MODELS_CHAIN:
+                try:
+                    chat = LlmChat(
+                        api_key=EMERGENT_LLM_KEY,
+                        session_id=f"image-analysis-{uuid.uuid4()}",
+                        system_message="""Tu es un expert agronome specialise dans la detection des maladies des plantes.
+                        Analyse l'image et identifie:
+                        1. Type de culture visible
+                        2. Etat de sante (excellent/bon/attention/critique)
+                        3. Maladies detectees avec niveau de confiance
+                        4. Traitements recommandes
+                        Reponds en JSON avec: crop_type, health_status, diseases (array), treatments (array), confidence"""
+                    ).with_model(ai_provider, ai_model)
+                    
+                    image_content = ImageContent(image_base64=image_base64)
+                    response = await chat.send_message(UserMessage(
+                        text=f"Analyse cette image de la culture {parcel.get('crop_type', '')} de la parcelle {parcel.get('name', '')}",
+                        file_contents=[image_content]
+                    ))
+                    
+                    try:
+                        json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                        if json_match:
+                            ai_results = json.loads(json_match.group())
+                        else:
+                            ai_results = {"raw_analysis": response, "health_status": "bon"}
+                    except:
+                        ai_results = {"raw_analysis": response, "health_status": "bon"}
+                    
+                    analysis_result["results"] = ai_results
+                    analysis_result["source"] = f"{ai_provider}/{ai_model}"
+                    ai_done = True
+                    break
+                except Exception as model_err:
+                    logger.warning(f"Image analysis model {ai_provider}/{ai_model} failed: {model_err}")
+                    continue
             
-            image_content = ImageContent(image_base64=image_base64)
-            response = await chat.send_message(UserMessage(
-                text=f"Analyse cette image de la culture {parcel.get('crop_type', '')} de la parcelle {parcel.get('name', '')}",
-                file_contents=[image_content]
-            ))
+            if not ai_done:
+                raise Exception("All AI models failed")
             
-            # Parse AI response
-            try:
-                json_match = re.search(r'\{.*\}', response, re.DOTALL)
-                if json_match:
-                    ai_results = json.loads(json_match.group())
-                else:
-                    ai_results = {"raw_analysis": response, "health_status": "bon"}
-            except:
-                ai_results = {"raw_analysis": response, "health_status": "bon"}
-            
-            analysis_result["results"] = ai_results
-            analysis_result["source"] = "gemini_ai"
-            
-        except ImportError:
+        except Exception:
             # Fallback mock analysis
             analysis_result["results"] = {
                 "crop_type": parcel.get("crop_type", "Non identifié"),
@@ -4105,6 +4288,16 @@ async def user_subscription_status(user=Depends(get_current_user)):
         except: pass
     has_access = is_trial or is_sub or user.get("role") == "admin"
     return {"subscription_type": sub_type, "is_trial_active": is_trial, "is_subscribed": is_sub, "has_full_access": has_access, "days_remaining": days_left, "trial_end": trial_end, "subscription_end": sub_end}
+
+# User profile update
+@api_router.put("/user/update-profile")
+async def update_user_profile(data: dict, user=Depends(get_current_user)):
+    """Update user profile fields"""
+    allowed_fields = {"onboarding_completed", "phone", "address", "company_name", "culture_type", "full_name"}
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    if update_data:
+        await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    return {"message": "Profile updated", "updated_fields": list(update_data.keys())}
 
 # Include router and middleware
 app.include_router(api_router)

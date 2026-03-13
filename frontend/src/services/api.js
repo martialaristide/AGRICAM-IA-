@@ -24,14 +24,19 @@ api.interceptors.request.use(
   }
 );
 
-// Handle 401 errors
+// Handle 401 errors - use soft redirect to avoid full page reload
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("agricam_token");
-      localStorage.removeItem("agricam_user");
-      window.location.href = "/login";
+      const currentPath = window.location.pathname;
+      // Only redirect if not already on login/register pages
+      if (currentPath !== "/login" && currentPath !== "/register") {
+        localStorage.removeItem("agricam_token");
+        localStorage.removeItem("agricam_user");
+        // Dispatch custom event instead of hard reload
+        window.dispatchEvent(new CustomEvent("agricam-logout"));
+      }
     }
     return Promise.reject(error);
   }

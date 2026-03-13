@@ -29,26 +29,39 @@ export const LanguageProvider = ({ children }) => {
 
   const t = (key) => {
     const keys = key.split(".");
-    let value = translations[language];
     
-    for (const k of keys) {
-      if (value && value[k]) {
-        value = value[k];
-      } else {
-        // Fallback to French
-        value = translations.fr;
-        for (const k2 of keys) {
-          if (value && value[k2]) {
-            value = value[k2];
+    // Try current language first
+    let value = translations[language];
+    if (value) {
+      for (const k of keys) {
+        if (value != null && typeof value === "object" && k in value) {
+          value = value[k];
+        } else {
+          value = undefined;
+          break;
+        }
+      }
+      if (typeof value === "string") return value;
+      if (Array.isArray(value)) return value;
+    }
+    
+    // Fallback to French
+    if (language !== "fr") {
+      let fallback = translations.fr;
+      if (fallback) {
+        for (const k of keys) {
+          if (fallback != null && typeof fallback === "object" && k in fallback) {
+            fallback = fallback[k];
           } else {
-            return key; // Return key if not found
+            return key;
           }
         }
-        break;
+        if (typeof fallback === "string") return fallback;
+        if (Array.isArray(fallback)) return fallback;
       }
     }
     
-    return typeof value === "string" ? value : key;
+    return key;
   };
 
   const changeLanguage = (newLang) => {
