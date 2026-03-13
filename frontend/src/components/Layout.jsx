@@ -55,17 +55,26 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const NotificationBell = () => {
   const [notifications, setNotifications] = React.useState([]);
   const [open, setOpen] = React.useState(false);
+  const [coords, setCoords] = React.useState({ lat: 5.9631, lon: 10.1591 });
+
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        () => {} // Silently fallback to default coords
+      );
+    }
+  }, []);
 
   const fetchNotifications = async () => {
     try {
-      // Default GPS: Bamenda, Cameroun. Real coords will come from parcels
-      const res = await fetch(`${API}/api/climate-notifications?lat=5.9631&lon=10.1591`);
+      const res = await fetch(`${API}/api/climate-notifications?lat=${coords.lat}&lon=${coords.lon}`);
       const data = await res.json();
       setNotifications(data.alerts || []);
     } catch {}
   };
 
-  React.useEffect(() => { fetchNotifications(); const iv = setInterval(fetchNotifications, 120000); return () => clearInterval(iv); }, []);
+  React.useEffect(() => { fetchNotifications(); const iv = setInterval(fetchNotifications, 120000); return () => clearInterval(iv); }, [coords]);
 
   const unread = notifications.filter(n => !n.read).length;
   const severityIcon = (s) => s === "critical" ? "text-red-500" : s === "warning" ? "text-amber-500" : "text-blue-500";
@@ -224,6 +233,20 @@ const getNavItems = (role, t) => {
       { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
   }
+
+  if (role === "trainer") {
+    return [
+      ...baseItems,
+      { path: "/trainer-dashboard", icon: GraduationCap, label: "Espace Formateur" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
+      { path: "/camera-ia", icon: Camera, label: t("nav.camera") },
+      { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/paiements", icon: Smartphone, label: t("payment.title") || "Paiements" },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
+    ];
+  }
   
   return [
     ...baseItems,
@@ -244,6 +267,7 @@ const getRoleBadge = (role) => {
     investor: { label: "Investisseur", color: "bg-cyan-500" },
     seed_analyst: { label: "Analyste Semences", color: "bg-purple-500" },
     agronomist: { label: "Agronome", color: "bg-teal-500" },
+    trainer: { label: "Formateur", color: "bg-orange-500" },
   };
   return config[role] || { label: role, color: "bg-slate-500" };
 };
@@ -342,8 +366,12 @@ const Layout = () => {
           {!collapsed && user && (
             <div className="p-4 border-b border-emerald-900/20">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-900/40 flex items-center justify-center ring-2 ring-emerald-500/30">
-                  <User className="h-5 w-5 text-emerald-400" />
+              <div className="h-10 w-10 rounded-full bg-emerald-900/40 flex items-center justify-center ring-2 ring-emerald-500/30 overflow-hidden">
+                  {user.profile_photo ? (
+                    <img src={user.profile_photo} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-5 w-5 text-emerald-400" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-white truncate">{user.full_name}</p>

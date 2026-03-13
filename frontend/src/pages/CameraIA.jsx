@@ -48,6 +48,8 @@ const CameraIA = () => {
 
   useEffect(() => {
     fetchHistory();
+    // Auto-start camera on page load
+    startCamera();
     return () => stopCamera();
   }, []);
 
@@ -60,11 +62,18 @@ const CameraIA = () => {
 
   const startCamera = async () => {
     try {
+      // First try with environment (back) camera for mobile
       const constraints = {
         video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false
       };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch {
+        // Fallback: try any available camera
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -74,7 +83,8 @@ const CameraIA = () => {
       setCapturedImage(null);
       setAnalysisResult(null);
     } catch (err) {
-      toast.error("Impossible d'acceder a la camera. Verifiez les permissions.");
+      console.warn("Camera access failed:", err);
+      toast.error("Impossible d'acceder a la camera. Verifiez les permissions du navigateur.");
     }
   };
 

@@ -75,6 +75,7 @@ class UserRole(str, Enum):
     INVESTOR = "investor"
     SEED_ANALYST = "seed_analyst"
     AGRONOMIST = "agronomist"
+    TRAINER = "trainer"
 
 class SubscriptionType(str, Enum):
     FREEMIUM = "freemium"
@@ -2172,6 +2173,10 @@ async def seed_database():
          "full_name": "Ing. Paul Mbarga", "phone": "+237655555555", "role": "agronomist",
          "company_name": "AgroConsult Cameroun", "subscription_type": "basic", "is_verified": True, "is_active": True,
          "trial_start": datetime.now(timezone.utc).isoformat(), "trial_end": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "trainer-001", "email": "formateur@agricam.ai", "password_hash": hash_password("Trainer@2026"),
+         "full_name": "Dr. Aminata Diallo", "phone": "+237644444444", "role": "trainer",
+         "company_name": "AgroFormation Pro", "subscription_type": "premium", "is_verified": True, "is_active": True,
          "created_at": datetime.now(timezone.utc).isoformat()}
     ]
     await db.users.insert_many(users_data)
@@ -4294,11 +4299,75 @@ async def user_subscription_status(user=Depends(get_current_user)):
 @api_router.put("/user/update-profile")
 async def update_user_profile(data: dict, user=Depends(get_current_user)):
     """Update user profile fields"""
-    allowed_fields = {"onboarding_completed", "phone", "address", "company_name", "culture_type", "full_name"}
+    allowed_fields = {"onboarding_completed", "phone", "address", "company_name", "culture_type", "full_name", "language", "theme", "profile_photo", "linkedin_url", "bio"}
     update_data = {k: v for k, v in data.items() if k in allowed_fields}
     if update_data:
         await db.users.update_one({"id": user["id"]}, {"$set": update_data})
-    return {"message": "Profile updated", "updated_fields": list(update_data.keys())}
+    updated_user = await db.users.find_one({"id": user["id"]}, {"_id": 0, "password_hash": 0})
+    return {"message": "Profile updated", "updated_fields": list(update_data.keys()), "user": updated_user}
+
+# Change password
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.put("/user/change-password")
+async def change_user_password(data: ChangePasswordRequest, user=Depends(get_current_user)):
+    """Change user password"""
+    full_user = await db.users.find_one({"id": user["id"]})
+    if not full_user or not verify_password(data.current_password, full_user.get("password_hash", "")):
+        raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect")
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caracteres")
+    new_hash = hash_password(data.new_password)
+    await db.users.update_one({"id": user["id"]}, {"$set": {"password_hash": new_hash}})
+    return {"message": "Mot de passe modifie avec succes"}
+
+# Export analytics data
+@api_router.get("/admin/analytics/export")
+async def export_analytics_data(format: str = "json", user=Depends(require_roles([UserRole.ADMIN]))):
+    """Export analytics data in various formats"""
+    users_count = await db.users.count_documents({})
+    parcels_count = await db.parcels.count_documents({})
+    sensors_count = await db.sensors.count_documents({})
+    alerts_count = await db.alerts.count_documents({})
+    payments = await db.payments.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    users_by_role = {}
+    for role in ["admin", "farmer", "supplier", "financial", "seed_analyst", "agronomist", "trainer"]:
+        users_by_role[role] = await db.users.count_documents({"role": role})
+    
+    report = {
+        "report_date": datetime.now(timezone.utc).isoformat(),
+        "platform": "AGRICAM IA",
+        "summary": {
+            "total_users": users_count,
+            "total_parcels": parcels_count,
+            "total_sensors": sensors_count,
+            "total_alerts": alerts_count,
+            "total_payments": len(payments),
+        },
+        "users_by_role": users_by_role,
+        "recent_payments": payments[:20],
+    }
+    
+    if format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Metric", "Value"])
+        for k, v in report["summary"].items():
+            writer.writerow([k, v])
+        writer.writerow([])
+        writer.writerow(["Role", "Count"])
+        for k, v in users_by_role.items():
+            writer.writerow([k, v])
+        output.seek(0)
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode()),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=agricam_analytics.csv"}
+        )
+    
+    return report
 
 # Include router and middleware
 # AGRICAMIA 2.0 Routes
@@ -4308,6 +4377,7 @@ from routes.predictive import router as predictive_router
 from routes.blockchain import router as blockchain_router
 from routes.epidemiology import router as epidemiology_router
 from routes.supplier_analytics import router as supplier_analytics_router
+from routes.trainer import router as trainer_router
 
 app.include_router(agriscore_router)
 app.include_router(digital_twin_router)
@@ -4315,6 +4385,7 @@ app.include_router(predictive_router)
 app.include_router(blockchain_router)
 app.include_router(epidemiology_router)
 app.include_router(supplier_analytics_router)
+app.include_router(trainer_router)
 
 app.include_router(api_router)
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import translations, { supportedLanguages } from "../locales/translations";
 
 const LanguageContext = createContext(null);
@@ -12,7 +12,7 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => {
+  const [language, setLanguageState] = useState(() => {
     const saved = localStorage.getItem("agricam_language");
     return saved || navigator.language.split("-")[0] || "fr";
   });
@@ -27,7 +27,7 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = (key) => {
+  const t = useCallback((key) => {
     const keys = key.split(".");
     
     // Try current language first
@@ -62,13 +62,41 @@ export const LanguageProvider = ({ children }) => {
     }
     
     return key;
-  };
+  }, [language]);
 
   const changeLanguage = (newLang) => {
     if (supportedLanguages.find(l => l.code === newLang)) {
-      setLanguage(newLang);
+      setLanguageState(newLang);
+      // Persist to backend if user is logged in
+      const token = localStorage.getItem("agricam_token");
+      if (token) {
+        const API_BASE = process.env.REACT_APP_BACKEND_URL + "/api";
+        fetch(`${API_BASE}/user/update-profile`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ language: newLang })
+        }).catch(() => {});
+      }
     }
   };
+
+  // Load language from user profile on mount (if logged in)
+  useEffect(() => {
+    const token = localStorage.getItem("agricam_token");
+    if (token) {
+      const API_BASE = process.env.REACT_APP_BACKEND_URL + "/api";
+      fetch(`${API_BASE}/auth/me`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(user => {
+          if (user?.language && supportedLanguages.find(l => l.code === user.language)) {
+            setLanguageState(user.language);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   return (
     <LanguageContext.Provider value={{

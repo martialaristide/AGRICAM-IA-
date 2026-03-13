@@ -403,8 +403,28 @@ export function exportToCSV(data, filename) {
   saveAs(blob, `${filename}-${Date.now()}.csv`);
 }
 
+/**
+ * Export data to Excel (XLSX)
+ */
+export function exportToExcel(data, filename) {
+  try {
+    const XLSX = require('xlsx');
+    const rows = Array.isArray(data) ? data : [data];
+    if (rows.length === 0) return;
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Rapport");
+    XLSX.writeFile(wb, `${filename}-${Date.now()}.xlsx`);
+  } catch (e) {
+    console.error("Excel export error:", e);
+    // Fallback to CSV
+    exportToCSV(data, filename);
+  }
+}
+
 export default {
   exportToPDF,
   exportToWord,
-  exportToCSV
+  exportToCSV,
+  exportToExcel
 };

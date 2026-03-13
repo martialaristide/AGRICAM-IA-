@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import { FileText, FileSpreadsheet, Download, Loader2 } from 'lucide-react';
-import { exportToPDF, exportToWord, exportToCSV } from '../services/exportService';
+import { exportToPDF, exportToWord, exportToCSV, exportToExcel } from '../services/exportService';
 import { toast } from 'sonner';
 
 export default function ExportButton({ data, type, title, className = '' }) {
@@ -28,15 +28,19 @@ export default function ExportButton({ data, type, title, className = '' }) {
       switch (format) {
         case 'pdf':
           await exportToPDF(data, type, title);
-          toast.success('PDF exporté avec succès');
+          toast.success('PDF exporte avec succes');
           break;
         case 'word':
           await exportToWord(data, type, title);
-          toast.success('Document Word exporté avec succès');
+          toast.success('Document Word exporte avec succes');
           break;
         case 'csv':
           exportToCSV(Array.isArray(data) ? data : [data], `agricam-${type}`);
-          toast.success('CSV exporté avec succès');
+          toast.success('CSV exporte avec succes');
+          break;
+        case 'excel':
+          exportToExcel(Array.isArray(data) ? data : [data], `agricam-${type}`);
+          toast.success('Excel exporte avec succes');
           break;
         default:
           break;
@@ -87,6 +91,13 @@ export default function ExportButton({ data, type, title, className = '' }) {
         >
           <FileSpreadsheet className="w-4 h-4 mr-2 text-green-500" />
           Exporter en CSV
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => handleExport('excel')}
+          data-testid="export-excel"
+        >
+          <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+          Exporter en Excel
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
