@@ -1,76 +1,69 @@
-# AGRICAM IA 2.0 - PRD
+# AGRICAM IA - Product Requirements Document
 
 ## Original Problem Statement
-Enterprise-level precision agriculture platform with 6 user roles, AI-powered analytics, and mobile money payments. Target market: Cameroon and Africa.
+Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered crop analysis, multi-role dashboards, drone/robot management, and comprehensive farm management tools.
 
-## Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI (Dark Futuristic Theme)
-- **Backend**: FastAPI + MongoDB (Async)
-- **AI**: Gemini via emergentintegrations (AGRI GENIUS)
-- **Payments**: NetWalletPay (MTN/Orange Mobile Money) + Stripe (test)
-- **Languages**: 21 languages (FR, EN, ES, DE, AR, ZH, SW, HA, YO, WO, BAM, FF, EW, BAS, DUA, BAF, IG, AM, LN, MG, ZU)
+## Core Architecture
+- **Frontend**: React + Tailwind CSS + Shadcn/UI, dark theme
+- **Backend**: FastAPI + MongoDB (motor async)
+- **AI**: Gemini via emergentintegrations with OpenAI failover
+- **i18n**: Custom LanguageContext with 20+ languages (FR, EN, ES, DE, AR, ZH, African languages)
 
 ## User Roles
-1. **Admin** - Platform management, predictive analytics, security, A/B testing
-2. **Farmer** - Crop health, yield/price predictions, blockchain traceability
-3. **Supplier** - Demand forecast, logistics, stock management, cross-selling
-4. **Bank/Financial** - AgriScore credit scoring, loan simulator, risk management
-5. **Seed Analyst** - Digital twin, genomic modeling, crossing simulator, climate adaptation
-6. **Agronomist** - AI copilot, epidemiology, carbon simulator, dynamic recommendations
+1. **Admin** - Full platform management, analytics, user CRM
+2. **Farmer (Agriculteur)** - Parcel management, crop analysis, IoT monitoring
+3. **Supplier (Fournisseur)** - Supply chain, inventory, orders
+4. **Bank (Banque)** - Financial services, credit scoring, loans
+5. **Seed Analyst** - Seed quality analysis, genomic modeling
+6. **Agronomist** - Expert diagnostics, AR analysis, epidemiology
 
-## What's Implemented (March 2026)
-### Core Features
-- [x] Multi-role authentication (6 roles + demo accounts)
-- [x] Dark futuristic UI theme (global CSS overrides, glass-card effects)
-- [x] 21-language support with dynamic switching
-- [x] Freemium 14-day trial + subscription system
-- [x] NetWalletPay integration (MTN/Orange Mobile Money)
-- [x] Payment success/failure/processing pages
-- [x] Subscription gate for premium features
+## Key Features Implemented
+- Multi-role dashboards with dark futuristic theme
+- 14-day freemium trial system
+- AI-powered crop analysis (Camera IA module with 5 modes)
+- Satellite zone capture and AI analysis
+- Farmer onboarding wizard with guided assistant
+- Language switching (20+ languages, FR default)
+- IoT sensor management, drone/robot control
+- AGRI GENIUS chatbot with conversation history
+- Marketplace, E-Learning modules
+- Auto irrigation management
+- Payment integration (NetWalletPay - backend ready, blocked by network)
 
-### Role Dashboards (Enhanced)
-- [x] Admin: Predictive metrics, platform health, security alerts, user management, A/B testing
-- [x] Farmer: Crop health hub (NDVI/spectral), yield prediction, price prediction, blockchain traceability
-- [x] Supplier: Demand forecast, route optimization/GPS tracking, expiry alerts/flash promos, cross-selling
-- [x] Bank: AgriScore dynamic credit scoring, interactive loan simulator (sliders), portfolio risk by zone, parametric insurance
-- [x] Seed Analyst: Batch certification table, digital twin simulations (10K scenarios), genomic CRISPR modeling, virtual crossing simulator, 30-50yr climate projections
-- [x] Agronomist: Field visits, AI copilot (report generation), disease propagation modeling, carbon sequestration simulator, real-time dynamic alerts
-
-### Other Modules
-- [x] AGRI GENIUS chatbot (Gemini AI, multilingual, multi-session)
-- [x] Camera IA (device camera, AI analysis)
-- [x] Parcels management with data export (CSV/Excel)
-- [x] Marketplace
-- [x] IoT Sensors dashboard
-- [x] Drones/Robots management
-- [x] Satellite imagery
-- [x] E-Learning (course creation)
-- [x] Irrigation management (plan generator)
-- [x] Weather widget (OpenWeatherMap)
-- [x] Notification system (climate alerts)
-- [x] Admin access control panel (CRM, revenue, logs)
-
-## Backlog (P2)
-- [ ] Real blockchain integration (currently simulated)
-- [ ] Real-time ML model training/inference
-- [ ] Push notifications (mobile)
-- [ ] Federated learning for agronomist network
-- [ ] Backend server.py monolith refactoring
-- [ ] Advanced SEO (react-helmet-async)
-- [ ] Mobile app deployment (App Store/Play Store)
-
-## Test Credentials
+## Demo Accounts
 - Admin: admin@agricam.ai / Admin@2026
 - Farmer: agriculteur@agricam.ai / Farmer@2026
 - Supplier: fournisseur@agricam.ai / Supplier@2026
 - Bank: banque@agricam.ai / Bank@2026
 - Seed Analyst: analyste@agricam.ai / Analyst@2026
-- Agronomist: agronome@agricam.ai / Agro@2026
+- Agronomist: agronome@agricam.ai / Agronomist@2026
 
-## Mocked/Simulated
-- NetWalletPay (API unreachable from preview, fallback simulation)
-- Blockchain traceability (demo data)
-- Yield/Price predictions (realistic demo data)
-- AgriScore (simulated scoring algorithm)
-- Genomic/CRISPR modeling (simulated results)
-- Carbon sequestration (demo calculations)
+## API Endpoints
+- Auth: /api/auth/login, /api/auth/register
+- Camera: /api/camera/analyze, /api/camera/scans, /api/camera/satellite-analyze
+- Parcels: /api/parcels (CRUD)
+- Dashboard: /api/dashboard/stats
+- User: /api/user/update-profile
+- Chatbot: /api/chatbot/message
+- Payments: /api/payments/netwalletpay/*
+
+## P0 Features (Completed)
+- [x] i18n translation bug fixed - full app language switching works
+- [x] App reload/redirect bug fixed (401 interceptor + splash screen)
+- [x] Intelligent Camera module with AI failover (Gemini → OpenAI)
+- [x] Satellite zone capture and AI analysis
+- [x] Farmer onboarding wizard with zone definition and assistant
+
+## P1 Features (Upcoming)
+- [ ] AGRICAMIA 2.0 advanced AI features for all dashboards
+- [ ] Functional backend logic for predictive analytics
+- [ ] Digital twin simulation for Seed Analyst
+- [ ] AR diagnostics for Agronomist
+- [ ] Dynamic AgriScore credit scoring for Bank
+
+## P2 Features (Backlog)
+- [ ] Backend server.py monolith refactoring
+- [ ] Real Mobile Money integration (CinetPay/PayDunya)
+- [ ] Twilio SMS integration
+- [ ] SEO optimization with react-helmet-async
+- [ ] Offline camera analysis support
