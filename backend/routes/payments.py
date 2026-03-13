@@ -98,12 +98,11 @@ async def _get_user_from_request(request: Request):
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:
         raise HTTPException(401, "Non authentifie")
-    from jose import jwt
-    import os as _os
+    import jwt as pyjwt
     try:
-        payload = jwt.decode(token, _os.environ.get("SECRET_KEY", "agricam-secret-key-2024-african-ai-solutions"), algorithms=["HS256"])
-        user = await _db.users.find_one({"id": payload.get("sub")}, {"_id": 0})
-    except:
+        payload = pyjwt.decode(token, os.environ.get("JWT_SECRET_KEY", "agricam-secret-key-prod-2025"), algorithms=["HS256"])
+        user = await _db.users.find_one({"id": payload.get("user_id")}, {"_id": 0, "password_hash": 0})
+    except Exception:
         raise HTTPException(401, "Token invalide")
     if not user:
         raise HTTPException(401, "Utilisateur non trouve")
@@ -116,19 +115,8 @@ async def get_packages():
 
 @router.get("/subscription-status")
 async def subscription_status(request: Request):
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    if not token or not _get_current_user:
-        raise HTTPException(401, "Non authentifie")
-    from jose import jwt
-    import os as _os
-    try:
-        payload = jwt.decode(token, _os.environ.get("SECRET_KEY", "agricam-secret-key-2024-african-ai-solutions"), algorithms=["HS256"])
-        user = await _db.users.find_one({"id": payload.get("sub")}, {"_id": 0})
-    except:
-        raise HTTPException(401, "Token invalide")
-    if not user:
-        raise HTTPException(401, "Utilisateur non trouve")
-    return _compute_sub_status(user)
+    u = await _get_user_from_request(request)
+    return _compute_sub_status(u)
 
 @router.get("/providers")
 async def get_providers():

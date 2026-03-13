@@ -12,7 +12,7 @@ import os
 import base64
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ai-crops-stage.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agri-checkout.preview.emergentagent.com').rstrip('/')
 
 # Demo credentials
 ADMIN_CREDS = {"email": "admin@agricam.ai", "password": "Admin@2026"}

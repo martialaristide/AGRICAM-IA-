@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -14,12 +15,13 @@ import { toast } from "sonner";
 import api from "../services/api";
 
 const MobileMoneyPayment = () => {
+  const navigate = useNavigate();
   const [packages, setPackages] = useState([]);
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [phone, setPhone] = useState("");
   const [provider, setProvider] = useState("mtn_cm");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState("select"); // select, pay, processing, success, failed
+  const [step, setStep] = useState("select"); // select, pay, processing
   const [orderId, setOrderId] = useState(null);
   const [history, setHistory] = useState([]);
   const [subStatus, setSubStatus] = useState(null);
@@ -43,7 +45,7 @@ const MobileMoneyPayment = () => {
   };
 
   const fetchSubStatus = async () => {
-    try { const res = await api.get("/user/subscription-status"); setSubStatus(res.data); } catch {}
+    try { const res = await api.get("/payments/subscription-status"); setSubStatus(res.data); } catch {}
   };
 
   const defaultPackages = [
@@ -72,11 +74,11 @@ const MobileMoneyPayment = () => {
         // Poll for status
         setTimeout(() => checkStatus(res.data.order_id), 5000);
       } else {
-        setStep("failed");
+        navigate(`/paiement-echec?reason=unknown`);
         toast.error("Echec de l'initiation du paiement");
       }
     } catch (e) {
-      setStep("failed");
+      navigate(`/paiement-echec?reason=network`);
       toast.error("Erreur de paiement");
     } finally {
       setLoading(false);
@@ -87,74 +89,18 @@ const MobileMoneyPayment = () => {
     try {
       const res = await api.get(`/payments/check-status/${oid}`);
       if (res.data.status === "success") {
-        setStep("success");
-        toast.success("Paiement confirme ! Abonnement active.");
-        fetchSubStatus();
+        toast.success("Paiement confirme !");
+        navigate(`/paiement-succes?order=${oid}&pkg=${encodeURIComponent(selectedPkg?.label || "")}&amount=${selectedPkg?.amount || 0}&days=${selectedPkg?.days || 30}`);
       } else if (res.data.status === "failed") {
-        setStep("failed");
+        navigate(`/paiement-echec?order=${oid}&reason=unknown`);
       } else {
         // Still processing, check again
         setTimeout(() => checkStatus(oid), 5000);
       }
     } catch {
-      setStep("failed");
+      navigate(`/paiement-echec?order=${oid}&reason=network`);
     }
   };
-
-  // Success Page
-  if (step === "success") return (
-    <div className="flex items-center justify-center min-h-[60vh] animate-slide-in" data-testid="payment-success">
-      <Card className="glass-card max-w-md w-full">
-        <CardContent className="p-8 text-center">
-          <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-emerald-900/30 ring-2 ring-emerald-500/30 flex items-center justify-center animate-glow">
-            <CheckCircle className="h-10 w-10 text-emerald-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Paiement Reussi !</h2>
-          <p className="text-slate-400 mb-4">Votre abonnement {selectedPkg?.type} a ete active avec succes.</p>
-          <div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-800/30 mb-6">
-            <p className="text-sm text-emerald-400">Montant: <strong>{selectedPkg?.amount?.toLocaleString()} XAF</strong></p>
-            <p className="text-sm text-emerald-400">Duree: <strong>{selectedPkg?.days} jours</strong></p>
-            <p className="text-xs text-slate-500 mt-1">Ref: {orderId}</p>
-          </div>
-          <p className="text-sm text-slate-500 mb-4">Un message de confirmation vous sera envoye.</p>
-          <Button className="w-full bg-emerald-600 gap-2" onClick={() => { setStep("select"); window.location.href = "/dashboard"; }}>
-            Acceder au tableau de bord <ArrowRight className="h-4 w-4" />
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  // Failed Page
-  if (step === "failed") return (
-    <div className="flex items-center justify-center min-h-[60vh] animate-slide-in" data-testid="payment-failed">
-      <Card className="glass-card max-w-md w-full">
-        <CardContent className="p-8 text-center">
-          <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-red-900/30 ring-2 ring-red-500/30 flex items-center justify-center">
-            <XCircle className="h-10 w-10 text-red-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Paiement Echoue</h2>
-          <p className="text-slate-400 mb-4">Le paiement n'a pas pu etre effectue. Verifiez votre solde ou reessayez.</p>
-          <div className="p-4 rounded-lg bg-red-900/20 border border-red-800/30 mb-6">
-            <p className="text-sm text-red-400">Causes possibles:</p>
-            <ul className="text-xs text-slate-500 mt-1 list-disc list-inside">
-              <li>Solde insuffisant</li>
-              <li>Transaction refusee par l'operateur</li>
-              <li>Numero de telephone incorrect</li>
-            </ul>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 border-slate-700 text-slate-400" onClick={() => setStep("select")}>
-              <ArrowLeft className="h-4 w-4 mr-2" /> Retour
-            </Button>
-            <Button className="flex-1 bg-emerald-600" onClick={() => { setStep("pay"); }}>
-              Reessayer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   // Processing
   if (step === "processing") return (

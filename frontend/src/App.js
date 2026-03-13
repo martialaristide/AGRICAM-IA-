@@ -32,6 +32,8 @@ import ELearning from "./pages/ELearning";
 import MobileMoneyPayment from "./pages/MobileMoneyPayment";
 import RobotControl from "./pages/RobotControl";
 import CameraIA from "./pages/CameraIA";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
 import DevAnalytics from "./pages/DevAnalytics";
 import AgribotIA from "./pages/AgribotIA";
 import GestionDronesAvance from "./pages/GestionDronesAvance";
@@ -282,6 +284,8 @@ function App() {
               <Route path="parametres" element={<Parametres />} />
               <Route path="formation" element={<ELearning />} />
               <Route path="paiements" element={<MobileMoneyPayment />} />
+              <Route path="paiement-succes" element={<PaymentSuccess />} />
+              <Route path="paiement-echec" element={<PaymentFailure />} />
               <Route path="robot-control" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <RobotControl />
