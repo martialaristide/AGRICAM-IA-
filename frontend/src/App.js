@@ -171,10 +171,11 @@ function App() {
     if (!leadCaptured && !token && !isAuthPage) {
       const timer = setTimeout(() => {
         const currentToken = localStorage.getItem("agricam_token");
-        if (!currentToken) {
+        const currPath = window.location.pathname;
+        if (!currentToken && currPath !== "/login" && currPath !== "/register") {
           setShowLeadCapture(true);
         }
-      }, 5000);
+      }, 15000);
       return () => clearTimeout(timer);
     }
   }, []);

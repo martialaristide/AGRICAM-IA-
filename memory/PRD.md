@@ -1,80 +1,76 @@
-# AGRICAM IA - PRD
+# AGRICAM IA 2.0 - PRD
 
 ## Original Problem Statement
-Enterprise-level precision agriculture platform "AGRICAM IA" with drone/robot management, AI analytics, AgriBot assistant, parcel management, admin dashboard, climate alerts, full i18n.
-
-## User Language: French
+Enterprise-level precision agriculture platform with 6 user roles, AI-powered analytics, and mobile money payments. Target market: Cameroon and Africa.
 
 ## Architecture
-- **Frontend**: React + Tailwind + Shadcn/UI (port 3000)
-- **Backend**: FastAPI + MongoDB (port 8001)
-- **AI**: emergentintegrations (Emergent LLM Key)
-- **External**: OpenWeatherMap
+- **Frontend**: React + Tailwind CSS + Shadcn/UI (Dark Futuristic Theme)
+- **Backend**: FastAPI + MongoDB (Async)
+- **AI**: Gemini via emergentintegrations (AGRI GENIUS)
+- **Payments**: NetWalletPay (MTN/Orange Mobile Money) + Stripe (test)
+- **Languages**: 21 languages (FR, EN, ES, DE, AR, ZH, SW, HA, YO, WO, BAM, FF, EW, BAS, DUA, BAF, IG, AM, LN, MG, ZU)
 
-## Credentials
+## User Roles
+1. **Admin** - Platform management, predictive analytics, security, A/B testing
+2. **Farmer** - Crop health, yield/price predictions, blockchain traceability
+3. **Supplier** - Demand forecast, logistics, stock management, cross-selling
+4. **Bank/Financial** - AgriScore credit scoring, loan simulator, risk management
+5. **Seed Analyst** - Digital twin, genomic modeling, crossing simulator, climate adaptation
+6. **Agronomist** - AI copilot, epidemiology, carbon simulator, dynamic recommendations
+
+## What's Implemented (March 2026)
+### Core Features
+- [x] Multi-role authentication (6 roles + demo accounts)
+- [x] Dark futuristic UI theme (global CSS overrides, glass-card effects)
+- [x] 21-language support with dynamic switching
+- [x] Freemium 14-day trial + subscription system
+- [x] NetWalletPay integration (MTN/Orange Mobile Money)
+- [x] Payment success/failure/processing pages
+- [x] Subscription gate for premium features
+
+### Role Dashboards (Enhanced)
+- [x] Admin: Predictive metrics, platform health, security alerts, user management, A/B testing
+- [x] Farmer: Crop health hub (NDVI/spectral), yield prediction, price prediction, blockchain traceability
+- [x] Supplier: Demand forecast, route optimization/GPS tracking, expiry alerts/flash promos, cross-selling
+- [x] Bank: AgriScore dynamic credit scoring, interactive loan simulator (sliders), portfolio risk by zone, parametric insurance
+- [x] Seed Analyst: Batch certification table, digital twin simulations (10K scenarios), genomic CRISPR modeling, virtual crossing simulator, 30-50yr climate projections
+- [x] Agronomist: Field visits, AI copilot (report generation), disease propagation modeling, carbon sequestration simulator, real-time dynamic alerts
+
+### Other Modules
+- [x] AGRI GENIUS chatbot (Gemini AI, multilingual, multi-session)
+- [x] Camera IA (device camera, AI analysis)
+- [x] Parcels management with data export (CSV/Excel)
+- [x] Marketplace
+- [x] IoT Sensors dashboard
+- [x] Drones/Robots management
+- [x] Satellite imagery
+- [x] E-Learning (course creation)
+- [x] Irrigation management (plan generator)
+- [x] Weather widget (OpenWeatherMap)
+- [x] Notification system (climate alerts)
+- [x] Admin access control panel (CRM, revenue, logs)
+
+## Backlog (P2)
+- [ ] Real blockchain integration (currently simulated)
+- [ ] Real-time ML model training/inference
+- [ ] Push notifications (mobile)
+- [ ] Federated learning for agronomist network
+- [ ] Backend server.py monolith refactoring
+- [ ] Advanced SEO (react-helmet-async)
+- [ ] Mobile app deployment (App Store/Play Store)
+
+## Test Credentials
 - Admin: admin@agricam.ai / Admin@2026
 - Farmer: agriculteur@agricam.ai / Farmer@2026
+- Supplier: fournisseur@agricam.ai / Supplier@2026
+- Bank: banque@agricam.ai / Bank@2026
+- Seed Analyst: analyste@agricam.ai / Analyst@2026
+- Agronomist: agronome@agricam.ai / Agro@2026
 
-## Implemented Features (All Tested)
-
-### Core Platform
-- Marketing landing page, Dashboard, Parcels, Drones, Robots, Satellites, AGRI GENIUS, Camera IA, Irrigation, Marketplace, Alerts, Settings, Access Control, Database Browser, ELearning
-- 4 user roles (Admin, Farmer, Supplier, Bank)
-- Real-time weather (OpenWeatherMap)
-
-### P0 Fixes (Done)
-- AGRI GENIUS rebrand (0 Gemini mentions)
-- AgriBot cache+fallback (TTLCache 500/1h + 15+ keyword responses)
-- Admin access control (grant/revoke/extend trials + audit log)
-- User activity tracking (page views, online users, stats)
-- Exit intent conversion (auto-detect + offers)
-- Database browser (collections + pagination)
-
-### Phase 1 Features (Done)
-- 13 Languages: FR, EN, ES, DE, AR, ZH + Fulfulde, Ewondo, Bambara, Hausa, Swahili, Wolof, Yoruba
-- Page-level translations (dashboard, irrigation, formation, accessControl, satellite, camera, agribot)
-- Parcels: Satellite map zoom 21, full weather data (wind dir, pressure, visibility, sunrise/sunset), export CSV/Excel/JSON/GeoJSON
-- AGRI GENIUS responds in app language
-- Admin CRM: contacts, transactions, revenue stats, ARPU, conversion rate, CSV export
-- Drone camera WebRTC connection, zoom, AI analysis
-- Robot camera + AI detection overlays (crops, pests, soil, leaves with confidence %)
-- Irrigation plan generator (zones, water calc, material lists, export)
-- Satellite capture scheduling (date/time/source/resolution)
-- Formation system (create courses: video, ebook, PowerPoint, live)
-- Marketplace product images + quality grades
-- Settings language selector (13 languages)
-
-### Phase 2 Features (Done)
-- AI Video Recognition API (7 detections: crops, pests, soil, vegetation with confidence %, recommendations)
-- 3D Environment Reconstruction API (terrain, vegetation, obstacles, water sources, paths, weather)
-- Robot 3D SVG environment visualization with reconstruct button
-- Drone video AI detection display (color-coded by category)
-
-### Phase 3 Features (Done)
-- SEO: XML sitemap, robots.txt, meta per page, Open Graph, Twitter Cards, structured data (JSON-LD)
-- Email notifications for trial expiry (auto-detect 2-day window, discount code generation)
-- Notification history + user notifications API
-- Backend modularization: admin_extended.py route module
-- Admin "Send expiry alerts" button in Access Control
-
-## Backend API Endpoints
-
-### Auth: POST /api/auth/login, /api/auth/register
-### Access: POST /api/admin/access/grant, /update; GET /logs, /expired
-### Tracking: POST /api/tracking/activity; GET /admin/tracking/users-online, /stats
-### CRM: GET /api/admin/crm/contacts, /transactions, /revenue-stats
-### Campaigns: GET /api/campaigns/exit-offers; POST /claim-offer; GET /admin/campaigns/stats
-### Database: GET /api/admin/database/collections, /browse/{name}
-### Formations: POST /api/formations; GET /api/formations
-### Export: GET /api/admin/export/{collection}
-### ChatBot: POST /api/chatbot/message (cache → AI → fallback)
-### SEO: GET /api/seo/sitemap, /robots, /meta/{page}
-### AI: POST /api/ai/video-recognize, /ai/3d-reconstruct
-### Notifications: POST /api/admin/notifications/trial-expiry; GET /notifications/my, /admin/notifications/history
-
-## Remaining (P2 Backlog)
-- Real Mobile Money integration (needs API keys)
-- Real SMS integration (needs API keys)
-- Full text i18n for ALL page content strings
-- Complete backend refactoring (move all server.py routes to modules)
-- Push to GitHub via "Save to Github"
+## Mocked/Simulated
+- NetWalletPay (API unreachable from preview, fallback simulation)
+- Blockchain traceability (demo data)
+- Yield/Price predictions (realistic demo data)
+- AgriScore (simulated scoring algorithm)
+- Genomic/CRISPR modeling (simulated results)
+- Carbon sequestration (demo calculations)
