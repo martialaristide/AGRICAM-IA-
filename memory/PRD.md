@@ -30,10 +30,10 @@ Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered cro
     epidemiology.py    # Disease modeling (Agronomist)
     supplier_analytics.py  # Demand & logistics (Supplier)
     management_api.py  # Admin management
-    payments.py        # NetWalletPay integration
+    payments.py        # NetWalletPay + Mobile Money payments
 ```
 
-## AGRICAMIA 2.0 API Endpoints (New)
+## AGRICAMIA 2.0 API Endpoints
 - `/api/predictive/platform-health`, `/api/predictive/growth-forecast`, `/api/predictive/security-alerts`, `/api/predictive/ai-insights`
 - `/api/agriscore/scores`, `/api/agriscore/compute`, `/api/agriscore/risk-zones`, `/api/agriscore/insurance-simulate`
 - `/api/digital-twin/simulations`, `/api/digital-twin/simulate`, `/api/digital-twin/genomic-analysis`, `/api/digital-twin/seed-batches`
@@ -41,13 +41,20 @@ Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered cro
 - `/api/epidemiology/alerts`, `/api/epidemiology/predict-spread`, `/api/epidemiology/intervention-plan`, `/api/epidemiology/carbon-tracking`
 - `/api/supplier-analytics/demand-forecast`, `/api/supplier-analytics/logistics-optimization`, `/api/supplier-analytics/inventory-alerts`, `/api/supplier-analytics/revenue-analytics`
 
+## Payment Endpoints
+- `/api/payments/packages` - Liste des forfaits
+- `/api/payments/subscription-status` - Statut abonnement utilisateur
+- `/api/payments/request-payment` - Initier un paiement Mobile Money
+- `/api/payments/check-status/{order_id}` - Verifier le statut
+- `/api/payments/history` - Historique des paiements
+
 ## Demo Accounts
 - Admin: admin@agricam.ai / Admin@2026
 - Farmer: agriculteur@agricam.ai / Farmer@2026
 - Supplier: fournisseur@agricam.ai / Supplier@2026
 - Bank: banque@agricam.ai / Bank@2026
 - Seed Analyst: analyste@agricam.ai / Analyst@2026
-- Agronomist: agronome@agricam.ai / Agronomist@2026
+- Agronomist: agronome@agricam.ai / Agro@2026
 
 ## Completed Features
 - [x] Multi-role dashboards (6 roles) with dark futuristic theme
@@ -67,12 +74,19 @@ Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered cro
 - [x] AI Insights generation for Admin dashboard
 - [x] Parametric insurance simulation for Bank
 - [x] Carbon tracking for Agronomist
+- [x] **Payment Bug Fix**: JWT secret mismatch resolved - payments no longer redirect to login (13 Mar 2026)
+- [x] **Payment Success/Failure Pages**: Dedicated /paiement-succes and /paiement-echec routes (13 Mar 2026)
+- [x] **Payment Flow**: Full simulated Mobile Money payment flow working end-to-end (13 Mar 2026)
+
+## Known Limitations
+- NetWalletPay: External API unreachable in preview environment (network restriction). Payments use simulated fallback mode. Will work in production.
+- Camera AI: Falls back gracefully when AI models are unavailable.
 
 ## P2 Features (Backlog)
 - [ ] Complete migration of legacy routes from server.py to modular files
 - [ ] Real Mobile Money integration (CinetPay/PayDunya)
 - [ ] Twilio SMS integration
-- [ ] NetWalletPay - functional once network allows
+- [ ] NetWalletPay - functional once deployed to production
 - [ ] SEO optimization with react-helmet-async
 - [ ] Offline camera analysis support
 - [ ] Real-time WebSocket notifications
@@ -81,3 +95,4 @@ Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered cro
 ## Testing Status
 - Iteration 21: 16 backend tests, 100% pass
 - Iteration 22: 25 backend tests + 5 frontend dashboards, 100% pass
+- Iteration 23: 8 backend + 6 frontend payment tests, 100% pass (13 Mar 2026)
