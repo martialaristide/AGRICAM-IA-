@@ -25,13 +25,26 @@ const BankDashboard = () => {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loanSim, setLoanSim] = useState({ amount: 500000, rate: 8.5, months: 12 });
+  const [agriScores, setAgriScores] = useState([]);
+  const [riskZones, setRiskZones] = useState([]);
+  const [computingScore, setComputingScore] = useState(false);
+  const [insuranceSim, setInsuranceSim] = useState(null);
 
   useEffect(() => {
-    const fetchLoans = async () => {
-      try { const res = await api.get("/financial/loans"); setLoans(res.data); } catch {}
+    const fetchData = async () => {
+      try {
+        const [loansRes, scoresRes, risksRes] = await Promise.all([
+          api.get("/financial/loans").catch(() => ({ data: [] })),
+          api.get("/agriscore/scores").catch(() => ({ data: [] })),
+          api.get("/agriscore/risk-zones").catch(() => ({ data: [] })),
+        ]);
+        setLoans(loansRes.data);
+        setAgriScores(scoresRes.data || []);
+        setRiskZones(risksRes.data || []);
+      } catch {}
       finally { setLoading(false); }
     };
-    fetchLoans();
+    fetchData();
   }, []);
 
   const monthlyPayment = () => {
@@ -44,19 +57,40 @@ const BankDashboard = () => {
 
   const totalCost = () => monthlyPayment() * loanSim.months;
 
-  const agriScores = [
-    { farmer: "Jean Dupont", score: 87, yield: "4.2 t/ha", sustainability: 92, sales: 78, climate: "Faible", trend: "up" },
-    { farmer: "Marie Nkolo", score: 74, yield: "3.1 t/ha", sustainability: 68, sales: 85, climate: "Moyen", trend: "up" },
-    { farmer: "Paul Tagne", score: 61, yield: "2.8 t/ha", sustainability: 55, sales: 62, climate: "Eleve", trend: "down" },
-    { farmer: "Awa Sow", score: 93, yield: "5.1 t/ha", sustainability: 95, sales: 91, climate: "Faible", trend: "up" },
-  ];
+  const computeNewScore = async () => {
+    setComputingScore(true);
+    try {
+      const res = await api.post("/agriscore/compute", {
+        farmer_name: "Nouveau agriculteur",
+        region: "Centre",
+        crop_type: "Mais",
+        area_ha: 10,
+        years_experience: 5,
+        previous_yield: 3.8,
+        loan_amount: loanSim.amount,
+        loan_duration_months: loanSim.months
+      });
+      if (res.data.agriscore) {
+        setAgriScores(prev => [res.data.agriscore, ...prev]);
+        toast.success("AgriScore calcule avec succes !");
+      }
+    } catch { toast.error("Erreur calcul AgriScore"); }
+    finally { setComputingScore(false); }
+  };
 
-  const riskZones = [
-    { zone: "Extreme-Nord", exposure: "15%", risk: "Secheresse severe", level: "critical", amount: "45M XAF" },
-    { zone: "Sud-Ouest", exposure: "8%", risk: "Inondation moderee", level: "warning", amount: "24M XAF" },
-    { zone: "Centre", exposure: "22%", risk: "Normal", level: "safe", amount: "66M XAF" },
-    { zone: "Ouest", exposure: "18%", risk: "Faible", level: "safe", amount: "54M XAF" },
-  ];
+  const simulateInsurance = async () => {
+    try {
+      const res = await api.post("/agriscore/insurance-simulate", {
+        farmer_name: "Simulation",
+        crop_type: "Mais",
+        loan_amount: loanSim.amount,
+        loan_duration_months: loanSim.months,
+        previous_yield: 3.5
+      });
+      setInsuranceSim(res.data);
+      toast.success("Simulation assurance generee !");
+    } catch { toast.error("Erreur simulation"); }
+  };
 
   return (
     <div className="space-y-6 animate-slide-in" data-testid="bank-dashboard">
@@ -126,22 +160,30 @@ const BankDashboard = () => {
 
       {activeTab === "agriscore" && (
         <Card className="glass-card">
-          <CardHeader className="border-b border-slate-800/50"><CardTitle className="text-white">{t("roles.bank.agriScore")} - {t("roles.bank.creditScore")} Dynamique</CardTitle></CardHeader>
+          <CardHeader className="border-b border-slate-800/50">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white">{t("roles.bank.agriScore")} - {t("roles.bank.creditScore")} Dynamique</CardTitle>
+              <Button size="sm" onClick={computeNewScore} disabled={computingScore} className="bg-emerald-600 hover:bg-emerald-700 text-xs" data-testid="compute-score-btn">
+                {computingScore ? <Activity className="h-3 w-3 mr-1 animate-spin" /> : <Zap className="h-3 w-3 mr-1" />}
+                {computingScore ? "Calcul IA..." : "Calculer AgriScore"}
+              </Button>
+            </div>
+          </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead><tr className="border-b border-slate-800/50">
-                  {["Agriculteur", "AgriScore", t("roles.bank.yieldHistory"), t("roles.bank.sustainability"), t("roles.bank.salesRegularity"), t("roles.bank.climateRisk"), "Tendance"].map(h => <th key={h} className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{h}</th>)}
+                  {["Agriculteur", "AgriScore", "Risque", "Pret max", "Taux", "Region", "Tendance"].map(h => <th key={h} className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{h}</th>)}
                 </tr></thead>
                 <tbody>{agriScores.map((a, i) => (
                   <tr key={i} className="border-b border-slate-800/30 hover:bg-slate-800/20">
-                    <td className="p-3 text-sm text-white font-medium">{a.farmer}</td>
+                    <td className="p-3 text-sm text-white font-medium">{a.farmer_name || a.farmer}</td>
                     <td className="p-3"><div className="flex items-center gap-2"><Progress value={a.score} className="h-2 w-16" /><span className={cn("text-sm font-bold", a.score >= 80 ? "text-emerald-400" : a.score >= 60 ? "text-amber-400" : "text-red-400")}>{a.score}</span></div></td>
-                    <td className="p-3 text-sm text-slate-400">{a.yield}</td>
-                    <td className="p-3"><span className={`text-sm font-bold text-${a.sustainability >= 80 ? "emerald" : a.sustainability >= 60 ? "amber" : "red"}-400`}>{a.sustainability}%</span></td>
-                    <td className="p-3 text-sm text-white">{a.sales}%</td>
-                    <td className="p-3"><Badge className={cn("text-xs text-white", a.climate === "Faible" ? "bg-emerald-500" : a.climate === "Moyen" ? "bg-amber-500" : "bg-red-500")}>{a.climate}</Badge></td>
-                    <td className="p-3"><TrendingUp className={cn("h-4 w-4", a.trend === "up" ? "text-emerald-400" : "text-red-400 rotate-180")} /></td>
+                    <td className="p-3"><Badge className={cn("text-xs text-white", a.risk_level === "low" ? "bg-emerald-500" : a.risk_level === "medium" ? "bg-amber-500" : "bg-red-500")}>{a.risk_level}</Badge></td>
+                    <td className="p-3 text-sm text-white">{(a.max_loan || a.max_loan_recommended || 0).toLocaleString()} XAF</td>
+                    <td className="p-3 text-sm text-emerald-400">{a.rate_suggestion || a.interest_rate_suggestion || 8}%</td>
+                    <td className="p-3 text-sm text-slate-400">{a.region || "-"}</td>
+                    <td className="p-3"><TrendingUp className={cn("h-4 w-4", a.score >= 70 ? "text-emerald-400" : "text-red-400 rotate-180")} /></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -187,15 +229,16 @@ const BankDashboard = () => {
           <CardHeader className="border-b border-slate-800/50"><CardTitle className="text-white">{t("roles.bank.portfolioExposure")} - {t("roles.bank.zoneRisk")}</CardTitle></CardHeader>
           <CardContent className="p-4 space-y-3">
             {riskZones.map((z, i) => (
-              <div key={i} className={cn("p-4 rounded-xl border-l-4", z.level === "critical" ? "border-l-red-500 bg-red-900/10" : z.level === "warning" ? "border-l-amber-500 bg-amber-900/10" : "border-l-emerald-500 bg-emerald-900/10")}>
+              <div key={i} className={cn("p-4 rounded-xl border-l-4", z.risk_level === "high" ? "border-l-red-500 bg-red-900/10" : z.risk_level === "medium" ? "border-l-amber-500 bg-amber-900/10" : "border-l-emerald-500 bg-emerald-900/10")}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-slate-400" /><span className="text-white font-medium">{z.zone}</span></div>
-                  <Badge className={cn("text-white text-xs", z.level === "critical" ? "bg-red-500" : z.level === "warning" ? "bg-amber-500" : "bg-emerald-500")}>{z.risk}</Badge>
+                  <Badge className={cn("text-white text-xs", z.risk_level === "high" ? "bg-red-500" : z.risk_level === "medium" ? "bg-amber-500" : "bg-emerald-500")}>{z.risk_type}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Exposition: {z.exposure} du portefeuille</span>
-                  <span className="text-white font-bold">{z.amount}</span>
+                  <span className="text-slate-400">Exposition: {z.exposure_percent}% ({z.farmers_count} agriculteurs)</span>
+                  <span className="text-white font-bold">{(z.total_exposure_xaf / 1000000).toFixed(0)}M XAF</span>
                 </div>
+                <div className="text-xs text-slate-500 mt-1">Taux defaut: {z.default_rate}%</div>
               </div>
             ))}
           </CardContent>
@@ -205,23 +248,45 @@ const BankDashboard = () => {
       {activeTab === "insurance" && (
         <Card className="glass-card">
           <CardHeader className="border-b border-slate-800/50"><CardTitle className="text-white flex items-center gap-2"><Umbrella className="h-5 w-5 text-cyan-400" />{t("roles.bank.parametricInsurance")}</CardTitle></CardHeader>
-          <CardContent className="p-6 text-center">
-            <Umbrella className="h-16 w-16 mx-auto text-cyan-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Assurance declenchement automatique</h3>
-            <p className="text-sm text-slate-400 mb-6">Indemnisation automatique basee sur les donnees satellites. Aucun dossier a remplir.</p>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[
-                { label: t("roles.bank.droughtAlert"), threshold: "Precipitations < 40mm/mois", color: "amber" },
-                { label: t("roles.bank.floodAlert"), threshold: "Precipitations > 200mm/j", color: "blue" },
-                { label: "Gel", threshold: "Temperature < 2C", color: "cyan" },
-              ].map((p, i) => (
-                <div key={i} className="p-3 rounded-xl bg-slate-800/30 border border-slate-800/50">
-                  <p className={`text-sm font-medium text-${p.color}-400`}>{p.label}</p>
-                  <p className="text-xs text-slate-500 mt-1">{p.threshold}</p>
-                </div>
-              ))}
+          <CardContent className="p-6 space-y-6">
+            <div className="text-center">
+              <Umbrella className="h-12 w-12 mx-auto text-cyan-400 mb-3" />
+              <h3 className="text-lg font-bold text-white mb-2">Assurance parametrique automatique</h3>
+              <p className="text-sm text-slate-400 mb-4">Indemnisation automatique basee sur les donnees satellites.</p>
+              <Button onClick={simulateInsurance} className="bg-cyan-600 hover:bg-cyan-500 gap-2" data-testid="simulate-insurance-btn">
+                <ShieldCheck className="h-4 w-4" />Simuler assurance parametrique
+              </Button>
             </div>
-            <Button className="bg-cyan-600 hover:bg-cyan-500 gap-2"><ShieldCheck className="h-4 w-4" />Configurer les seuils</Button>
+            {insuranceSim && (
+              <div className="space-y-4 mt-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-cyan-900/20 border border-cyan-800/30 text-center">
+                    <p className="text-xs text-slate-500">Prime annuelle</p>
+                    <p className="text-xl font-bold text-cyan-400">{insuranceSim.premium_annual?.toLocaleString()} XAF</p>
+                    <p className="text-xs text-slate-500">{insuranceSim.premium_rate_percent}%</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-violet-900/20 border border-violet-800/30 text-center">
+                    <p className="text-xs text-slate-500">Couverture</p>
+                    <p className="text-xl font-bold text-violet-400">{insuranceSim.coverage_amount?.toLocaleString()} XAF</p>
+                    <p className="text-xs text-slate-500">{insuranceSim.coverage_percent}%</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-emerald-900/20 border border-emerald-800/30 text-center">
+                    <p className="text-xs text-slate-500">Culture</p>
+                    <p className="text-xl font-bold text-emerald-400">{insuranceSim.crop}</p>
+                  </div>
+                </div>
+                <h4 className="text-sm font-medium text-white">Scenarios de sinistres</h4>
+                {insuranceSim.scenarios?.map((s, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                    <span className="text-sm text-white">{s.scenario}</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-slate-400">Prob: {s.probability_percent}%</span>
+                      <span className="text-sm font-medium text-emerald-400">{s.payout_amount?.toLocaleString()} XAF</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

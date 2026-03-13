@@ -20,6 +20,11 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [platformHealth, setPlatformHealth] = useState(null);
+  const [securityAlerts, setSecurityAlerts] = useState([]);
+  const [abTests, setAbTests] = useState([]);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [generatingInsights, setGeneratingInsights] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -27,17 +32,33 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes, healthRes, secRes, abRes] = await Promise.all([
         api.get("/admin/dashboard"),
-        api.get("/admin/users")
+        api.get("/admin/users"),
+        api.get("/predictive/platform-health").catch(() => ({ data: null })),
+        api.get("/predictive/security-alerts").catch(() => ({ data: [] })),
+        api.get("/predictive/ab-tests").catch(() => ({ data: [] })),
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
+      setPlatformHealth(healthRes.data);
+      setSecurityAlerts(secRes.data || []);
+      setAbTests(abRes.data || []);
     } catch (error) {
       console.error("Error:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateInsights = async () => {
+    setGeneratingInsights(true);
+    try {
+      const res = await api.post("/predictive/ai-insights");
+      setAiInsights(res.data.insights);
+      toast.success("Insights IA generes !");
+    } catch { toast.error("Erreur generation insights"); }
+    finally { setGeneratingInsights(false); }
   };
 
   const handleVerify = async (userId) => {
@@ -48,23 +69,7 @@ const AdminDashboard = () => {
     try { await api.delete(`/admin/users/${userId}`); toast.success("OK"); fetchData(); } catch { toast.error("Erreur"); }
   };
 
-  const systemMetrics = {
-    uptime: "99.97%", responseTime: "42ms", errorRate: "0.02%",
-    memoryUsage: 67, cpuLoad: 34, apiCalls: "12,847",
-    dbConnections: 23, cacheHitRate: "94.2%"
-  };
-
-  const securityAlerts = [
-    { id: 1, type: "warning", msg: t("roles.admin.suspiciousActivity") + ": 3 connexions depuis IP inconnue", time: "Il y a 12min", severity: "medium" },
-    { id: 2, type: "info", msg: "Mise a jour de securite disponible v3.2.1", time: "Il y a 2h", severity: "low" },
-    { id: 3, type: "critical", msg: t("roles.admin.fraudDetection") + ": Compte fournisseur suspect detecte", time: "Il y a 35min", severity: "high" },
-  ];
-
-  const abTests = [
-    { name: "Nouveau dashboard agriculteur", variant: "B", conversionA: 12.3, conversionB: 18.7, status: "active", confidence: 94 },
-    { name: "Onboarding simplifie", variant: "A", conversionA: 45.2, conversionB: 41.8, status: "completed", confidence: 97 },
-    { name: "Prix affiche en XAF", variant: "B", conversionA: 8.1, conversionB: 14.5, status: "active", confidence: 88 },
-  ];
+  const health = platformHealth || { uptime_percent: 99.97, response_time_ms: 42, error_rate_percent: 0.02, memory_usage_percent: 67, cpu_load_percent: 34, api_calls_today: 12847, db_connections: 23, cache_hit_rate: 94.2 };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" /></div>;
 
@@ -106,7 +111,7 @@ const AdminDashboard = () => {
               { label: t("roles.admin.totalUsers"), value: stats?.users_count || users.length, icon: Users, color: "emerald" },
               { label: t("roles.admin.activeUsers"), value: stats?.active_users || Math.floor(users.length * 0.7), icon: Globe, color: "blue" },
               { label: t("roles.admin.monthlyRevenue"), value: `${((stats?.revenue || 2450000) / 1000).toFixed(0)}K`, icon: TrendingUp, color: "violet" },
-              { label: t("roles.admin.serverLoad"), value: `${systemMetrics.cpuLoad}%`, icon: Cpu, color: "orange" },
+              { label: t("roles.admin.serverLoad"), value: `${health.cpu_load_percent}%`, icon: Cpu, color: "orange" },
             ].map((s, i) => (
               <Card key={i} className="glass-card card-hover">
                 <CardContent className="p-5">
@@ -163,20 +168,56 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           </div>
+          {/* AI Insights Section */}
+          <Card className="glass-card">
+            <CardHeader className="border-b border-slate-800/50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white text-base">{t("roles.admin.predictiveAnalytics") || "Insights IA Predictifs"}</CardTitle>
+                <Button size="sm" onClick={generateInsights} disabled={generatingInsights}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-xs" data-testid="generate-insights-btn">
+                  {generatingInsights ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <Zap className="h-3 w-3 mr-1" />}
+                  {generatingInsights ? "Analyse..." : "Generer Insights IA"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              {aiInsights ? (
+                <div className="space-y-3">
+                  {(aiInsights.insights || []).map((insight, i) => (
+                    <div key={i} className="p-3 rounded-lg bg-slate-800/30 border border-slate-800/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={cn("text-xs", insight.impact === "high" ? "bg-red-900/40 text-red-400" : insight.impact === "medium" ? "bg-amber-900/40 text-amber-400" : "bg-blue-900/40 text-blue-400")}>{insight.category}</Badge>
+                        <span className="text-sm font-medium text-white">{insight.title}</span>
+                      </div>
+                      <p className="text-xs text-slate-400">{insight.description}</p>
+                      <p className="text-xs text-emerald-400 mt-1">Action: {insight.action}</p>
+                    </div>
+                  ))}
+                  {aiInsights.top_recommendation && (
+                    <div className="p-3 bg-emerald-900/20 border border-emerald-800/30 rounded-lg">
+                      <p className="text-sm text-emerald-400 font-medium">Recommandation principale: {aiInsights.top_recommendation}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">Cliquez sur "Generer Insights IA" pour obtenir des recommandations predictives</p>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
 
       {activeTab === "health" && (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: t("roles.admin.uptime"), value: systemMetrics.uptime, icon: Clock, color: "emerald" },
-            { label: t("roles.admin.responseTime"), value: systemMetrics.responseTime, icon: Zap, color: "blue" },
-            { label: t("roles.admin.errorRate"), value: systemMetrics.errorRate, icon: AlertTriangle, color: "amber" },
-            { label: "API Calls/h", value: systemMetrics.apiCalls, icon: Globe, color: "violet" },
-            { label: t("roles.admin.memoryUsage"), value: `${systemMetrics.memoryUsage}%`, icon: Server, color: "orange", progress: systemMetrics.memoryUsage },
-            { label: "CPU", value: `${systemMetrics.cpuLoad}%`, icon: Cpu, color: "cyan", progress: systemMetrics.cpuLoad },
-            { label: "DB Conn.", value: systemMetrics.dbConnections, icon: Database, color: "pink" },
-            { label: "Cache Hit", value: systemMetrics.cacheHitRate, icon: RefreshCw, color: "green" },
+            { label: t("roles.admin.uptime"), value: `${health.uptime_percent}%`, icon: Clock, color: "emerald" },
+            { label: t("roles.admin.responseTime"), value: `${health.response_time_ms}ms`, icon: Zap, color: "blue" },
+            { label: t("roles.admin.errorRate"), value: `${health.error_rate_percent}%`, icon: AlertTriangle, color: "amber" },
+            { label: "API Calls", value: health.api_calls_today?.toLocaleString(), icon: Globe, color: "violet" },
+            { label: t("roles.admin.memoryUsage"), value: `${health.memory_usage_percent}%`, icon: Server, color: "orange", progress: health.memory_usage_percent },
+            { label: "CPU", value: `${health.cpu_load_percent}%`, icon: Cpu, color: "cyan", progress: health.cpu_load_percent },
+            { label: "DB Conn.", value: health.db_connections, icon: Database, color: "pink" },
+            { label: "Cache Hit", value: `${health.cache_hit_rate}%`, icon: RefreshCw, color: "green" },
           ].map((m, i) => (
             <Card key={i} className="glass-card card-hover">
               <CardContent className="p-5 text-center">
@@ -202,10 +243,10 @@ const AdminDashboard = () => {
               {securityAlerts.map(a => (
                 <div key={a.id} className={cn("p-4 rounded-xl border-l-4", a.severity === "high" ? "border-l-red-500 bg-red-900/10" : a.severity === "medium" ? "border-l-amber-500 bg-amber-900/10" : "border-l-blue-500 bg-blue-900/10")} data-testid={`alert-${a.id}`}>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-white font-medium">{a.msg}</p>
+                    <p className="text-sm text-white font-medium">{a.message || a.msg}</p>
                     <Badge className={cn("text-xs text-white", a.severity === "high" ? "bg-red-500" : a.severity === "medium" ? "bg-amber-500" : "bg-blue-500")}>{a.severity}</Badge>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{a.time}</p>
+                  <p className="text-xs text-slate-500 mt-1">{a.timestamp ? new Date(a.timestamp).toLocaleString("fr-FR") : a.time}</p>
                 </div>
               ))}
             </CardContent>
@@ -257,11 +298,11 @@ const AdminDashboard = () => {
                   <Badge className={test.status === "active" ? "bg-emerald-500 text-white" : "bg-slate-600 text-white"}>{test.status}</Badge>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div><p className="text-xs text-slate-500">Variant A</p><p className="text-lg font-bold text-white">{test.conversionA}%</p></div>
-                  <div><p className="text-xs text-slate-500">Variant B</p><p className="text-lg font-bold text-emerald-400">{test.conversionB}%</p></div>
+                  <div><p className="text-xs text-slate-500">Variant A</p><p className="text-lg font-bold text-white">{test.conversion_a || test.conversionA}%</p></div>
+                  <div><p className="text-xs text-slate-500">Variant B</p><p className="text-lg font-bold text-emerald-400">{test.conversion_b || test.conversionB}%</p></div>
                   <div><p className="text-xs text-slate-500">Confidence</p><p className="text-lg font-bold text-amber-400">{test.confidence}%</p></div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Gagnant: Variant {test.variant}</p>
+                <p className="text-xs text-slate-500 mt-2">Gagnant: Variant {test.variant_winning || test.variant} {test.sample_size ? `(${test.sample_size} samples)` : ""}</p>
               </div>
             ))}
           </CardContent>

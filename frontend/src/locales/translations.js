@@ -304,7 +304,8 @@ export const translations = {
         responseTime: "Temps de reponse",
         errorRate: "Taux d'erreur",
         memoryUsage: "Utilisation memoire",
-        scalingRecommendation: "Recommandation de mise a l'echelle"
+        scalingRecommendation: "Recommandation de mise a l'echelle",
+        predictiveAnalytics: "Insights IA Predictifs"
       },
       farmer: {
         title: "Hub Agriculteur Intelligent",

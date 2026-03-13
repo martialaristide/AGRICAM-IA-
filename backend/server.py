@@ -4300,6 +4300,21 @@ async def update_user_profile(data: dict, user=Depends(get_current_user)):
     return {"message": "Profile updated", "updated_fields": list(update_data.keys())}
 
 # Include router and middleware
+# AGRICAMIA 2.0 Routes
+from routes.agriscore import router as agriscore_router
+from routes.digital_twin import router as digital_twin_router
+from routes.predictive import router as predictive_router
+from routes.blockchain import router as blockchain_router
+from routes.epidemiology import router as epidemiology_router
+from routes.supplier_analytics import router as supplier_analytics_router
+
+app.include_router(agriscore_router)
+app.include_router(digital_twin_router)
+app.include_router(predictive_router)
+app.include_router(blockchain_router)
+app.include_router(epidemiology_router)
+app.include_router(supplier_analytics_router)
+
 app.include_router(api_router)
 
 app.add_middleware(
