@@ -4204,13 +4204,14 @@ async def get_formations(user = Depends(get_optional_user)):
 # =============================================================================
 
 @api_router.get("/admin/export/{collection_name}")
-async def export_collection(collection_name: str, format: str = "csv", user = Depends(require_roles([UserRole.ADMIN]))):
-    """Export a collection as CSV or JSON"""
+async def export_collection(collection_name: str, format: str = "csv", limit: int = 1000, skip: int = 0, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Export a collection as CSV or JSON with pagination"""
     collection_names = await db.list_collection_names()
     if collection_name not in collection_names:
         raise HTTPException(status_code=404, detail="Collection non trouvee")
     
-    docs = await db[collection_name].find({}, {"_id": 0}).to_list(10000)
+    limit = min(limit, 5000)
+    docs = await db[collection_name].find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
     if format == "json":
         return {"data": docs, "count": len(docs), "collection": collection_name}
