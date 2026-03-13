@@ -4399,7 +4399,13 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("🌾 AGRICAM IA API v3.0 starting - Developed by Barra Martial Aristide / African AI Solutions")
+    logger.info("AGRICAM IA API v3.0 starting - Developed by Barra Martial Aristide / African AI Solutions")
+    # Init object storage
+    try:
+        from storage import init_storage
+        init_storage()
+    except Exception as e:
+        logger.warning(f"Storage init: {e}")
     count = await db.parcels.count_documents({})
     if count == 0:
         logger.info("Seeding database with demo data...")

@@ -2,7 +2,8 @@
 AGRICAM IA - Trainer (Formateur) Routes
 Training management, ebook sales, video publishing
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Header
+from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -25,6 +26,8 @@ except ImportError:
     db = client[os.environ.get('DB_NAME')]
     logger = logging.getLogger(__name__)
     get_current_user = None
+
+from storage import init_storage, put_object, get_object, generate_path
 
 
 class TrainingCreate(BaseModel):
@@ -290,3 +293,151 @@ async def get_trainer_stats(user=Depends(get_current_user)):
         "total_students": enrollments_count,
         "verified": False,
     }
+
+
+# --- File Uploads ---
+ALLOWED_VIDEO = {"mp4", "avi", "mov", "webm"}
+ALLOWED_DOCS = {"pdf", "epub", "doc", "docx", "txt"}
+MAX_VIDEO_SIZE = 200 * 1024 * 1024  # 200MB
+MAX_DOC_SIZE = 50 * 1024 * 1024  # 50MB
+
+
+@router.post("/upload-video")
+async def upload_training_video(
+    training_id: str = Query(...),
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    """Upload a video file for a training"""
+    if user.get("role") not in ("trainer", "admin"):
+        raise HTTPException(403, "Seuls les formateurs peuvent uploader des videos")
+    
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ALLOWED_VIDEO:
+        raise HTTPException(400, f"Format non supporte. Formats acceptes: {', '.join(ALLOWED_VIDEO)}")
+    
+    data = await file.read()
+    if len(data) > MAX_VIDEO_SIZE:
+        raise HTTPException(400, "Fichier trop volumineux (max 200 Mo)")
+    
+    path = generate_path(user["id"], file.filename, "videos")
+    try:
+        result = put_object(path, data, file.content_type or "video/mp4")
+    except Exception as e:
+        logger.error(f"Video upload failed: {e}")
+        raise HTTPException(500, "Erreur lors de l'upload de la video")
+    
+    file_record = {
+        "id": str(uuid.uuid4()),
+        "storage_path": result["path"],
+        "original_filename": file.filename,
+        "content_type": file.content_type,
+        "size": result.get("size", len(data)),
+        "training_id": training_id,
+        "uploaded_by": user["id"],
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.files.insert_one(file_record)
+    
+    # Update training with video reference
+    await db.trainings.update_one(
+        {"id": training_id},
+        {"$set": {"video_file_id": file_record["id"], "video_filename": file.filename}}
+    )
+    
+    file_record.pop("_id", None)
+    return {"success": True, "file": file_record}
+
+
+@router.post("/upload-ebook")
+async def upload_ebook_file(
+    ebook_id: str = Query(...),
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    """Upload an ebook/document file"""
+    if user.get("role") not in ("trainer", "admin"):
+        raise HTTPException(403, "Seuls les formateurs peuvent uploader des ebooks")
+    
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ALLOWED_DOCS:
+        raise HTTPException(400, f"Format non supporte. Formats acceptes: {', '.join(ALLOWED_DOCS)}")
+    
+    data = await file.read()
+    if len(data) > MAX_DOC_SIZE:
+        raise HTTPException(400, "Fichier trop volumineux (max 50 Mo)")
+    
+    path = generate_path(user["id"], file.filename, "ebooks")
+    try:
+        result = put_object(path, data, file.content_type or "application/pdf")
+    except Exception as e:
+        logger.error(f"Ebook upload failed: {e}")
+        raise HTTPException(500, "Erreur lors de l'upload du fichier")
+    
+    file_record = {
+        "id": str(uuid.uuid4()),
+        "storage_path": result["path"],
+        "original_filename": file.filename,
+        "content_type": file.content_type,
+        "size": result.get("size", len(data)),
+        "ebook_id": ebook_id,
+        "uploaded_by": user["id"],
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.files.insert_one(file_record)
+    
+    await db.ebooks.update_one(
+        {"id": ebook_id},
+        {"$set": {"file_id": file_record["id"], "file_name": file.filename}}
+    )
+    
+    file_record.pop("_id", None)
+    return {"success": True, "file": file_record}
+
+
+@router.get("/files/{file_id}/download")
+async def download_file(file_id: str, user=Depends(get_current_user)):
+    """Download a file (video or ebook)"""
+    record = await db.files.find_one({"id": file_id, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(404, "Fichier non trouve")
+    
+    # Check ebook download permission
+    if record.get("ebook_id"):
+        ebook = await db.ebooks.find_one({"id": record["ebook_id"]}, {"_id": 0})
+        if ebook and not ebook.get("download_enabled", True):
+            if user["id"] != record.get("uploaded_by"):
+                raise HTTPException(403, "Telechargement desactive pour cet ebook")
+    
+    try:
+        data, content_type = get_object(record["storage_path"])
+    except Exception as e:
+        logger.error(f"File download failed: {e}")
+        raise HTTPException(500, "Erreur lors du telechargement")
+    
+    return Response(
+        content=data,
+        media_type=record.get("content_type", content_type),
+        headers={"Content-Disposition": f'attachment; filename="{record.get("original_filename", "file")}"'}
+    )
+
+
+@router.get("/files/{file_id}/stream")
+async def stream_video(file_id: str, auth: str = Query(None)):
+    """Stream a video file (supports query param auth for video player)"""
+    record = await db.files.find_one({"id": file_id, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(404, "Fichier non trouve")
+    
+    try:
+        data, content_type = get_object(record["storage_path"])
+    except Exception as e:
+        logger.error(f"Video stream failed: {e}")
+        raise HTTPException(500, "Erreur de streaming")
+    
+    return Response(
+        content=data,
+        media_type=record.get("content_type", "video/mp4"),
+    )

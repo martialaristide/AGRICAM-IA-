@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 
 const ELearning = () => {
   const [courses, setCourses] = useState([]);
+  const [trainerCourses, setTrainerCourses] = useState([]);
   const [myCourses, setMyCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -37,12 +38,14 @@ const ELearning = () => {
 
   const fetchData = async () => {
     try {
-      const [coursesRes, myCoursesRes] = await Promise.all([
+      const [coursesRes, myCoursesRes, trainerRes] = await Promise.all([
         api.get("/learning/courses"),
-        api.get("/learning/my-courses")
+        api.get("/learning/my-courses"),
+        api.get("/trainer/trainings").catch(() => ({ data: [] }))
       ]);
       setCourses(coursesRes.data);
       setMyCourses(myCoursesRes.data);
+      setTrainerCourses(trainerRes.data || []);
     } catch (error) {
       console.error("Error fetching courses:", error);
     } finally {
@@ -324,6 +327,47 @@ const ELearning = () => {
           })}
         </div>
       </div>
+
+      {/* Trainer Expert Formations */}
+      {trainerCourses.length > 0 && (
+        <div data-testid="trainer-courses-section">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-orange-500" />
+            Formations expert
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trainerCourses.filter(tc => tc.is_published).map((tc) => (
+              <Card key={tc.id} className="overflow-hidden card-hover" data-testid={`trainer-course-${tc.id}`}>
+                <div className="h-28 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 relative p-4">
+                  <div className="absolute top-3 right-3 flex gap-1">
+                    <Badge className="bg-white/20 text-white text-xs">{tc.difficulty || "debutant"}</Badge>
+                    {tc.price > 0 && <Badge className="bg-white/20 text-white text-xs">{tc.price.toLocaleString()} XAF</Badge>}
+                    {tc.price === 0 && <Badge className="bg-emerald-500/80 text-white text-xs">Gratuit</Badge>}
+                  </div>
+                  <div className="absolute bottom-3 left-4">
+                    <Video className="h-8 w-8 text-white/80" />
+                  </div>
+                </div>
+                <CardContent className="p-4 space-y-2">
+                  <h3 className="font-semibold line-clamp-2">{tc.title}</h3>
+                  <p className="text-sm text-slate-500 line-clamp-2">{tc.description}</p>
+                  <div className="flex items-center gap-3 text-xs text-slate-400">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{tc.duration_minutes} min</span>
+                    <span className="flex items-center gap-1"><Users className="h-3 w-3" />{tc.students_count || 0}</span>
+                    {tc.rating > 0 && <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-400" />{tc.rating}</span>}
+                  </div>
+                  <p className="text-xs text-slate-400">Par {tc.trainer_name}</p>
+                  <Button size="sm" className="w-full bg-orange-600 hover:bg-orange-500 gap-1" onClick={async () => {
+                    try { await api.post(`/trainer/trainings/${tc.id}/enroll`); toast.success("Inscrit !"); fetchData(); } catch(e) { toast.error(e.response?.data?.message || "Inscription effectuee"); }
+                  }}>
+                    <GraduationCap className="h-3 w-3" /> S'inscrire
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Course Detail Dialog */}
       <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>

@@ -15,9 +15,11 @@ import { cn } from "../../lib/utils";
 import IMAGES from "../../assets/images";
 import SEOHead from "../../components/SEOHead";
 import InteractiveDemo from "../../components/InteractiveDemo";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [showDemo, setShowDemo] = useState(false);
 
@@ -169,25 +171,24 @@ const HomePage = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-300 text-sm mb-8 backdrop-blur-sm">
               <Zap className="h-4 w-4" />
-              Propulsé par AGRI GENIUS AI
+              {t("landing.poweredBy")}
               <Badge className="bg-emerald-500 text-white text-xs">Nouveau</Badge>
             </div>
 
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 font-[Manrope] leading-tight">
-              L'Agriculture
+              {t("landing.heroTitle1")}
               <br />
               <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                Intelligente
+                {t("landing.heroTitle2")}
               </span>
               <br />
-              pour l'Afrique
+              {t("landing.heroTitle3")}
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl text-slate-300 mb-10 leading-relaxed">
-              Transformez votre exploitation avec l'IA, les drones autonomes et les robots connectés. 
-              Détectez les maladies, optimisez vos rendements et prenez des décisions éclairées.
+              {t("landing.heroSubtitle")}
             </p>
 
             {/* CTA Buttons */}
@@ -197,7 +198,7 @@ const HomePage = () => {
                 className="bg-emerald-500 hover:bg-emerald-600 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-emerald-500/30"
                 onClick={() => navigate("/register")}
               >
-                Démarrer gratuitement
+                {t("landing.ctaStart")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
@@ -207,7 +208,7 @@ const HomePage = () => {
                 onClick={() => setShowDemo(true)}
               >
                 <Play className="mr-2 h-5 w-5" />
-                Tester la démo
+                {t("landing.ctaDemo")}
               </Button>
             </div>
 
@@ -215,15 +216,15 @@ const HomePage = () => {
             <div className="flex items-center gap-6 text-slate-400 text-sm">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-emerald-400" />
-                <span>Données sécurisées</span>
+                <span>{t("landing.trustSecure")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-emerald-400" />
-                <span>+5000 agriculteurs</span>
+                <span>{t("landing.trustUsers")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-emerald-400" />
-                <span>Prix Innovation 2024</span>
+                <span>{t("landing.trustAward")}</span>
               </div>
             </div>
           </div>

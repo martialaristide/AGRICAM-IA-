@@ -57,8 +57,9 @@ const TrainerDashboard = () => {
   const handleCreateTraining = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const videoFile = fd.get("video_file");
     try {
-      await api.post("/trainer/trainings", {
+      const res = await api.post("/trainer/trainings", {
         title: fd.get("title"),
         description: fd.get("description"),
         category: fd.get("category"),
@@ -69,23 +70,46 @@ const TrainerDashboard = () => {
         price: parseFloat(fd.get("price")) || 0,
         is_published: true,
       });
+      const trainingId = res.data?.training?.id;
+      // Upload video if provided
+      if (videoFile && videoFile.size > 0 && trainingId) {
+        toast.info("Upload de la video en cours...");
+        const uploadForm = new FormData();
+        uploadForm.append("file", videoFile);
+        await api.post(`/trainer/upload-video?training_id=${trainingId}`, uploadForm, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Video uploadee !");
+      }
       toast.success("Formation creee avec succes !");
       setShowTrainingDialog(false);
       fetchAll();
-    } catch (e) { toast.error("Erreur lors de la creation"); }
+    } catch (e) { toast.error(e.response?.data?.detail || "Erreur lors de la creation"); }
   };
 
   const handleCreateEbook = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const ebookFile = fd.get("ebook_file");
     try {
-      await api.post("/trainer/ebooks", {
+      const res = await api.post("/trainer/ebooks", {
         title: fd.get("title"),
         description: fd.get("description"),
         category: fd.get("category"),
         price: parseFloat(fd.get("price")) || 0,
         download_enabled: true,
       });
+      const ebookId = res.data?.ebook?.id;
+      // Upload file if provided
+      if (ebookFile && ebookFile.size > 0 && ebookId) {
+        toast.info("Upload du fichier en cours...");
+        const uploadForm = new FormData();
+        uploadForm.append("file", ebookFile);
+        await api.post(`/trainer/upload-ebook?ebook_id=${ebookId}`, uploadForm, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Fichier uploade !");
+      }
       toast.success("Ebook cree avec succes !");
       setShowEbookDialog(false);
       fetchAll();
@@ -235,6 +259,7 @@ const TrainerDashboard = () => {
                   </div>
                   <div><Label className="text-slate-400">Profils cibles (virgule)</Label><Input name="target_roles" defaultValue="farmer,agronomist" className="bg-slate-800 border-slate-700 text-white" data-testid="training-roles" /></div>
                   <div><Label className="text-slate-400">URL Video (YouTube/MP4)</Label><Input name="video_url" placeholder="https://youtube.com/embed/..." className="bg-slate-800 border-slate-700 text-white" data-testid="training-video" /></div>
+                  <div><Label className="text-slate-400">Ou uploader un fichier video (MP4, max 200Mo)</Label><input name="video_file" type="file" accept="video/mp4,video/avi,video/mov" className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-900/40 file:text-orange-300 hover:file:bg-orange-800/40" data-testid="training-video-upload" /></div>
                   <Button type="submit" className="w-full bg-orange-600" data-testid="submit-training">Publier la formation</Button>
                 </form>
               </DialogContent>
@@ -306,6 +331,7 @@ const TrainerDashboard = () => {
                     </div>
                     <div><Label className="text-slate-400">Prix (XAF)</Label><Input name="price" type="number" defaultValue={0} className="bg-slate-800 border-slate-700 text-white" data-testid="ebook-price" /></div>
                   </div>
+                  <div><Label className="text-slate-400">Fichier ebook (PDF, EPUB, max 50Mo)</Label><input name="ebook_file" type="file" accept=".pdf,.epub,.doc,.docx,.txt" className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-900/40 file:text-emerald-300 hover:file:bg-emerald-800/40" data-testid="ebook-file-upload" /></div>
                   <Button type="submit" className="w-full bg-orange-600" data-testid="submit-ebook">Publier l'ebook</Button>
                 </form>
               </DialogContent>

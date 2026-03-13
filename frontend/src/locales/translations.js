@@ -34,6 +34,22 @@ export const translations = {
       accessControl: "Controle Acces",
       database: "Base de Donnees"
     },
+    // Landing page
+    landing: {
+      heroTitle1: "L'Agriculture",
+      heroTitle2: "Intelligente",
+      heroTitle3: "pour l'Afrique",
+      heroSubtitle: "Transformez votre exploitation avec l'IA, les drones autonomes et les robots connectes. Detectez les maladies, optimisez vos rendements et prenez des decisions eclairees.",
+      ctaStart: "Demarrer gratuitement",
+      ctaDemo: "Tester la demo",
+      poweredBy: "Propulse par AGRI GENIUS AI",
+      trustSecure: "Donnees securisees",
+      trustUsers: "+5000 agriculteurs",
+      trustAward: "Prix Innovation 2024",
+      statsTitle: "Chiffres cles",
+      featuresTitle: "Solutions",
+      featuresSubtitle: "Technologies de pointe pour l'agriculture africaine",
+    },
     // Common
     common: {
       loading: "Chargement...",
@@ -499,6 +515,21 @@ export const translations = {
       financial: "Finances",
       accessControl: "Access Control",
       database: "Database"
+    },
+    landing: {
+      heroTitle1: "Smart",
+      heroTitle2: "Agriculture",
+      heroTitle3: "for Africa",
+      heroSubtitle: "Transform your farm with AI, autonomous drones and connected robots. Detect diseases, optimize yields and make informed decisions.",
+      ctaStart: "Start for free",
+      ctaDemo: "Try the demo",
+      poweredBy: "Powered by AGRI GENIUS AI",
+      trustSecure: "Secure data",
+      trustUsers: "+5000 farmers",
+      trustAward: "Innovation Award 2024",
+      statsTitle: "Key figures",
+      featuresTitle: "Solutions",
+      featuresSubtitle: "Cutting-edge technologies for African agriculture",
     },
     common: {
       loading: "Loading...",
