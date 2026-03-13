@@ -131,10 +131,12 @@ const getNavItems = (role, t) => {
       { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
       { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
-      { path: "/paiements", icon: Smartphone, label: "Mobile Money" },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
       { path: "/dev-analytics", icon: Code2, label: t("nav.analytics") + " Dev" },
+      { path: "/seed-analyst", icon: Microscope, label: "Analyse Semences" },
+      { path: "/agronomist", icon: Lightbulb, label: "Espace Agronome" },
       { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Controle Acces" },
       { path: "/database", icon: Database, label: t("nav.database") || "Base de Donnees" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
@@ -155,7 +157,7 @@ const getNavItems = (role, t) => {
       { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
       { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
-      { path: "/paiements", icon: Smartphone, label: "Mobile Money" },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
@@ -168,6 +170,9 @@ const getNavItems = (role, t) => {
       ...baseItems,
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
+      { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
       { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
@@ -178,6 +183,40 @@ const getNavItems = (role, t) => {
       ...baseItems,
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
+    ];
+  }
+
+  if (role === "seed_analyst") {
+    return [
+      ...baseItems,
+      { path: "/seed-analyst", icon: Microscope, label: "Analyse Semences" },
+      { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
+      { path: "/camera-ia", icon: Camera, label: t("nav.camera") },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
+      { path: "/alertes", icon: Bell, label: t("nav.alerts") },
+      { path: "/parametres", icon: Settings, label: t("nav.settings") },
+    ];
+  }
+
+  if (role === "agronomist") {
+    return [
+      ...baseItems,
+      { path: "/agronomist", icon: Lightbulb, label: "Espace Agronome" },
+      { path: "/parcelles", icon: Map, label: t("nav.parcels") },
+      { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
+      { path: "/camera-ia", icon: Camera, label: t("nav.camera") },
+      { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
+      { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
+      { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/paiements", icon: Smartphone, label: "Paiements" },
+      { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
       { path: "/parametres", icon: Settings, label: t("nav.settings") },
     ];
@@ -187,6 +226,7 @@ const getNavItems = (role, t) => {
     ...baseItems,
     { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
     { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+    { path: "/paiements", icon: Smartphone, label: "Paiements" },
     { path: "/parametres", icon: Settings, label: t("nav.settings") },
   ];
 };
@@ -199,6 +239,8 @@ const getRoleBadge = (role) => {
     financial: { label: "Banque", color: "bg-violet-500" },
     partner: { label: "Partenaire", color: "bg-amber-500" },
     investor: { label: "Investisseur", color: "bg-cyan-500" },
+    seed_analyst: { label: "Analyste Semences", color: "bg-purple-500" },
+    agronomist: { label: "Agronome", color: "bg-teal-500" },
   };
   return config[role] || { label: role, color: "bg-slate-500" };
 };

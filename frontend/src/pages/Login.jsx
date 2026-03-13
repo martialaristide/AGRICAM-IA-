@@ -128,12 +128,14 @@ const Login = () => {
 
             <div className="border-t border-slate-800 pt-4">
               <p className="text-sm text-slate-600 text-center mb-3">Comptes de demonstration</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: "Admin", email: "admin@agricam.ai", pw: "Admin@2026", id: "demo-admin" },
                   { label: "Agriculteur", email: "agriculteur@agricam.ai", pw: "Farmer@2026", id: "demo-farmer" },
                   { label: "Fournisseur", email: "fournisseur@agricam.ai", pw: "Supplier@2026", id: "demo-supplier" },
                   { label: "Banque", email: "banque@agricam.ai", pw: "Bank@2026", id: "demo-financial" },
+                  { label: "Analyste", email: "analyste@agricam.ai", pw: "Analyst@2026", id: "demo-analyst" },
+                  { label: "Agronome", email: "agronome@agricam.ai", pw: "Agro@2026", id: "demo-agronomist" },
                 ].map((d) => (
                   <Button key={d.id} variant="outline" size="sm"
                     onClick={() => demoLogin(d.email, d.pw)} disabled={loading}

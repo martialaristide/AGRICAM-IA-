@@ -73,6 +73,8 @@ class UserRole(str, Enum):
     FINANCIAL = "financial"
     PARTNER = "partner"
     INVESTOR = "investor"
+    SEED_ANALYST = "seed_analyst"
+    AGRONOMIST = "agronomist"
 
 class SubscriptionType(str, Enum):
     FREEMIUM = "freemium"
@@ -328,6 +330,8 @@ async def register(data: UserCreate):
         "culture_type": data.culture_type,
         "subscription_type": "freemium",
         "subscription_end": None,
+        "trial_start": datetime.now(timezone.utc).isoformat(),
+        "trial_end": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
         "is_verified": data.role == UserRole.FARMER,
         "is_active": True,
         "id_document_type": data.id_document_type,
@@ -1975,6 +1979,16 @@ async def seed_database():
         {"id": "financial-001", "email": "banque@agricam.ai", "password_hash": hash_password("Bank@2026"),
          "full_name": "Credit Agricole Cameroun", "phone": "+237677777777", "role": "financial",
          "company_name": "Credit Agricole Cameroun", "subscription_type": "premium", "is_verified": True, "is_active": True,
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "analyst-001", "email": "analyste@agricam.ai", "password_hash": hash_password("Analyst@2026"),
+         "full_name": "Dr. Marie Ngo Seed Lab", "phone": "+237666666666", "role": "seed_analyst",
+         "company_name": "Cameroon Seed Lab", "subscription_type": "basic", "is_verified": True, "is_active": True,
+         "trial_start": datetime.now(timezone.utc).isoformat(), "trial_end": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
+         "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "agronome-001", "email": "agronome@agricam.ai", "password_hash": hash_password("Agro@2026"),
+         "full_name": "Ing. Paul Mbarga", "phone": "+237655555555", "role": "agronomist",
+         "company_name": "AgroConsult Cameroun", "subscription_type": "basic", "is_verified": True, "is_active": True,
+         "trial_start": datetime.now(timezone.utc).isoformat(), "trial_end": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
          "created_at": datetime.now(timezone.utc).isoformat()}
     ]
     await db.users.insert_many(users_data)
@@ -4052,9 +4066,45 @@ except ImportError as e:
 try:
     from routes.agremo_api import router as agremo_router
     api_router.include_router(agremo_router, tags=["Agremo Analysis"])
-    logger.info("✅ Agremo Analysis routes loaded successfully")
+    logger.info("Agremo Analysis routes loaded successfully")
 except ImportError as e:
-    logger.warning(f"⚠️ Agremo routes not loaded: {e}")
+    logger.warning(f"Agremo routes not loaded: {e}")
+
+# Import and include NetWalletPay payment routes
+try:
+    from routes.payments import router as payments_router, init_db as payments_init
+    payments_init(db, get_current_user)
+    app.include_router(payments_router)
+    logger.info("NetWalletPay payment routes loaded successfully")
+except ImportError as e:
+    logger.warning(f"Payment routes not loaded: {e}")
+
+# Subscription status endpoint on main API
+@api_router.get("/user/subscription-status")
+async def user_subscription_status(user=Depends(get_current_user)):
+    now = datetime.now(timezone.utc)
+    trial_end = user.get("trial_end")
+    sub_end = user.get("subscription_end")
+    sub_type = user.get("subscription_type", "freemium")
+    is_trial = False
+    is_sub = False
+    days_left = 0
+    if trial_end:
+        try:
+            td = datetime.fromisoformat(trial_end.replace("Z", "+00:00")) if isinstance(trial_end, str) else trial_end
+            if now < td:
+                is_trial = True
+                days_left = (td - now).days
+        except: pass
+    if sub_end:
+        try:
+            sd = datetime.fromisoformat(sub_end.replace("Z", "+00:00")) if isinstance(sub_end, str) else sub_end
+            if now < sd and sub_type in ("basic", "premium"):
+                is_sub = True
+                days_left = (sd - now).days
+        except: pass
+    has_access = is_trial or is_sub or user.get("role") == "admin"
+    return {"subscription_type": sub_type, "is_trial_active": is_trial, "is_subscribed": is_sub, "has_full_access": has_access, "days_remaining": days_left, "trial_end": trial_end, "subscription_end": sub_end}
 
 # Include router and middleware
 app.include_router(api_router)

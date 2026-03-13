@@ -1,414 +1,320 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { ActionTooltip } from "../components/ui/tooltip";
-import { 
-  Smartphone, CreditCard, CheckCircle, Clock,
-  Phone, Wallet, ArrowRight, Shield, RefreshCw,
-  DollarSign, History, AlertCircle
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import {
+  CreditCard, Smartphone, CheckCircle, XCircle, Clock,
+  ArrowRight, Shield, Zap, Loader2, ArrowLeft, History
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import api from "../services/api";
 
 const MobileMoneyPayment = () => {
-  const [paymentHistory, setPaymentHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showPayDialog, setShowPayDialog] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [paymentInstructions, setPaymentInstructions] = useState(null);
-
-  const [paymentForm, setPaymentForm] = useState({
-    phone_number: "",
-    amount_xaf: "",
-    description: "Abonnement AGRICAM IA"
-  });
-
-  const providers = [
-    {
-      id: "orange_money",
-      name: "Orange Money",
-      color: "bg-orange-500",
-      textColor: "text-orange-600",
-      bgColor: "bg-orange-50",
-      logo: "🟠",
-      merchant: "698226903",
-      ussd: "#150*1*1#"
-    },
-    {
-      id: "mtn_momo",
-      name: "MTN Mobile Money",
-      color: "bg-yellow-500",
-      textColor: "text-yellow-600",
-      bgColor: "bg-yellow-50",
-      logo: "🟡",
-      merchant: "653722443",
-      ussd: "*126#"
-    }
-  ];
-
-  const subscriptionPlans = [
-    { id: "basic", name: "Basic", price: 5000, duration: "1 mois" },
-    { id: "premium", name: "Premium", price: 15000, duration: "1 mois" },
-    { id: "premium_annual", name: "Premium Annuel", price: 150000, duration: "12 mois" }
-  ];
+  const [packages, setPackages] = useState([]);
+  const [selectedPkg, setSelectedPkg] = useState(null);
+  const [phone, setPhone] = useState("");
+  const [provider, setProvider] = useState("mtn_cm");
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("select"); // select, pay, processing, success, failed
+  const [orderId, setOrderId] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [subStatus, setSubStatus] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    fetchPaymentHistory();
+    fetchPackages();
+    fetchHistory();
+    fetchSubStatus();
   }, []);
 
-  const fetchPaymentHistory = async () => {
+  const fetchPackages = async () => {
     try {
-      const response = await api.get("/payment/history");
-      setPaymentHistory(response.data.payments || []);
-    } catch (error) {
-      console.error("Error fetching payment history:", error);
+      const res = await api.get("/payments/packages");
+      setPackages(res.data.packages || []);
+    } catch { setPackages(defaultPackages); }
+  };
+
+  const fetchHistory = async () => {
+    try { const res = await api.get("/payments/history"); setHistory(res.data.payments || []); } catch {}
+  };
+
+  const fetchSubStatus = async () => {
+    try { const res = await api.get("/user/subscription-status"); setSubStatus(res.data); } catch {}
+  };
+
+  const defaultPackages = [
+    { id: "basic_monthly", amount: 5000, days: 30, type: "basic", label: "Basic Mensuel" },
+    { id: "premium_monthly", amount: 15000, days: 30, type: "premium", label: "Premium Mensuel" },
+  ];
+
+  const handlePay = async () => {
+    if (!phone || phone.length < 9) { toast.error("Numero de telephone invalide"); return; }
+    if (!selectedPkg) { toast.error("Selectionnez un forfait"); return; }
+    setLoading(true);
+    setStep("processing");
+    try {
+      const methodType = provider === "orange_cm" ? "ORANGE_MONEY" : "MOMO";
+      const res = await api.post("/payments/request-payment", {
+        amount: selectedPkg.amount,
+        phone_number: phone,
+        method: "MOBILE_MONEY",
+        method_type: methodType,
+        provider,
+        package_id: selectedPkg.id,
+      });
+      if (res.data.success) {
+        setOrderId(res.data.order_id);
+        toast.info("Validez le paiement sur votre telephone");
+        // Poll for status
+        setTimeout(() => checkStatus(res.data.order_id), 5000);
+      } else {
+        setStep("failed");
+        toast.error("Echec de l'initiation du paiement");
+      }
+    } catch (e) {
+      setStep("failed");
+      toast.error("Erreur de paiement");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInitiatePayment = async () => {
-    if (!paymentForm.phone_number || !paymentForm.amount_xaf || !selectedProvider) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-
-    setProcessing(true);
+  const checkStatus = async (oid) => {
     try {
-      const response = await api.post("/payment/mobile-money", {
-        phone_number: paymentForm.phone_number,
-        amount_xaf: parseInt(paymentForm.amount_xaf),
-        provider: selectedProvider.id,
-        description: paymentForm.description
-      });
-
-      setPaymentInstructions(response.data);
-      toast.success("Demande de paiement initiée");
-    } catch (error) {
-      toast.error("Erreur lors de l'initiation du paiement");
-    } finally {
-      setProcessing(false);
+      const res = await api.get(`/payments/check-status/${oid}`);
+      if (res.data.status === "success") {
+        setStep("success");
+        toast.success("Paiement confirme ! Abonnement active.");
+        fetchSubStatus();
+      } else if (res.data.status === "failed") {
+        setStep("failed");
+      } else {
+        // Still processing, check again
+        setTimeout(() => checkStatus(oid), 5000);
+      }
+    } catch {
+      setStep("failed");
     }
   };
 
-  const handleVerifyPayment = async (paymentId) => {
-    try {
-      await api.post(`/payment/verify/${paymentId}`);
-      toast.success("Paiement vérifié et confirmé!");
-      fetchPaymentHistory();
-      setPaymentInstructions(null);
-      setShowPayDialog(false);
-    } catch (error) {
-      toast.error("Erreur lors de la vérification");
-    }
-  };
+  // Success Page
+  if (step === "success") return (
+    <div className="flex items-center justify-center min-h-[60vh] animate-slide-in" data-testid="payment-success">
+      <Card className="glass-card max-w-md w-full">
+        <CardContent className="p-8 text-center">
+          <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-emerald-900/30 ring-2 ring-emerald-500/30 flex items-center justify-center animate-glow">
+            <CheckCircle className="h-10 w-10 text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Paiement Reussi !</h2>
+          <p className="text-slate-400 mb-4">Votre abonnement {selectedPkg?.type} a ete active avec succes.</p>
+          <div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-800/30 mb-6">
+            <p className="text-sm text-emerald-400">Montant: <strong>{selectedPkg?.amount?.toLocaleString()} XAF</strong></p>
+            <p className="text-sm text-emerald-400">Duree: <strong>{selectedPkg?.days} jours</strong></p>
+            <p className="text-xs text-slate-500 mt-1">Ref: {orderId}</p>
+          </div>
+          <p className="text-sm text-slate-500 mb-4">Un message de confirmation vous sera envoye.</p>
+          <Button className="w-full bg-emerald-600 gap-2" onClick={() => { setStep("select"); window.location.href = "/dashboard"; }}>
+            Acceder au tableau de bord <ArrowRight className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-emerald-100 text-emerald-700"><CheckCircle className="h-3 w-3 mr-1" /> Complété</Badge>;
-      case "pending":
-        return <Badge className="bg-amber-100 text-amber-700"><Clock className="h-3 w-3 mr-1" /> En attente</Badge>;
-      case "failed":
-        return <Badge className="bg-rose-100 text-rose-700"><AlertCircle className="h-3 w-3 mr-1" /> Échoué</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
+  // Failed Page
+  if (step === "failed") return (
+    <div className="flex items-center justify-center min-h-[60vh] animate-slide-in" data-testid="payment-failed">
+      <Card className="glass-card max-w-md w-full">
+        <CardContent className="p-8 text-center">
+          <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-red-900/30 ring-2 ring-red-500/30 flex items-center justify-center">
+            <XCircle className="h-10 w-10 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Paiement Echoue</h2>
+          <p className="text-slate-400 mb-4">Le paiement n'a pas pu etre effectue. Verifiez votre solde ou reessayez.</p>
+          <div className="p-4 rounded-lg bg-red-900/20 border border-red-800/30 mb-6">
+            <p className="text-sm text-red-400">Causes possibles:</p>
+            <ul className="text-xs text-slate-500 mt-1 list-disc list-inside">
+              <li>Solde insuffisant</li>
+              <li>Transaction refusee par l'operateur</li>
+              <li>Numero de telephone incorrect</li>
+            </ul>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1 border-slate-700 text-slate-400" onClick={() => setStep("select")}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+            </Button>
+            <Button className="flex-1 bg-emerald-600" onClick={() => { setStep("pay"); }}>
+              Reessayer
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-      </div>
-    );
-  }
+  // Processing
+  if (step === "processing") return (
+    <div className="flex items-center justify-center min-h-[60vh] animate-slide-in" data-testid="payment-processing">
+      <Card className="glass-card max-w-md w-full">
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-16 w-16 mx-auto mb-4 text-emerald-400 animate-spin" />
+          <h2 className="text-xl font-bold text-white mb-2">Paiement en cours...</h2>
+          <p className="text-slate-400 mb-4">Validez la transaction sur votre telephone mobile.</p>
+          <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-800/30">
+            <p className="text-sm text-amber-400">Composez *126# ou validez la notification push</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
-    <div className="space-y-6 animate-slide-in" data-testid="mobile-money-page">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 rounded-2xl p-8 text-white shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Smartphone className="h-8 w-8" />
-              <h1 className="text-3xl font-bold font-[Manrope]">Paiement Mobile Money</h1>
+    <div className="space-y-6 animate-slide-in" data-testid="payment-page">
+      <div className="gradient-marketplace rounded-2xl p-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center ring-1 ring-emerald-500/30">
+              <CreditCard className="h-8 w-8 text-emerald-400" />
             </div>
-            <p className="text-white/80">Orange Money & MTN Mobile Money - Cameroun</p>
+            <div>
+              <h1 className="text-3xl font-bold text-white font-[Manrope]">Abonnement & Paiement</h1>
+              <p className="text-slate-400">MTN Mobile Money - Orange Money - NetWallet Pay</p>
+            </div>
           </div>
-          
-          <Dialog open={showPayDialog} onOpenChange={setShowPayDialog}>
-            <ActionTooltip content="Effectuer un nouveau paiement">
-              <DialogTrigger asChild>
-                <Button className="bg-white text-orange-600 hover:bg-white/90 mt-4 md:mt-0">
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Nouveau paiement
-                </Button>
-              </DialogTrigger>
-            </ActionTooltip>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-orange-600" />
-                  Paiement Mobile Money
-                </DialogTitle>
-              </DialogHeader>
-              
-              {!paymentInstructions ? (
-                <div className="space-y-6">
-                  {/* Provider Selection */}
-                  <div>
-                    <Label className="mb-3 block">Choisir le moyen de paiement</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {providers.map((provider) => (
-                        <div
-                          key={provider.id}
-                          className={cn(
-                            "p-4 rounded-xl border-2 cursor-pointer transition-all",
-                            selectedProvider?.id === provider.id 
-                              ? `border-${provider.id === 'orange_money' ? 'orange' : 'yellow'}-500 ${provider.bgColor}`
-                              : "border-slate-200 hover:border-slate-300"
-                          )}
-                          onClick={() => setSelectedProvider(provider)}
-                        >
-                          <div className="text-center">
-                            <span className="text-3xl">{provider.logo}</span>
-                            <p className={cn("font-semibold mt-2", provider.textColor)}>{provider.name}</p>
-                            <p className="text-xs text-slate-500 mt-1">N°: {provider.merchant}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quick Amount Selection */}
-                  <div>
-                    <Label className="mb-3 block">Abonnement</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {subscriptionPlans.map((plan) => (
-                        <Button
-                          key={plan.id}
-                          variant={paymentForm.amount_xaf === String(plan.price) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setPaymentForm({ 
-                            ...paymentForm, 
-                            amount_xaf: String(plan.price),
-                            description: `Abonnement ${plan.name}`
-                          })}
-                          className="flex-col h-auto py-3"
-                        >
-                          <span className="font-bold">{plan.name}</span>
-                          <span className="text-xs">{plan.price.toLocaleString()} XAF</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Phone Number */}
-                  <div className="space-y-2">
-                    <Label>Numéro de téléphone</Label>
-                    <div className="flex gap-2">
-                      <span className="flex items-center px-3 bg-slate-100 rounded-lg text-sm">+237</span>
-                      <Input
-                        value={paymentForm.phone_number}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, phone_number: e.target.value })}
-                        placeholder="6XX XXX XXX"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="space-y-2">
-                    <Label>Montant (XAF)</Label>
-                    <Input
-                      type="number"
-                      value={paymentForm.amount_xaf}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, amount_xaf: e.target.value })}
-                      placeholder="5000"
-                    />
-                  </div>
-
-                  {/* Submit */}
-                  <Button 
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                    onClick={handleInitiatePayment}
-                    disabled={processing}
-                  >
-                    {processing ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4 mr-2" />
-                    )}
-                    Continuer
-                  </Button>
-                </div>
-              ) : (
-                /* Payment Instructions */
-                <div className="space-y-6">
-                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="h-5 w-5 text-emerald-600" />
-                      <span className="font-semibold text-emerald-800">Demande initiée</span>
-                    </div>
-                    <p className="text-sm text-emerald-700">Référence: <strong>{paymentInstructions.reference}</strong></p>
-                  </div>
-
-                  <div className="bg-slate-50 p-4 rounded-xl">
-                    <h4 className="font-semibold mb-3">Instructions de paiement:</h4>
-                    <div className="space-y-2 text-sm">
-                      {paymentInstructions.instructions?.split('\n').map((line, idx) => (
-                        <p key={idx} className="flex items-start gap-2">
-                          <span className="text-orange-600 font-bold">{idx + 1}.</span>
-                          {line.replace(/^\d+\.\s*/, '')}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-amber-600" />
-                      <span className="font-semibold text-amber-800">Numéro marchand:</span>
-                    </div>
-                    <p className="text-2xl font-bold text-amber-700 mt-1">{paymentInstructions.merchant_number}</p>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button 
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setPaymentInstructions(null)}
-                    >
-                      Retour
-                    </Button>
-                    <Button 
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => handleVerifyPayment(paymentInstructions.payment_id)}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      J'ai payé
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" className="border-slate-700 text-slate-400 gap-2" onClick={() => setShowHistory(!showHistory)}>
+            <History className="h-4 w-4" /> Historique
+          </Button>
         </div>
       </div>
 
-      {/* Provider Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {providers.map((provider) => (
-          <Card key={provider.id} className={cn("overflow-hidden", provider.bgColor)}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center text-4xl", provider.color)}>
-                  {provider.logo}
-                </div>
-                <div>
-                  <h3 className={cn("text-xl font-bold", provider.textColor)}>{provider.name}</h3>
-                  <p className="text-sm text-slate-600">Cameroun</p>
-                </div>
+      {/* Current subscription status */}
+      {subStatus && (
+        <Card className="glass-card neon-border-green">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-emerald-400" />
+              <div>
+                <span className="text-sm text-slate-400">Statut: </span>
+                <Badge className={cn("ml-1", subStatus.has_full_access ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>
+                  {subStatus.is_subscribed ? `${subStatus.subscription_type} actif` : subStatus.is_trial_active ? "Essai gratuit" : "Expire"}
+                </Badge>
               </div>
-              
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
-                  <span className="text-sm">Numéro marchand</span>
-                  <span className="font-bold">{provider.merchant}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
-                  <span className="text-sm">Code USSD</span>
-                  <span className="font-mono font-bold">{provider.ussd}</span>
-                </div>
-              </div>
+            </div>
+            {subStatus.days_remaining > 0 && (
+              <span className="text-sm text-slate-400">{subStatus.days_remaining} jours restants</span>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-              <Button 
-                className={cn("w-full mt-4", provider.color, "hover:opacity-90")}
-                onClick={() => { setSelectedProvider(provider); setShowPayDialog(true); }}
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Payer avec {provider.name}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5 text-slate-600" />
-            Historique des paiements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {paymentHistory.length > 0 ? (
-            <div className="space-y-3">
-              {paymentHistory.map((payment) => (
-                <div 
-                  key={payment.id}
-                  className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "h-10 w-10 rounded-full flex items-center justify-center text-xl",
-                      payment.provider === "orange_money" ? "bg-orange-100" : "bg-yellow-100"
-                    )}>
-                      {payment.provider === "orange_money" ? "🟠" : "🟡"}
-                    </div>
+      {showHistory ? (
+        <Card className="glass-card">
+          <CardHeader className="border-b border-slate-800/50">
+            <CardTitle className="text-white">Historique des paiements</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {history.length === 0 ? (
+              <p className="text-slate-500 text-center py-8">Aucun paiement</p>
+            ) : (
+              <div className="divide-y divide-slate-800/30">
+                {history.map((p, i) => (
+                  <div key={i} className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{payment.description}</p>
-                      <p className="text-xs text-slate-500">
-                        {payment.phone_number} • {new Date(payment.created_at).toLocaleDateString('fr-FR')}
-                      </p>
+                      <p className="text-sm text-white">{p.package_id} - {p.amount?.toLocaleString()} XAF</p>
+                      <p className="text-xs text-slate-500">{p.phone} - {new Date(p.created_at).toLocaleDateString("fr-FR")}</p>
                     </div>
+                    <Badge className={cn(p.status === "success" ? "bg-emerald-500" : p.status === "failed" ? "bg-red-500" : "bg-amber-500", "text-white")}>
+                      {p.status === "success" ? "Confirme" : p.status === "failed" ? "Echoue" : "En cours"}
+                    </Badge>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold">{payment.amount_xaf?.toLocaleString()} XAF</p>
-                    {getStatusBadge(payment.status)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-400">
-              <Wallet className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p>Aucun paiement effectué</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Security Info */}
-      <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-              <Shield className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg text-slate-800">Paiements sécurisés</h3>
-              <p className="text-slate-700 mt-1">
-                Vos transactions sont sécurisées via les plateformes officielles:
-              </p>
-              <ul className="mt-2 text-sm text-slate-600 space-y-1">
-                <li>• Orange Money Cameroun - N° marchand: <strong>698226903</strong></li>
-                <li>• MTN Mobile Money - N° marchand: <strong>653722443</strong></li>
-                <li>• Confirmations par SMS instantanées</li>
-                <li>• Support client disponible 24/7</li>
-              </ul>
-            </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : step === "select" ? (
+        <>
+          {/* Package Selection */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {(packages.length > 0 ? packages : defaultPackages).map(pkg => (
+              <Card key={pkg.id}
+                className={cn("glass-card cursor-pointer transition-all hover:-translate-y-1",
+                  selectedPkg?.id === pkg.id ? "neon-border-green ring-1 ring-emerald-500/30" : "hover:border-emerald-500/20")}
+                onClick={() => setSelectedPkg(pkg)} data-testid={`pkg-${pkg.id}`}>
+                <CardContent className="p-6 text-center">
+                  {pkg.type === "premium" && <Badge className="bg-violet-600 text-white text-xs mb-2">Populaire</Badge>}
+                  <h3 className="text-lg font-bold text-white mb-1">{pkg.label}</h3>
+                  <p className="text-3xl font-bold text-emerald-400">{pkg.amount?.toLocaleString()} <span className="text-sm text-slate-500">XAF</span></p>
+                  <p className="text-xs text-slate-500 mt-1">{pkg.days} jours</p>
+                  {selectedPkg?.id === pkg.id && <CheckCircle className="h-5 w-5 text-emerald-400 mx-auto mt-2" />}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+
+          {selectedPkg && (
+            <Button className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+              onClick={() => setStep("pay")} data-testid="proceed-to-pay">
+              Continuer vers le paiement <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </>
+      ) : (
+        /* Payment Form */
+        <Card className="glass-card max-w-md mx-auto">
+          <CardHeader className="border-b border-slate-800/50">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-emerald-400" /> Paiement Mobile Money
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="p-3 rounded-lg bg-emerald-900/20 border border-emerald-800/30 mb-4">
+              <p className="text-sm text-emerald-400 text-center">
+                {selectedPkg?.label} - <strong>{selectedPkg?.amount?.toLocaleString()} XAF</strong>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-400">Operateur</Label>
+              <Select value={provider} onValueChange={setProvider}>
+                <SelectTrigger className="bg-[#0f1729] border-slate-800 text-white" data-testid="provider-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#111827] border-slate-700">
+                  <SelectItem value="mtn_cm">MTN Mobile Money</SelectItem>
+                  <SelectItem value="orange_cm">Orange Money</SelectItem>
+                  <SelectItem value="netwallet_cm">Netwallet Pay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-400">Numero de telephone</Label>
+              <Input
+                placeholder="6XXXXXXXX"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                className="bg-[#0f1729] border-slate-800 text-white"
+                data-testid="phone-input"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1 border-slate-700 text-slate-400" onClick={() => setStep("select")}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+              </Button>
+              <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 gap-2" onClick={handlePay} disabled={loading} data-testid="pay-now-btn">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                Payer {selectedPkg?.amount?.toLocaleString()} XAF
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

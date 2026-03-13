@@ -69,3 +69,127 @@ td, th {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ============== DARK FUTURISTIC THEME ============== */
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(11, 17, 32, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.5) !important;
+  border-radius: 1rem;
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+.card-hover:hover {
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Neon borders */
+.neon-border-green {
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.08);
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Gradient headers for different sections */
+.gradient-dashboard {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+.gradient-parcels {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(34, 197, 94, 0.06)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+.gradient-ai-analysis {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.05)) !important;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+.gradient-marketplace {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(245, 158, 11, 0.04)) !important;
+  border: 1px solid rgba(249, 115, 22, 0.15);
+}
+
+/* Glow animation */
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+  from { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+  to { box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
+}
+
+/* Slide in animation */
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1120;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Global body dark */
+body {
+  background-color: #060a13 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Input overrides */
+input, textarea, select {
+  color: #e2e8f0 !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #475569 !important;
+}
+
+/* Select content dropdown */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+[role="listbox"] {
+  background-color: #111827 !important;
+  border-color: #1e293b !important;
+}
+[role="option"] {
+  color: #e2e8f0 !important;
+}
+[role="option"]:hover, [role="option"][data-highlighted] {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Progress bar override */
+[role="progressbar"] > div {
+  background-color: #10b981 !important;
+}
+
+/* Badge override for dark */
+.bg-emerald-100 { background-color: rgba(16, 185, 129, 0.15) !important; }
+.text-emerald-700 { color: #34d399 !important; }
+.text-emerald-800 { color: #34d399 !important; }

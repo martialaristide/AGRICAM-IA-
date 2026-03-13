@@ -37,6 +37,9 @@ import GestionRobotsAvance from "./pages/GestionRobotsAvance";
 import AnalyseAvancee from "./pages/AnalyseAvancee";
 import AccessControl from "./pages/AccessControl";
 import DatabaseBrowser from "./pages/DatabaseBrowser";
+import SeedAnalystDashboard from "./pages/SeedAnalystDashboard";
+import AgronomistDashboard from "./pages/AgronomistDashboard";
+import SubscriptionGate from "./components/SubscriptionGate";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import LeadCaptureModal from "./components/LeadCaptureModal";
@@ -159,13 +162,12 @@ function App() {
   const [showExitIntent, setShowExitIntent] = useState(false);
 
   useEffect(() => {
-    // Don't show lead capture if user is already logged in
+    // Don't show lead capture if user is already logged in or on auth pages
     const token = localStorage.getItem("agricam_token");
     const leadCaptured = localStorage.getItem("agricam_lead_captured");
-    if (!leadCaptured && !token) {
-      // Show lead capture after 5 seconds only for non-logged-in visitors
+    const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+    if (!leadCaptured && !token && !isAuthPage) {
       const timer = setTimeout(() => {
-        // Double-check token before showing (in case user logged in during wait)
         const currentToken = localStorage.getItem("agricam_token");
         if (!currentToken) {
           setShowLeadCapture(true);
@@ -253,13 +255,23 @@ function App() {
                   <AdminDashboard />
                 </ProtectedRoute>
               } />
-              <Route path="parcelles" element={<Parcelles />} />
-              <Route path="capteurs" element={<CapteursIoT />} />
-              <Route path="drones" element={<GestionDrones />} />
-              <Route path="satellites" element={<ImagesSatellites />} />
-              <Route path="analyse-ia" element={<AnalyseImagesIA />} />
-              <Route path="irrigation" element={<IrrigationAuto />} />
-              <Route path="recommandations" element={<RecommandationsIA />} />
+              <Route path="seed-analyst" element={
+                <ProtectedRoute allowedRoles={["admin", "seed_analyst"]}>
+                  <SeedAnalystDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="agronomist" element={
+                <ProtectedRoute allowedRoles={["admin", "agronomist"]}>
+                  <AgronomistDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="parcelles" element={<SubscriptionGate><Parcelles /></SubscriptionGate>} />
+              <Route path="capteurs" element={<SubscriptionGate><CapteursIoT /></SubscriptionGate>} />
+              <Route path="drones" element={<SubscriptionGate><GestionDrones /></SubscriptionGate>} />
+              <Route path="satellites" element={<SubscriptionGate><ImagesSatellites /></SubscriptionGate>} />
+              <Route path="analyse-ia" element={<SubscriptionGate><AnalyseImagesIA /></SubscriptionGate>} />
+              <Route path="irrigation" element={<SubscriptionGate><IrrigationAuto /></SubscriptionGate>} />
+              <Route path="recommandations" element={<SubscriptionGate><RecommandationsIA /></SubscriptionGate>} />
               <Route path="marketplace" element={<MarketplaceEnhanced />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="alertes" element={<Alertes />} />

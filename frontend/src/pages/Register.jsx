@@ -15,7 +15,9 @@ const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artif
 const roles = [
   { value: "farmer", label: "Agriculteur", icon: Tractor },
   { value: "supplier", label: "Fournisseur d'intrants", icon: Building },
-  { value: "financial", label: "Institution financière", icon: Building },
+  { value: "financial", label: "Institution financiere", icon: Building },
+  { value: "seed_analyst", label: "Analyste des semences", icon: User },
+  { value: "agronomist", label: "Ingenieur agronome", icon: User },
   { value: "partner", label: "Partenaire", icon: User },
   { value: "investor", label: "Investisseur", icon: User },
 ];

@@ -735,23 +735,71 @@ export const translations = {
     },
     common: { loading: "N tẹsiwaju...", save: "Fi pamọ", cancel: "Fagile", delete: "Paarẹ", edit: "Ṣatunkọ", add: "Fi kun", search: "Wa" },
     weather: { title: "Oju ojo", temperature: "Iwọn ooru", humidity: "Ọrinrin", wind: "Afẹfẹ" }
+  },
+  bas: {
+    nav: { home: "Ndap", solutions: "Mahoŋ", pricing: "Mbongo", about: "I niñ", contact: "Tep", login: "Kεl", register: "Tilε", logout: "Yik", dashboard: "Panoo", admin: "Nkwel", parcels: "Hilam", sensors: "Capteurs IoT", drones: "Drones", robots: "Robots", satellites: "Satellites", agribot: "AGRI GENIUS", advancedAnalysis: "Analyse", camera: "Camera IA", irrigation: "Ndik", recommendations: "Mahoŋ IA", marketplace: "Marse", alerts: "Malep", settings: "Lisoŋ", analytics: "Analytics", financial: "Mbongo", accessControl: "Kontrol", database: "Base data" },
+    common: { loading: "I yoŋ...", save: "Bεk", cancel: "Yen", delete: "Hôl", edit: "Pεm", add: "Jôk", search: "Soŋ" },
+    weather: { title: "Nyu", temperature: "Ngii", humidity: "Ndik", wind: "Mbel" }
+  },
+  dua: {
+    nav: { home: "Ndabo", solutions: "Musango", pricing: "Mbongo", about: "Mba asu", contact: "Busa", login: "Kota", register: "Kwedi", logout: "Buda", dashboard: "Panoo", admin: "Mukala", parcels: "Nja", sensors: "Capteurs IoT", drones: "Drones", robots: "Robots", satellites: "Satellites", agribot: "AGRI GENIUS", advancedAnalysis: "Analyse", camera: "Camera IA", irrigation: "Madiba", recommendations: "Musango IA", marketplace: "Marse", alerts: "Moni", settings: "Musango", analytics: "Analytics", financial: "Mbongo", accessControl: "Kontrol", database: "Base data" },
+    common: { loading: "E bwam...", save: "Ja", cancel: "Bwam", delete: "Pola", edit: "Bεngε", add: "Wεya", search: "Sεnga" },
+    weather: { title: "Joba", temperature: "Moto", humidity: "Madiba", wind: "Muya" }
+  },
+  baf: {
+    nav: { home: "Nda", solutions: "Nkap", pricing: "Nkap", about: "A si", contact: "Kwa", login: "Ku", register: "Dzε", logout: "Fu", dashboard: "Panoo", admin: "Fo", parcels: "Ntsε", sensors: "Capteurs IoT", drones: "Drones", robots: "Robots", satellites: "Satellites", agribot: "AGRI GENIUS", advancedAnalysis: "Analyse", camera: "Camera IA", irrigation: "Shyε", recommendations: "Nkap IA", marketplace: "Marse", alerts: "Ntam", settings: "Nkap", analytics: "Analytics", financial: "Nkap", accessControl: "Kontrol", database: "Base data" },
+    common: { loading: "A gha...", save: "Sεt", cancel: "Gha", delete: "Kwε", edit: "Lεŋ", add: "Pε", search: "Lε" },
+    weather: { title: "Mvεt", temperature: "Nkuε", humidity: "Shyε", wind: "Fεfε" }
+  },
+  ig: {
+    nav: { home: "Ulo", solutions: "Ngwota", pricing: "Ego", about: "Maka anyi", contact: "Kpoturu", login: "Banye", register: "Debanye", logout: "Puo", dashboard: "Dashibod", admin: "Nchikwa", parcels: "Ala", sensors: "Ngwaoru IoT", drones: "Drones", robots: "Robots", satellites: "Foto satelaiti", agribot: "AGRI GENIUS", advancedAnalysis: "Nyocha", camera: "Camera AI", irrigation: "Mmiri", recommendations: "Ndumodu AI", marketplace: "Ahia", alerts: "Nkpotu", settings: "Ntọala", analytics: "Nyocha", financial: "Ego", accessControl: "Njikwa", database: "Nchekwa data" },
+    common: { loading: "Na-ebu...", save: "Chekwa", cancel: "Kagbuo", delete: "Hichapụ", edit: "Dezie", add: "Tinye", search: "Chọọ" },
+    weather: { title: "Ihu igwe", temperature: "Okpomoku", humidity: "Ikuku mmiri", wind: "Ifufe" }
+  },
+  am: {
+    nav: { home: "መነሻ", solutions: "መፍትሄ", pricing: "ዋጋ", about: "ስለ እኛ", contact: "አግኙን", login: "ግባ", register: "ተመዝገብ", logout: "ውጣ", dashboard: "ዳሽቦርድ", admin: "አስተዳዳሪ", parcels: "ማሳ", sensors: "ሴንሰር IoT", drones: "ድሮን", robots: "ሮቦት", satellites: "ሳተላይት", agribot: "AGRI GENIUS", advancedAnalysis: "ትንተና", camera: "ካሜራ AI", irrigation: "መስኖ", recommendations: "ምክር AI", marketplace: "ገበያ", alerts: "ማስጠንቀቂያ", settings: "ቅንብር", analytics: "ትንተና", financial: "ፋይናንስ", accessControl: "ቁጥጥር", database: "ዳታቤዝ" },
+    common: { loading: "በመጫን...", save: "አስቀምጥ", cancel: "ሰርዝ", delete: "ሰርዝ", edit: "አርትዕ", add: "ጨምር", search: "ፈልግ" },
+    weather: { title: "የአየር ሁኔታ", temperature: "ሙቀት", humidity: "እርጥበት", wind: "ንፋስ" }
+  },
+  ln: {
+    nav: { home: "Ndako", solutions: "Biyano", pricing: "Ntalo", about: "Mpo na biso", contact: "Benga biso", login: "Kota", register: "Komisa nkombo", logout: "Bima", dashboard: "Tableau", admin: "Mokambi", parcels: "Bilanga", sensors: "Capteurs IoT", drones: "Drones", robots: "Robots", satellites: "Satellites", agribot: "AGRI GENIUS", advancedAnalysis: "Analyse", camera: "Camera IA", irrigation: "Mai", recommendations: "Toli IA", marketplace: "Zando", alerts: "Kebisa", settings: "Mibeko", analytics: "Analytics", financial: "Mbongo", accessControl: "Kontrol", database: "Base data" },
+    common: { loading: "Ezali ko charger...", save: "Bomba", cancel: "Tika", delete: "Longola", edit: "Bobongola", add: "Bakisa", search: "Luka" },
+    weather: { title: "Elanga", temperature: "Molunge", humidity: "Mai", wind: "Mopepe" }
+  },
+  mg: {
+    nav: { home: "Fandraisana", solutions: "Vahaolana", pricing: "Vidiny", about: "Momba anay", contact: "Mifandraisa", login: "Hiditra", register: "Hisoratra", logout: "Hivoaka", dashboard: "Dashboard", admin: "Mpitantana", parcels: "Tanimbary", sensors: "Capteurs IoT", drones: "Drones", robots: "Robots", satellites: "Satellites", agribot: "AGRI GENIUS", advancedAnalysis: "Famakafakana", camera: "Camera IA", irrigation: "Famondrahana", recommendations: "Torohevitra IA", marketplace: "Tsena", alerts: "Fampitandremana", settings: "Fanovana", analytics: "Analytics", financial: "Vola", accessControl: "Kontrol", database: "Base data" },
+    common: { loading: "Mamorona...", save: "Tehirizo", cancel: "Hanafoana", delete: "Hamafa", edit: "Hanova", add: "Hanampy", search: "Hitady" },
+    weather: { title: "Toetrandro", temperature: "Hafanana", humidity: "Hamandoana", wind: "Rivotra" }
+  },
+  zu: {
+    nav: { home: "Ikhaya", solutions: "Izixazululo", pricing: "Amanani", about: "Mayelana nathi", contact: "Xhumana", login: "Ngena", register: "Bhalisa", logout: "Phuma", dashboard: "Ideshibhodi", admin: "Umlawuli", parcels: "Amasimu", sensors: "Ama-sensor IoT", drones: "Amadrone", robots: "Amarobhothi", satellites: "Amasathelayithi", agribot: "AGRI GENIUS", advancedAnalysis: "Ukuhlaziya", camera: "Ikhamera ye-AI", irrigation: "Ukunisela", recommendations: "Izincomo ze-AI", marketplace: "Imakethe", alerts: "Izexwayiso", settings: "Izilungiselelo", analytics: "Ukuhlaziya", financial: "Izimali", accessControl: "Ukulawula", database: "Idathabheyisi" },
+    common: { loading: "Iyalayisha...", save: "Gcina", cancel: "Khansela", delete: "Susa", edit: "Hlela", add: "Engeza", search: "Sesha" },
+    weather: { title: "Isimo sezulu", temperature: "Amazinga okushisa", humidity: "Umswakama", wind: "Umoya" }
   }
 };
 
 export const supportedLanguages = [
-  { code: "fr", name: "Francais", flag: "🇫🇷" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "es", name: "Espanol", flag: "🇪🇸" },
-  { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  { code: "ar", name: "العربية", flag: "🇸🇦", rtl: true },
-  { code: "zh", name: "中文", flag: "🇨🇳" },
-  { code: "sw", name: "Kiswahili", flag: "🇰🇪" },
-  { code: "ha", name: "Hausa", flag: "🇳🇬" },
-  { code: "yo", name: "Yoruba", flag: "🇳🇬" },
-  { code: "wo", name: "Wolof", flag: "🇸🇳" },
-  { code: "bam", name: "Bambara", flag: "🇲🇱" },
-  { code: "ff", name: "Fulfulde", flag: "🇨🇲" },
-  { code: "ew", name: "Ewondo", flag: "🇨🇲" }
+  { code: "fr", name: "Francais", flag: "FR" },
+  { code: "en", name: "English", flag: "GB" },
+  { code: "es", name: "Espanol", flag: "ES" },
+  { code: "de", name: "Deutsch", flag: "DE" },
+  { code: "ar", name: "العربية", flag: "SA", rtl: true },
+  { code: "zh", name: "中文", flag: "CN" },
+  { code: "sw", name: "Kiswahili", flag: "KE" },
+  { code: "ha", name: "Hausa", flag: "NG" },
+  { code: "yo", name: "Yoruba", flag: "NG" },
+  { code: "wo", name: "Wolof", flag: "SN" },
+  { code: "bam", name: "Bambara", flag: "ML" },
+  { code: "ff", name: "Fulfulde", flag: "CM" },
+  { code: "ew", name: "Ewondo", flag: "CM" },
+  { code: "bas", name: "Bassa", flag: "CM" },
+  { code: "dua", name: "Douala", flag: "CM" },
+  { code: "baf", name: "Bafoussam (Ghomala)", flag: "CM" },
+  { code: "ig", name: "Igbo", flag: "NG" },
+  { code: "am", name: "Amharique", flag: "ET" },
+  { code: "ln", name: "Lingala", flag: "CD" },
+  { code: "mg", name: "Malagasy", flag: "MG" },
+  { code: "zu", name: "Zulu", flag: "ZA" },
 ];
 
 export default translations;

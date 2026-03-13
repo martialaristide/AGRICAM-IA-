@@ -9,7 +9,7 @@ import {
   Droplets, Thermometer, TrendingUp, AlertTriangle,
   Download, FileSpreadsheet, File, Image, Loader2,
   Brain, Sparkles, Globe, Calculator, Target,
-  Plus, MessageSquare, Trash2, ChevronDown, Copy, Check
+  Plus, MessageSquare, Trash2, ChevronDown, Copy, Check, Video
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -217,14 +217,14 @@ const AgribotIA = () => {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-140px)] overflow-hidden rounded-xl border border-slate-200 bg-white" data-testid="agribot-ia-page">
+    <div className="flex h-[calc(100vh-140px)] overflow-hidden rounded-xl border border-slate-800/50 bg-[#0b1120]" data-testid="agribot-ia-page">
       {/* Sidebar - Conversation history */}
       <div className={cn(
-        "border-r border-slate-200 bg-slate-50 flex flex-col transition-all duration-300",
+        "border-r border-slate-800/50 bg-[#0a0f1e] flex flex-col transition-all duration-300",
         sidebarOpen ? "w-64 min-w-[256px]" : "w-0 min-w-0 overflow-hidden"
       )}>
-        <div className="p-3 border-b border-slate-200">
-          <Button onClick={newConversation} className="w-full bg-emerald-600 hover:bg-emerald-700 text-sm gap-2" data-testid="new-conv-btn">
+        <div className="p-3 border-b border-slate-800/50">
+          <Button onClick={newConversation} className="w-full bg-emerald-600 hover:bg-emerald-500 text-sm gap-2" data-testid="new-conv-btn">
             <Plus className="h-4 w-4" /> Nouvelle conversation
           </Button>
         </div>
@@ -234,7 +234,7 @@ const AgribotIA = () => {
               key={conv.id}
               className={cn(
                 "group flex items-center gap-2 px-3 py-2.5 mx-2 rounded-lg cursor-pointer text-sm transition-colors",
-                conv.id === activeConvId ? "bg-emerald-100 text-emerald-800" : "hover:bg-slate-100 text-slate-600"
+                conv.id === activeConvId ? "bg-emerald-900/30 text-emerald-400" : "hover:bg-slate-800/50 text-slate-500"
               )}
               onClick={() => setActiveConvId(conv.id)}
               data-testid={`conv-${conv.id}`}
@@ -244,7 +244,7 @@ const AgribotIA = () => {
               {conversations.length > 1 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-opacity"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -252,8 +252,8 @@ const AgribotIA = () => {
             </div>
           ))}
         </div>
-        <div className="p-3 border-t border-slate-200 text-center">
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+        <div className="p-3 border-t border-slate-800/50 text-center">
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
             <Brain className="h-3.5 w-3.5" />
             <span>AGRI GENIUS</span>
           </div>
@@ -263,9 +263,9 @@ const AgribotIA = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50 bg-[#0b1120]">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(!sidebarOpen)} data-testid="toggle-sidebar">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400" onClick={() => setSidebarOpen(!sidebarOpen)} data-testid="toggle-sidebar">
               <MessageSquare className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
@@ -273,12 +273,12 @@ const AgribotIA = () => {
                 <Bot className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="font-semibold text-slate-800 text-sm">AGRI GENIUS</h2>
-                <p className="text-xs text-slate-400">Expert agricole intelligent</p>
+                <h2 className="font-semibold text-white text-sm">AGRI GENIUS</h2>
+                <p className="text-xs text-slate-500">Expert agricole intelligent</p>
               </div>
             </div>
           </div>
-          <Badge className="bg-emerald-100 text-emerald-700 text-xs">En ligne</Badge>
+          <Badge className="bg-emerald-900/30 text-emerald-400 text-xs ring-1 ring-emerald-500/20">En ligne</Badge>
         </div>
 
         {/* Messages */}
@@ -286,17 +286,17 @@ const AgribotIA = () => {
           <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
             {messages.length <= 1 && !loading && (
               <div className="text-center py-12">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-4">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                   <Bot className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-1">AGRI GENIUS</h3>
+                <h3 className="text-lg font-semibold text-white mb-1">AGRI GENIUS</h3>
                 <p className="text-sm text-slate-500 mb-6">Votre assistant agricole intelligent</p>
                 <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                   {quickPrompts.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                      className="p-3 text-left text-xs border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-emerald-300 transition-colors text-slate-600"
+                      className="p-3 text-left text-xs border border-slate-800/50 rounded-xl hover:bg-emerald-900/10 hover:border-emerald-500/30 transition-colors text-slate-400"
                       data-testid={`quick-prompt-${i}`}
                     >
                       <Sparkles className="h-3.5 w-3.5 text-emerald-500 mb-1" />
@@ -378,11 +378,11 @@ const AgribotIA = () => {
                   <button
                     key={i}
                     onClick={() => handleToolAction(tool)}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors text-center"
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-slate-800/50 hover:border-emerald-500/30 hover:bg-emerald-900/10 transition-colors text-center"
                     data-testid={`tool-${tool.type}-${i}`}
                   >
                     <tool.icon className={cn("h-4 w-4", tool.color)} />
-                    <span className="text-[10px] text-slate-600 leading-tight">{tool.label}</span>
+                    <span className="text-[10px] text-slate-500 leading-tight">{tool.label}</span>
                   </button>
                 ))}
               </div>
@@ -392,14 +392,14 @@ const AgribotIA = () => {
 
         {/* Image Preview */}
         {previewUrl && (
-          <div className="border-t border-slate-100 bg-slate-50 px-4 py-2">
+          <div className="border-t border-slate-800/50 bg-[#0a0f1e] px-4 py-2">
             <div className="max-w-3xl mx-auto flex items-center gap-3">
-              <img src={previewUrl} alt="Preview" className="h-16 w-16 object-cover rounded-lg border" />
+              <img src={previewUrl} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-slate-700" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-700 truncate">{selectedFile?.name}</p>
-                <p className="text-xs text-slate-400">{(selectedFile?.size / 1024).toFixed(0)} Ko</p>
+                <p className="text-sm font-medium text-white truncate">{selectedFile?.name}</p>
+                <p className="text-xs text-slate-500">{(selectedFile?.size / 1024).toFixed(0)} Ko</p>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }} className="text-red-500 hover:text-red-600">
+              <Button size="sm" variant="ghost" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }} className="text-red-400 hover:text-red-300">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -407,14 +407,24 @@ const AgribotIA = () => {
         )}
 
         {/* Input Area */}
-        <div className="border-t border-slate-200 bg-white p-4">
+        <div className="border-t border-slate-800/50 bg-[#0b1120] p-4">
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition-all">
+            <div className="flex items-end gap-2 bg-[#0f1729] border border-slate-800 rounded-2xl p-2 focus-within:border-emerald-500/40 focus-within:ring-1 focus-within:ring-emerald-500/20 transition-all">
               <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*,.pdf,.doc,.docx,.csv" className="hidden" />
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:text-emerald-600" onClick={() => fileInputRef.current?.click()} data-testid="upload-btn">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-500 hover:text-emerald-400" onClick={() => fileInputRef.current?.click()} title="Importer fichier" data-testid="upload-btn">
                 <Upload className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl", showTools ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-emerald-600")} onClick={() => setShowTools(!showTools)} data-testid="tools-btn">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-500 hover:text-emerald-400" title="Prendre photo"
+                onClick={() => { const input = document.createElement("input"); input.type = "file"; input.accept = "image/*"; input.capture = "environment"; input.onchange = (e) => handleFileSelect(e); input.click(); }}
+                data-testid="camera-btn">
+                <Camera className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-500 hover:text-blue-400" title="Capturer video"
+                onClick={() => { const input = document.createElement("input"); input.type = "file"; input.accept = "video/*"; input.capture = "environment"; input.onchange = (e) => handleFileSelect(e); input.click(); }}
+                data-testid="video-btn">
+                <Video className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl", showTools ? "text-emerald-400 bg-emerald-900/20" : "text-slate-500 hover:text-emerald-400")} onClick={() => setShowTools(!showTools)} data-testid="tools-btn">
                 <Zap className="h-5 w-5" />
               </Button>
               <textarea
@@ -423,7 +433,7 @@ const AgribotIA = () => {
                 value={input}
                 onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                className="flex-1 bg-transparent border-0 outline-none resize-none text-sm text-slate-800 placeholder-slate-400 py-2 min-h-[36px] max-h-[120px]"
+                className="flex-1 bg-transparent border-0 outline-none resize-none text-sm text-white placeholder-slate-600 py-2 min-h-[36px] max-h-[120px]"
                 rows={1}
                 data-testid="chat-input"
               />
@@ -432,7 +442,7 @@ const AgribotIA = () => {
                 disabled={loading || (!input.trim() && !selectedFile)}
                 className={cn(
                   "h-9 w-9 rounded-xl transition-colors",
-                  input.trim() || selectedFile ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-200 text-slate-400"
+                  input.trim() || selectedFile ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]" : "bg-slate-800 text-slate-600"
                 )}
                 size="icon"
                 data-testid="send-btn"
@@ -440,7 +450,7 @@ const AgribotIA = () => {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </div>
-            <p className="text-[10px] text-slate-400 text-center mt-2">AgriBot IA peut faire des erreurs. Verifiez les informations importantes.</p>
+            <p className="text-[10px] text-slate-600 text-center mt-2">AGRI GENIUS peut faire des erreurs. Verifiez les informations importantes.</p>
           </div>
         </div>
       </div>
