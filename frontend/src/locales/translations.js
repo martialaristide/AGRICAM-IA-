@@ -808,35 +808,91 @@ export const translations = {
   
   ar: {
     nav: {
-      home: "الرئيسية",
-      solutions: "الحلول",
-      pricing: "الأسعار",
-      about: "من نحن",
-      contact: "اتصل بنا",
-      login: "تسجيل الدخول",
-      register: "إنشاء حساب",
-      logout: "تسجيل الخروج",
-      dashboard: "لوحة التحكم",
-      parcels: "القطع",
-      sensors: "أجهزة الاستشعار",
-      drones: "إدارة الطائرات",
-      robots: "التحكم في الروبوتات"
+      home: "الرئيسية", solutions: "الحلول", pricing: "الأسعار", about: "من نحن",
+      contact: "اتصل بنا", login: "تسجيل الدخول", register: "إنشاء حساب", logout: "تسجيل الخروج",
+      dashboard: "لوحة التحكم", admin: "الإدارة", parcels: "القطع الأرضية", sensors: "أجهزة الاستشعار",
+      drones: "إدارة الطائرات", robots: "التحكم في الروبوتات", satellites: "صور الأقمار الصناعية",
+      agribot: "AGRI GENIUS", advancedAnalysis: "تحليل متقدم", camera: "كاميرا الذكاء الاصطناعي",
+      irrigation: "الري التلقائي", recommendations: "توصيات الذكاء الاصطناعي", marketplace: "السوق",
+      alerts: "التنبيهات", settings: "الإعدادات", analytics: "التحليلات", elearning: "التدريب",
+      financial: "المالية", accessControl: "التحكم في الوصول", database: "قاعدة البيانات"
+    },
+    landing: {
+      heroTitle1: "الزراعة", heroTitle2: "الذكية", heroTitle3: "لأفريقيا",
+      heroSubtitle: "حوّل مزرعتك بالذكاء الاصطناعي والطائرات المسيّرة والروبوتات المتصلة. اكتشف الأمراض وحسّن إنتاجك واتخذ قرارات مستنيرة.",
+      ctaStart: "ابدأ مجاناً", ctaDemo: "جرّب العرض التوضيحي",
+      poweredBy: "مدعوم من AGRI GENIUS AI", trustSecure: "بيانات آمنة",
+      trustUsers: "+5000 مزارع", trustAward: "جائزة الابتكار 2024",
+      statsTitle: "أرقام رئيسية", featuresTitle: "الحلول",
+      featuresSubtitle: "تقنيات متطورة للزراعة الأفريقية"
     },
     common: {
-      loading: "جاري التحميل...",
-      save: "حفظ",
-      cancel: "إلغاء",
-      delete: "حذف",
-      edit: "تعديل",
-      add: "إضافة",
-      search: "بحث"
+      loading: "جاري التحميل...", save: "حفظ", cancel: "إلغاء", delete: "حذف",
+      edit: "تعديل", add: "إضافة", search: "بحث", filter: "تصفية", export: "تصدير",
+      import: "استيراد", refresh: "تحديث", close: "إغلاق", confirm: "تأكيد",
+      yes: "نعم", no: "لا", back: "رجوع", next: "التالي", previous: "السابق",
+      submit: "إرسال", success: "نجاح", error: "خطأ", warning: "تحذير", info: "معلومات"
     },
     weather: {
-      title: "الطقس",
-      temperature: "درجة الحرارة",
-      humidity: "الرطوبة",
-      wind: "الرياح"
-    }
+      title: "الطقس", temperature: "درجة الحرارة", humidity: "الرطوبة", wind: "الرياح",
+      pressure: "الضغط", visibility: "الرؤية", sunrise: "شروق الشمس", sunset: "غروب الشمس",
+      forecast: "التوقعات", feelsLike: "الإحساس الحراري"
+    },
+    parcels: {
+      title: "إدارة القطع الأرضية", newParcel: "قطعة جديدة", drawZone: "رسم منطقة",
+      analyzeZone: "تحليل المنطقة", area: "المساحة", hectares: "هكتار", crop: "المحصول",
+      status: "الحالة", lastAnalysis: "آخر تحليل"
+    },
+    analysis: {
+      title: "التحليل", ndvi: "مؤشر NDVI", stress: "مناطق الإجهاد", disease: "كشف الأمراض",
+      humidity: "رطوبة التربة", thermal: "التحليل الحراري", cropHealth: "صحة المحاصيل",
+      generateReport: "إنشاء تقرير", overallScore: "النتيجة العامة", recommendations: "التوصيات"
+    },
+    drones: {
+      title: "إدارة الطائرات المسيّرة", addDrone: "إضافة طائرة", piloting: "القيادة",
+      telemetry: "القياس عن بعد", altitude: "الارتفاع", speed: "السرعة", battery: "البطارية",
+      signal: "إشارة واي فاي", takeoff: "إقلاع", land: "هبوط", emergency: "طوارئ",
+      photo: "صورة", video: "فيديو", scan: "مسح", infrared: "أشعة تحت الحمراء",
+      lidar: "ليدار", realView: "عرض حقيقي", mission: "مهمة"
+    },
+    robots: {
+      title: "التحكم في الروبوتات", addRobot: "إضافة روبوت", start: "بدء", pause: "إيقاف مؤقت",
+      stop: "توقف", weeding: "إزالة الأعشاب", spraying: "الرش", patrol: "دورية",
+      sampling: "أخذ العينات", manual: "وضع يدوي", autonomous: "وضع تلقائي", view3d: "عرض ثلاثي الأبعاد"
+    },
+    marketplace: {
+      title: "السوق", addProduct: "إضافة منتج",
+      categories: { all: "الكل", seeds: "بذور", fertilizers: "أسمدة", equipment: "معدات", phyto: "مبيدات", harvest: "محاصيل" },
+      price: "السعر", quantity: "الكمية", seller: "البائع", contact: "اتصال"
+    },
+    auth: {
+      login: "تسجيل الدخول", register: "إنشاء حساب", email: "البريد الإلكتروني",
+      password: "كلمة المرور", confirmPassword: "تأكيد كلمة المرور", fullName: "الاسم الكامل",
+      phone: "الهاتف", forgotPassword: "نسيت كلمة المرور؟", noAccount: "ليس لديك حساب؟",
+      hasAccount: "لديك حساب بالفعل؟", privacyPolicy: "سياسة الخصوصية",
+      acceptTerms: "أوافق على شروط الاستخدام", mustAcceptTerms: "يجب قبول الشروط"
+    },
+    pages: {
+      dashboard: { title: "لوحة التحكم", welcome: "مرحباً بك في AGRICAM IA", overview: "نظرة عامة", quickActions: "إجراءات سريعة", recentActivity: "النشاط الأخير", activeParcels: "القطع النشطة", avgHumidity: "متوسط الرطوبة", avgTemperature: "متوسط الحرارة", activeAlerts: "التنبيهات النشطة", parcelStatus: "حالة القطع", recentAlerts: "التنبيهات الأخيرة", systemOperational: "النظام يعمل", activeSensors: "أجهزة استشعار نشطة" },
+      irrigation: { title: "الري التلقائي", systems: "أنظمة الري", planGenerator: "مولد الخطط", generatePlan: "إنشاء خطة ذكية", surface: "المساحة (هكتار)", culture: "المحصول", soilType: "نوع التربة", waterSource: "مصدر المياه", budget: "الميزانية", mode: "الوضع", auto: "تلقائي", manual: "يدوي", semiAuto: "شبه تلقائي" },
+      formation: { title: "التدريب", createCourse: "إنشاء دورة", myCourses: "دوراتي", category: "الفئة", level: "المستوى", price: "السعر", duration: "المدة", students: "الطلاب", instructor: "المدرب", certificate: "الشهادة", publish: "نشر" },
+      accessControl: { title: "التحكم في الوصول", grantAccess: "منح الوصول", revokeAccess: "إلغاء الوصول", extendAccess: "تمديد الوصول", trialDays: "أيام التجربة", expired: "منتهي", active: "نشط", onlineUsers: "المستخدمون المتصلون", campaigns: "الحملات", crm: "إدارة العملاء", revenue: "الإيرادات", transactions: "المعاملات" },
+      satellite: { title: "صور الأقمار الصناعية", scheduledCaptures: "الالتقاطات المجدولة", scheduleCapture: "جدولة التقاط", resolution: "الدقة", source: "المصدر" },
+      camera: { title: "كاميرا الذكاء الاصطناعي", startCamera: "تشغيل الكاميرا", stopCamera: "إيقاف الكاميرا", analyze: "تحليل", export: "تصدير" },
+      agribot: { title: "AGRI GENIUS", welcome: "مساعدك الزراعي الذكي", placeholder: "اطرح سؤالك...", analyzing: "جاري التحليل..." }
+    },
+    roles: {
+      admin: { title: "الإدارة المتقدمة", subtitle: "لوحة تحكم تنبؤية", platformHealth: "صحة المنصة", securityAlerts: "تنبيهات أمنية", anomalyDetection: "كشف الشذوذ", serverLoad: "حمل الخادم", apiSaturation: "تشبع API", activeUsers: "المستخدمون النشطون", totalUsers: "إجمالي المستخدمين", monthlyRevenue: "الإيرادات الشهرية", predictiveMaintenance: "الصيانة التنبؤية", featureAdoption: "اعتماد الميزات", abTesting: "اختبارات A/B", fraudDetection: "كشف الاحتيال", suspiciousActivity: "نشاط مشبوه", systemMetrics: "مقاييس النظام", uptime: "وقت التشغيل", responseTime: "وقت الاستجابة", errorRate: "معدل الأخطاء", memoryUsage: "استخدام الذاكرة", scalingRecommendation: "توصية التوسع" },
+      farmer: { title: "مركز المزارع الذكي", subtitle: "صحة المحاصيل والتنبؤات", cropHealth: "صحة المحاصيل", yieldPrediction: "توقع الإنتاج", pricePrediction: "توقع الأسعار", blockchainTrace: "تتبع البلوكتشين", smartMarketplace: "السوق الذكي", earlyDetection: "الكشف المبكر", spectralAnalysis: "التحليل الطيفي", treatmentMap: "خريطة العلاج", estimatedYield: "الإنتاج المقدر", optimalPrice: "السعر الأمثل", profitThreshold: "عتبة الربح", priceAlert: "تنبيه السعر", traceability: "التتبع", qrCode: "رمز QR", lifecycle: "دورة الحياة", groupPurchase: "شراء جماعي", priceComparison: "مقارنة الأسعار", sowing: "البذر", irrigation: "الري", fertilization: "التسميد", harvest: "الحصاد", plantingCalendar: "تقويم الزراعة", rotation: "تناوب المحاصيل" },
+      supplier: { title: "لوحة تحكم المورد", subtitle: "إدارة ذكية للمدخلات", demandForecast: "توقع الطلب", logistics: "تحسين اللوجستيات", stockManagement: "إدارة المخزون", crossSelling: "البيع المتقاطع", totalProducts: "إجمالي المنتجات", activeOrders: "الطلبات النشطة", expiringStock: "مخزون قارب على الانتهاء", deliveryRoutes: "مسارات التوصيل", routeOptimization: "تحسين المسارات", gpsTracking: "تتبع GPS", flashPromo: "عرض فوري", customerSuggestion: "اقتراح العملاء", expiryAlert: "تنبيه انتهاء الصلاحية", salesTrend: "اتجاه المبيعات", topProducts: "أفضل المنتجات", regionalDemand: "الطلب الإقليمي" },
+      bank: { title: "لوحة التحكم المالية", subtitle: "التصنيف الائتماني وإدارة المخاطر", agriScore: "AgriScore", loanSimulator: "محاكي القروض", riskManagement: "إدارة المخاطر", parametricInsurance: "التأمين البارامتري", creditScore: "النقاط الائتمانية", yieldHistory: "سجل الإنتاج", sustainability: "الممارسات المستدامة", salesRegularity: "انتظام المبيعات", climateRisk: "المخاطر المناخية", loanAmount: "مبلغ القرض", interestRate: "سعر الفائدة", duration: "المدة", monthlyPayment: "القسط الشهري", totalCost: "التكلفة الإجمالية", portfolioExposure: "تعرض المحفظة", zoneRisk: "منطقة خطر", droughtAlert: "تنبيه جفاف", floodAlert: "تنبيه فيضان", autoDisburse: "صرف تلقائي", autoRepayment: "سداد تلقائي" },
+      seedAnalyst: { title: "تحليل البذور المتقدم", subtitle: "مختبر افتراضي وتوائم رقمية", digitalTwin: "التوأم الرقمي", genomicModeling: "النمذجة الجينومية", crossingSimulator: "محاكي التهجين", climateAdaptation: "التكيف المناخي", germination: "الإنبات", purity: "النقاء", moisture: "الرطوبة", certified: "معتمد", pending: "قيد الانتظار", rejected: "مرفوض", testing: "قيد الاختبار", batchId: "الدفعة", variety: "الصنف", origin: "المنشأ", growthSimulation: "محاكاة النمو", scenarioCount: "سيناريوهات مناخية", resilience: "المرونة", geneEditing: "تحرير الجينات", hybridVigor: "القوة الهجينة", traitPrediction: "توقع السمات", diseaseResistance: "مقاومة الأمراض", yieldPotential: "إمكانية الإنتاج", proteinContent: "محتوى البروتين", climateProjection: "الإسقاط المناخي", yearsProjection: "إسقاط 30-50 سنة", ipTracking: "الملكية الفكرية" },
+      agronomist: { title: "مساحة المهندس الزراعي", subtitle: "مساعد ذكي ونمذجة متقدمة", aiCopilot: "مساعد ذكي خبير", epidemiology: "النمذجة الوبائية", carbonSimulator: "محاكي الكربون", dynamicRecommendations: "توصيات ديناميكية", fieldVisits: "زيارات ميدانية", farmerSupervised: "مزارعون مُتابَعون", monthlyVisits: "زيارات هذا الشهر", healthScore: "متوسط نقاط الصحة", supervisedCrops: "محاصيل مُراقَبة", generateReport: "إنشاء تقرير", diseasePropagation: "انتشار الأمراض", riskMap: "خريطة المخاطر", earlyWarning: "إنذار مبكر", carbonSequestration: "احتجاز الكربون", biodiversity: "التنوع البيولوجي", soilHealth: "صحة التربة", carbonCredits: "رصيد الكربون", lowCarbonCertification: "شهادة منخفض الكربون", frostAlert: "تنبيه صقيع", rainAlert: "أمطار غزيرة متوقعة", treatmentDelay: "تأخير العلاج", collaborativeNetwork: "شبكة تعاونية", peerValidation: "تحقق الأقران" }
+    },
+    subscription: { required: "الاشتراك مطلوب", trialExpired: "انتهت فترة التجربة المجانية (14 يوم)", subscribeNow: "اشترك الآن", fullAccess: "وصول كامل لجميع الميزات", paymentSecure: "دفع آمن عبر MTN/Orange Mobile Money", daysRemaining: "أيام متبقية", basicMonthly: "الأساسي الشهري", premiumMonthly: "المميز الشهري", freeTrial: "تجربة مجانية", active: "نشط", expired: "منتهي" },
+    payment: { title: "الاشتراك والدفع", selectPackage: "اختر باقة", payNow: "ادفع الآن", processing: "جاري معالجة الدفع...", validatePhone: "أكد على هاتفك", success: "تم الدفع بنجاح!", failed: "فشل الدفع", retry: "إعادة المحاولة", history: "سجل المدفوعات", operator: "المشغل", phoneNumber: "رقم الهاتف", insufficientBalance: "رصيد غير كافٍ", confirmed: "مؤكد", amount: "المبلغ" },
+    leadCapture: { title: "ادخل إلى AGRICAM IA", subtitle: "أدخل معلوماتك لاكتشاف منصتنا", cta: "دخول مجاني", benefits: ["تجربة مجانية 14 يوم", "وصول لجميع الميزات", "دعم مخصص"] },
+    exitIntent: { title: "انتظر!", subtitle: "لا تفوّت هذه الفرصة", offer: "احصل على 20% خصم على اشتراكك الأول", cta: "احصل على العرض", noThanks: "لا شكراً" }
   },
   
   zh: {
