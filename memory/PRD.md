@@ -1,23 +1,18 @@
 # AGRICAM IA - Product Requirements Document
 
 ## Original Problem Statement
-Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered crop analysis, multi-role dashboards, drone/robot management, and comprehensive farm management tools for African agriculture.
+Enterprise-grade precision agriculture platform with AI, multi-role dashboards, drone/robot management, intelligent mapping, and comprehensive farm tools for African agriculture.
 
 ## Core Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI, dark theme
+- **Frontend**: React + Tailwind CSS + Shadcn/UI + react-leaflet
 - **Backend**: FastAPI + MongoDB (motor async), modular routes
-- **AI**: Gemini via emergentintegrations with OpenAI failover chain
-- **Storage**: Emergent Object Storage (videos, ebooks, images)
-- **i18n**: Custom LanguageContext with 21+ languages, per-user persistence
+- **AI**: Gemini via emergentintegrations with failover
+- **Storage**: Emergent Object Storage (videos, ebooks)
+- **Map**: OpenStreetMap + Leaflet (free, no API key)
+- **i18n**: 21+ languages, per-user persistence
 
 ## User Roles (7)
-1. **Admin** - Platform management, predictive analytics, user CRM, exports
-2. **Farmer (Agriculteur)** - Parcels, blockchain, crop analysis, IoT
-3. **Supplier (Fournisseur)** - Demand forecasting, smart logistics, inventory
-4. **Bank (Banque)** - AgriScore credit scoring, parametric insurance
-5. **Seed Analyst** - Digital twin simulation, genomic analysis
-6. **Agronomist** - Epidemiological modeling, intervention planning
-7. **Trainer (Formateur)** - Training CRUD, ebook sales, video MP4 upload, verification
+1. Admin, 2. Farmer, 3. Supplier, 4. Bank, 5. Seed Analyst, 6. Agronomist, 7. Trainer
 
 ## Demo Accounts
 - Admin: admin@agricam.ai / Admin@2026
@@ -28,69 +23,43 @@ Enterprise-grade precision agriculture platform "AGRICAM IA" with AI-powered cro
 - Agronomist: agronome@agricam.ai / Agro@2026
 - Trainer: formateur@agricam.ai / Trainer@2026
 
-## Backend Architecture
-```
-/app/backend/
-  core.py              # Shared: db, auth, AI helpers
-  storage.py           # NEW: Object storage (put_object, get_object)
-  server.py            # Main app + legacy routes
-  routes/
-    trainer.py         # Trainer CRUD + file uploads (video/ebook)
-    payments.py        # Mobile Money payments (JWT fix applied)
-    blockchain.py      # Product traceability
-    camera_ai.py       # Camera AI analysis
-    agriscore.py       # Credit scoring
-    digital_twin.py    # Seed simulation
-    predictive.py      # Admin analytics
-    epidemiology.py    # Disease modeling
-    supplier_analytics.py  # Logistics
-    management_api.py  # Admin management
-```
+## Completed Features
+### Session 1 (Previous)
+- [x] 7 role dashboards, i18n 21+ languages, AGRICAMIA 2.0
 
-## Completed Features (All Tested 100%)
-### Phase 0 (Previous sessions)
-- [x] Multi-role dashboards (7 roles)
-- [x] i18n 21+ languages
-- [x] AGRICAMIA 2.0: All advanced dashboards
-- [x] Camera IA, Blockchain, Satellite, IoT
+### Session 2 (13 Mar 2026)
+- [x] Payment bug fix + Success/Failure pages
+- [x] Theme customization (4 themes), Change password
+- [x] Profile photo + LinkedIn, Admin Analytics Export (CSV/Excel/PDF)
+- [x] Trainer role (trainings, ebooks, video upload, verification)
+- [x] Geolocation weather alerts, Per-user language persistence
 
-### Phase 1 (13 Mar 2026)
-- [x] Payment bug fix (JWT secret mismatch)
-- [x] Payment Success/Failure pages
-- [x] Theme customization (4 themes)
-- [x] Change password (functional dialog)
-- [x] Profile photo + LinkedIn for all users
-- [x] Admin Analytics Export (CSV, Excel, PDF, Word)
-- [x] Trainer (Formateur) role - dashboard + CRUD
-- [x] Geolocation weather alerts
-- [x] Per-user language persistence
+### Session 3 (Current)
+- [x] **Camera IA rewrite** - Live camera preview, capture+analyze in one click, mode selector, fullscreen, history (19 Mar 2026)
+- [x] **Carte Agricole** - Full-page Yango-style map with OpenStreetMap, 10 demo Cameroon suppliers, filter by category/culture/need/radius, season mode, WhatsApp/Call/Itineraire, search (19 Mar 2026)
+- [x] **Admin block/unblock** - Block users with security logging, blocked users cannot login (19 Mar 2026)
+- [x] **Security dashboard** - Intrusion detection stats, active protections panel (19 Mar 2026)
 
-### Phase 2 (13 Mar 2026)
-- [x] Video MP4 upload via object storage
-- [x] Ebook file upload with download control
-- [x] Trainer file type validation (rejects invalid formats)
-- [x] File download/streaming endpoints
-- [x] Formations filtered by role on ELearning page
-- [x] Landing page multilingual (hero section translatable)
+## Map API Endpoints
+- GET /api/map/suppliers?lat=&lon=&radius=&category=&culture=&need=&search=
+- POST /api/map/suppliers (create supplier)
+- PUT /api/map/suppliers/{id} (update)
+- PUT /api/map/suppliers/{id}/approve (admin)
+- GET /api/map/seasons (current agricultural season)
+- GET /api/map/categories (all filter options)
 
-## Known Limitations
-- NetWalletPay: Simulated mode in preview (network restriction)
-- Camera AI: Graceful fallback when models unavailable
-
-## P1 Tasks Remaining
-- [ ] Security dashboard (intrusion detection, user blocking)
-- [ ] Database protection
+## P1 Remaining
+- [ ] Supplier self-registration with moderation workflow
+- [ ] Parcel drawing on map with nearby supplier recommendations
+- [ ] Full landing page multilingual (all sections)
 - [ ] WebSocket real-time notifications
-- [ ] Real Mobile Money integration
 
 ## P2 Backlog
+- [ ] Real Mobile Money integration
 - [ ] Complete server.py refactoring
-- [ ] Full landing page multilingual (all sections)
-- [ ] SEO optimization
-- [ ] Offline camera support
-- [ ] Export from all dashboards
+- [ ] Offline map caching
+- [ ] Database protection dashboard
 
 ## Testing Status
-- Iteration 23: Payment flow - 100% pass
-- Iteration 24: Trainer + Settings - 100% pass
-- Iteration 25: File uploads + Multilingual - 100% pass
+- Iteration 23-25: Payment, Trainer, Uploads - 100% pass
+- Iteration 26: Map + Camera + Admin Security - 13 backend + 21 frontend, 100% pass
