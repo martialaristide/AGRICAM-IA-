@@ -9,7 +9,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - **AI**: Gemini via emergentintegrations with failover
 - **Storage**: Emergent Object Storage (videos, ebooks)
 - **Map**: OpenStreetMap + Leaflet (free, no API key)
-- **i18n**: 21+ languages, per-user persistence
+- **i18n**: 21+ languages, per-user persistence, RTL support for Arabic
 
 ## User Roles (7)
 1. Admin, 2. Farmer, 3. Supplier, 4. Bank, 5. Seed Analyst, 6. Agronomist, 7. Trainer
@@ -34,11 +34,16 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - [x] Trainer role (trainings, ebooks, video upload, verification)
 - [x] Geolocation weather alerts, Per-user language persistence
 
-### Session 3 (Current)
-- [x] **Camera IA rewrite** - Live camera preview, capture+analyze in one click, mode selector, fullscreen, history (19 Mar 2026)
-- [x] **Carte Agricole** - Full-page Yango-style map with OpenStreetMap, 10 demo Cameroon suppliers, filter by category/culture/need/radius, season mode, WhatsApp/Call/Itineraire, search (19 Mar 2026)
-- [x] **Admin block/unblock** - Block users with security logging, blocked users cannot login (19 Mar 2026)
-- [x] **Security dashboard** - Intrusion detection stats, active protections panel (19 Mar 2026)
+### Session 3 (19 Mar 2026)
+- [x] **Camera IA rewrite** - Live camera preview, capture+analyze in one click, mode selector, fullscreen, history
+- [x] **Carte Agricole** - Full-page Yango-style map with OpenStreetMap, 10 demo Cameroon suppliers, filter by category/culture/need/radius, season mode, WhatsApp/Call/Itineraire, search
+- [x] **Admin block/unblock** - Block users with security logging, blocked users cannot login
+- [x] **Security dashboard** - Intrusion detection stats, active protections panel
+
+### Session 4 (19 Mar 2026)
+- [x] **RTL Layout Support** - Complete Right-to-Left layout for Arabic: sidebar moves to right, text alignment reversed, header controls flip, navigation borders flip, tooltips position correctly, mobile menu button position adapts. Uses `dir="rtl"` on HTML element + conditional CSS classes in Layout.jsx.
+- [x] **Camera IA Enhancement** - Added external camera selection via `navigator.mediaDevices.enumerateDevices()`, camera dropdown selector for multiple cameras, auto-start camera on mount, permission denied handling, improved UI with camera label display.
+- [x] **RTL Font Support** - Added Noto Sans Arabic font for proper Arabic text rendering.
 
 ## Map API Endpoints
 - GET /api/map/suppliers?lat=&lon=&radius=&category=&culture=&need=&search=
@@ -49,6 +54,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - GET /api/map/categories (all filter options)
 
 ## P1 Remaining
+- [ ] Enhance Admin Security Dashboard (intrusion detection, resource monitoring)
 - [ ] Supplier self-registration with moderation workflow
 - [ ] Parcel drawing on map with nearby supplier recommendations
 - [ ] Full landing page multilingual (all sections)
@@ -63,3 +69,4 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 ## Testing Status
 - Iteration 23-25: Payment, Trainer, Uploads - 100% pass
 - Iteration 26: Map + Camera + Admin Security - 13 backend + 21 frontend, 100% pass
+- Iteration 27: RTL Layout + Camera IA Enhancement - 100% pass (frontend only)
