@@ -1,8 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* RTL Support */
+[dir="rtl"] {
+  font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+  text-align: right;
+}
+
+[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+[dir="rtl"] .gap-2, [dir="rtl"] .gap-3, [dir="rtl"] .gap-4 {
+  /* gap works direction-independently, no change needed */
+}
 
 :root {
   --agricam-green: #10b981;

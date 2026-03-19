@@ -10,7 +10,7 @@ import { Button } from "./ui/button";
 import { Globe } from "lucide-react";
 
 const LanguageSelector = ({ variant = "default", showLabel = true }) => {
-  const { language, setLanguage, supportedLanguages } = useLanguage();
+  const { language, setLanguage, supportedLanguages, isRTL } = useLanguage();
   
   const currentLang = supportedLanguages.find(l => l.code === language) || supportedLanguages[0];
 
@@ -32,7 +32,7 @@ const LanguageSelector = ({ variant = "default", showLabel = true }) => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto bg-[#111827] border-slate-700">
+      <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-56 max-h-80 overflow-y-auto bg-[#111827] border-slate-700">
         {supportedLanguages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}

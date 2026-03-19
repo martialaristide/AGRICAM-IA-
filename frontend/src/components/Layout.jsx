@@ -57,6 +57,7 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = React.useState([]);
   const [open, setOpen] = React.useState(false);
   const [coords, setCoords] = React.useState({ lat: 5.9631, lon: 10.1591 });
+  const { isRTL } = useLanguage();
 
   React.useEffect(() => {
     if (navigator.geolocation) {
@@ -89,7 +90,7 @@ const NotificationBell = () => {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-10 w-80 bg-[#111827] rounded-xl shadow-lg border border-slate-800 z-50 max-h-96 overflow-hidden" data-testid="notification-panel">
+        <div className={cn("absolute top-10 w-80 bg-[#111827] rounded-xl shadow-lg border border-slate-800 z-50 max-h-96 overflow-hidden", isRTL ? "left-0" : "right-0")} data-testid="notification-panel">
           <div className="p-3 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold text-sm text-white">Alertes Climat</span>
             <div className="flex items-center gap-1.5">
@@ -281,7 +282,7 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   
   const navItems = getNavItems(user?.role, t);
   const roleBadge = getRoleBadge(user?.role);
@@ -329,7 +330,10 @@ const Layout = () => {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden text-emerald-400"
+        className={cn(
+          "fixed top-4 z-50 lg:hidden text-emerald-400",
+          isRTL ? "right-4" : "left-4"
+        )}
         onClick={() => setMobileOpen(!mobileOpen)}
         data-testid="mobile-menu-btn"
       >
@@ -339,9 +343,14 @@ const Layout = () => {
       {/* Sidebar - Dark Futuristic */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 bg-[#0b1120] border-r border-emerald-900/30 shadow-2xl transition-all duration-300",
+          "fixed lg:static inset-y-0 z-40 bg-[#0b1120] shadow-2xl transition-all duration-300",
+          isRTL ? "right-0 border-l border-emerald-900/30" : "left-0 border-r border-emerald-900/30",
           collapsed ? "w-20" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen
+            ? "translate-x-0"
+            : isRTL
+              ? "translate-x-full lg:translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">
@@ -401,7 +410,10 @@ const Layout = () => {
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                       "hover:bg-emerald-900/30 hover:text-emerald-400",
                       isActive
-                        ? "bg-emerald-900/30 text-emerald-400 border-l-3 border-emerald-400 font-medium shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                        ? cn(
+                            "bg-emerald-900/30 text-emerald-400 font-medium shadow-[0_0_15px_rgba(16,185,129,0.1)]",
+                            isRTL ? "border-r-3 border-emerald-400" : "border-l-3 border-emerald-400"
+                          )
                         : "text-slate-400",
                       collapsed && "justify-center px-2"
                     )}
@@ -417,11 +429,11 @@ const Layout = () => {
                 );
                 
                 return collapsed ? (
-                  <ActionTooltip key={item.path} content={item.tooltip} side="right">
+                  <ActionTooltip key={item.path} content={item.tooltip} side={isRTL ? "left" : "right"}>
                     {navContent}
                   </ActionTooltip>
                 ) : (
-                  <ActionTooltip key={item.path} content={item.tooltip} side="right">
+                  <ActionTooltip key={item.path} content={item.tooltip} side={isRTL ? "left" : "right"}>
                     {navContent}
                   </ActionTooltip>
                 );
@@ -431,7 +443,7 @@ const Layout = () => {
 
           {/* Bottom Actions */}
           <div className="p-3 border-t border-emerald-900/20 space-y-2">
-            <ActionTooltip content={t("nav.logout")} side="right">
+            <ActionTooltip content={t("nav.logout")} side={isRTL ? "left" : "right"}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -447,7 +459,7 @@ const Layout = () => {
               </Button>
             </ActionTooltip>
 
-            <ActionTooltip content={collapsed ? "Agrandir" : "Reduire"} side="right">
+            <ActionTooltip content={collapsed ? "Agrandir" : "Reduire"} side={isRTL ? "left" : "right"}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -456,10 +468,10 @@ const Layout = () => {
                 data-testid="collapse-sidebar-btn"
               >
                 {collapsed ? (
-                  <ChevronRight className="h-5 w-5" />
+                  isRTL ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />
                 ) : (
                   <>
-                    <ChevronLeft className="h-5 w-5 mr-2" />
+                    {isRTL ? <ChevronRight className="h-5 w-5 ml-2" /> : <ChevronLeft className="h-5 w-5 mr-2" />}
                     <span>Reduire</span>
                   </>
                 )}
@@ -501,7 +513,7 @@ const Layout = () => {
                     <span className="hidden md:inline text-sm font-medium">{user?.full_name}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-[#111827] border-slate-700">
+                <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-56 bg-[#111827] border-slate-700">
                   <DropdownMenuLabel>
                     <div>
                       <p className="font-medium text-white">{user?.full_name}</p>
@@ -510,16 +522,16 @@ const Layout = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-slate-700" />
                   <DropdownMenuItem onClick={() => navigate("/parametres")} className="text-slate-300 hover:text-white focus:text-white focus:bg-slate-800">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Parametres
+                    <Settings className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {t("nav.settings")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/alertes")} className="text-slate-300 hover:text-white focus:text-white focus:bg-slate-800">
-                    <Bell className="mr-2 h-4 w-4" />
-                    Alertes
+                    <Bell className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {t("nav.alerts")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-700" />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-900/20">
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
                     Deconnexion
                   </DropdownMenuItem>
                 </DropdownMenuContent>
