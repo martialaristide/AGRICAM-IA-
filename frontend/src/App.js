@@ -44,6 +44,7 @@ import DatabaseBrowser from "./pages/DatabaseBrowser";
 import SeedAnalystDashboard from "./pages/SeedAnalystDashboard";
 import AgronomistDashboard from "./pages/AgronomistDashboard";
 import TrainerDashboard from "./pages/TrainerDashboard";
+import CarteAgricole from "./pages/CarteAgricole";
 import SubscriptionGate from "./components/SubscriptionGate";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -303,6 +304,7 @@ function App() {
               <Route path="robots-avance" element={<GestionRobotsAvance />} />
               <Route path="analyse-avancee" element={<AnalyseAvancee />} />
               <Route path="trainer-dashboard" element={<TrainerDashboard />} />
+              <Route path="carte-agricole" element={<CarteAgricole />} />
               <Route path="access-control" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AccessControl />

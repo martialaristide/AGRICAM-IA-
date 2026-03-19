@@ -32,7 +32,8 @@ import {
   Microscope,
   KeyRound,
   Database,
-  Package
+  Package,
+  MapPin
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -148,6 +149,7 @@ const getNavItems = (role, t) => {
       { path: "/seed-analyst", icon: Microscope, label: t("roles.seedAnalyst.title") || "Analyse Semences" },
       { path: "/agronomist", icon: Lightbulb, label: t("roles.agronomist.title") || "Espace Agronome" },
       { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Controle Acces" },
+      { path: "/carte-agricole", icon: MapPin, label: "Carte Agricole" },
       { path: "/database", icon: Database, label: t("nav.database") || "Base de Donnees" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
@@ -167,6 +169,7 @@ const getNavItems = (role, t) => {
       { path: "/irrigation", icon: Droplets, label: t("nav.irrigation") },
       { path: "/recommandations", icon: Lightbulb, label: t("nav.recommendations") },
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/carte-agricole", icon: MapPin, label: "Carte Agricole" },
       { path: "/paiements", icon: Smartphone, label: t("payment.title") || "Paiements" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },

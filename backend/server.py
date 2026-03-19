@@ -1658,8 +1658,174 @@ async def update_subscription(user_id: str, subscription_type: SubscriptionType,
 async def delete_user(user_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
     result = await db.users.delete_one({"id": user_id})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    return {"message": "Utilisateur supprimé"}
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
+    return {"message": "Utilisateur supprime"}
+
+@api_router.put("/admin/users/{user_id}/block")
+async def block_user(user_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    await db.users.update_one({"id": user_id}, {"$set": {"is_blocked": True, "is_active": False}})
+    await db.security_logs.insert_one({"action": "block", "target_user_id": user_id, "admin_id": user["id"], "timestamp": datetime.now(timezone.utc).isoformat(), "ip": "admin-action"})
+    return {"message": "Utilisateur bloque"}
+
+@api_router.put("/admin/users/{user_id}/unblock")
+async def unblock_user(user_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    await db.users.update_one({"id": user_id}, {"$set": {"is_blocked": False, "is_active": True}})
+    return {"message": "Utilisateur debloque"}
+
+# =============================================================================
+# API ROUTES - Supplier Map (Cartographie Intelligente)
+# =============================================================================
+
+@api_router.get("/map/suppliers")
+async def get_map_suppliers(
+    lat: float = Query(None), lon: float = Query(None),
+    radius: float = Query(20), category: str = Query(None),
+    culture: str = Query(None), need: str = Query(None),
+    search: str = Query(None),
+    user = Depends(get_optional_user)
+):
+    """Get suppliers for the map, filtered by proximity, category, culture, need"""
+    query = {"is_approved": True}
+    if category:
+        query["category"] = category
+    if culture:
+        query["cultures"] = {"$in": [culture]}
+    if need:
+        query["needs"] = {"$in": [need]}
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"products": {"$elemMatch": {"$regex": search, "$options": "i"}}},
+            {"description": {"$regex": search, "$options": "i"}},
+        ]
+    
+    suppliers = await db.map_suppliers.find(query, {"_id": 0}).to_list(200)
+    
+    # If no suppliers in DB, return demo data for Cameroon
+    if not suppliers:
+        suppliers = _get_demo_suppliers()
+        # Filter demo data
+        if category:
+            suppliers = [s for s in suppliers if s["category"] == category]
+        if culture:
+            suppliers = [s for s in suppliers if culture in s.get("cultures", [])]
+        if need:
+            suppliers = [s for s in suppliers if need in s.get("needs", [])]
+        if search:
+            sl = search.lower()
+            suppliers = [s for s in suppliers if sl in s.get("name","").lower() or sl in " ".join(s.get("products",[])).lower()]
+    
+    # Filter by radius if coordinates given
+    if lat is not None and lon is not None:
+        from math import radians, sin, cos, sqrt, atan2
+        def haversine(la1, lo1, la2, lo2):
+            R = 6371
+            dlat, dlon = radians(la2-la1), radians(lo2-lo1)
+            a = sin(dlat/2)**2 + cos(radians(la1))*cos(radians(la2))*sin(dlon/2)**2
+            return R * 2 * atan2(sqrt(a), sqrt(1-a))
+        for s in suppliers:
+            s["distance_km"] = round(haversine(lat, lon, s["lat"], s["lon"]), 1)
+        suppliers = [s for s in suppliers if s["distance_km"] <= radius]
+        suppliers.sort(key=lambda x: x["distance_km"])
+    
+    return suppliers
+
+
+@api_router.post("/map/suppliers")
+async def create_map_supplier(data: dict, user = Depends(get_current_user)):
+    """Register a new supplier on the map"""
+    supplier = {
+        "id": f"sup-{str(uuid.uuid4())[:8]}",
+        "user_id": user["id"],
+        "name": data.get("name", ""),
+        "description": data.get("description", ""),
+        "category": data.get("category", "intrants"),
+        "lat": data.get("lat", 0),
+        "lon": data.get("lon", 0),
+        "address": data.get("address", ""),
+        "phone": data.get("phone", ""),
+        "whatsapp": data.get("whatsapp", ""),
+        "website": data.get("website", ""),
+        "products": data.get("products", []),
+        "cultures": data.get("cultures", []),
+        "needs": data.get("needs", []),
+        "hours": data.get("hours", "Lun-Sam 8h-18h"),
+        "photos": data.get("photos", []),
+        "is_approved": user.get("role") == "admin",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.map_suppliers.insert_one(supplier)
+    supplier.pop("_id", None)
+    return {"success": True, "supplier": supplier}
+
+
+@api_router.put("/map/suppliers/{supplier_id}")
+async def update_map_supplier(supplier_id: str, data: dict, user = Depends(get_current_user)):
+    """Update supplier info"""
+    existing = await db.map_suppliers.find_one({"id": supplier_id})
+    if not existing:
+        raise HTTPException(404, "Fournisseur non trouve")
+    if existing.get("user_id") != user["id"] and user.get("role") != "admin":
+        raise HTTPException(403, "Non autorise")
+    allowed = {"name","description","category","lat","lon","address","phone","whatsapp","website","products","cultures","needs","hours","photos"}
+    update = {k: v for k, v in data.items() if k in allowed}
+    if update:
+        await db.map_suppliers.update_one({"id": supplier_id}, {"$set": update})
+    return {"success": True}
+
+
+@api_router.put("/map/suppliers/{supplier_id}/approve")
+async def approve_map_supplier(supplier_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
+    """Admin approves a supplier"""
+    await db.map_suppliers.update_one({"id": supplier_id}, {"$set": {"is_approved": True}})
+    return {"success": True, "message": "Fournisseur approuve"}
+
+
+@api_router.get("/map/seasons")
+async def get_current_season():
+    """Get current agricultural season info for Cameroon"""
+    month = datetime.now().month
+    if month in (3, 4, 5):
+        season = {"id": "semis_1", "name": "Saison des semis (1ere)", "recommended_needs": ["semences", "engrais", "pesticides"], "tips": "Periode ideale pour semer mais, arachide, haricot"}
+    elif month in (6, 7, 8):
+        season = {"id": "croissance", "name": "Saison de croissance", "recommended_needs": ["engrais", "pesticides", "irrigation"], "tips": "Surveillez les ravageurs, apportez des engrais de couverture"}
+    elif month in (9, 10, 11):
+        season = {"id": "recolte", "name": "Saison de recolte", "recommended_needs": ["stockage", "transport", "financement"], "tips": "Preparez le stockage, contactez les acheteurs"}
+    else:
+        season = {"id": "preparation", "name": "Preparation des sols", "recommended_needs": ["materiel", "semences", "financement"], "tips": "Labourez, analysez vos sols, planifiez vos cultures"}
+    return season
+
+
+@api_router.get("/map/categories")
+async def get_map_categories():
+    """Get map filter categories"""
+    return {
+        "categories": [
+            {"id": "intrants", "label": "Fournisseur d'intrants", "icon": "leaf", "color": "#10b981"},
+            {"id": "services", "label": "Service agricole", "icon": "wrench", "color": "#3b82f6"},
+            {"id": "marche", "label": "Marche", "icon": "store", "color": "#f59e0b"},
+            {"id": "finance", "label": "Institution financiere", "icon": "landmark", "color": "#8b5cf6"},
+            {"id": "veterinaire", "label": "Veterinaire", "icon": "heart", "color": "#ef4444"},
+        ],
+        "cultures": ["mais", "cacao", "cafe", "tomate", "manioc", "banane_plantain", "riz", "arachide", "haricot", "oignon", "palmier_huile", "coton"],
+        "needs": ["semences", "engrais", "pesticides", "materiel", "irrigation", "financement", "stockage", "transport", "formation"],
+    }
+
+
+def _get_demo_suppliers():
+    """Demo supplier data for Cameroon"""
+    return [
+        {"id": "d-001", "name": "AgroShop Douala", "description": "Intrants agricoles de qualite", "category": "intrants", "lat": 4.0511, "lon": 9.7679, "address": "Marche Central, Douala", "phone": "+237699001122", "whatsapp": "+237699001122", "products": ["engrais NPK", "semences mais", "pesticides bio"], "cultures": ["mais", "tomate", "haricot"], "needs": ["semences", "engrais", "pesticides"], "hours": "Lun-Sam 7h-18h", "is_approved": True, "rating": 4.5},
+        {"id": "d-002", "name": "Semences du Cameroun", "description": "Semences certifiees toutes cultures", "category": "intrants", "lat": 4.0611, "lon": 9.7279, "address": "Akwa, Douala", "phone": "+237677112233", "whatsapp": "+237677112233", "products": ["semences certifiees", "mais hybride", "riz NERICA"], "cultures": ["mais", "riz", "arachide", "oignon"], "needs": ["semences"], "hours": "Lun-Ven 8h-17h", "is_approved": True, "rating": 4.8},
+        {"id": "d-003", "name": "Credit Agricole du Centre", "description": "Financement et microcredit agricole", "category": "finance", "lat": 3.8480, "lon": 11.5021, "address": "Centre-ville, Yaounde", "phone": "+237222334455", "whatsapp": "+237699334455", "products": ["microcredit", "pret campagne", "assurance recolte"], "cultures": ["mais", "cacao", "cafe"], "needs": ["financement"], "hours": "Lun-Ven 8h-16h", "is_approved": True, "rating": 4.2},
+        {"id": "d-004", "name": "Marche Mokolo", "description": "Plus grand marche agricole de Yaounde", "category": "marche", "lat": 3.8680, "lon": 11.5121, "address": "Mokolo, Yaounde", "phone": "+237699556677", "whatsapp": None, "products": ["tomates", "oignons", "mais", "haricots"], "cultures": ["tomate", "oignon", "mais", "haricot"], "needs": ["stockage", "transport"], "hours": "Tous les jours 6h-18h", "is_approved": True, "rating": 4.0},
+        {"id": "d-005", "name": "AgriMeca Bafoussam", "description": "Location et vente de materiel agricole", "category": "services", "lat": 5.4737, "lon": 10.4176, "address": "Zone industrielle, Bafoussam", "phone": "+237699778899", "whatsapp": "+237699778899", "products": ["tracteurs", "pulverisateurs", "motoculteurs", "irrigation goutte"], "cultures": ["mais", "tomate", "cacao", "cafe"], "needs": ["materiel", "irrigation"], "hours": "Lun-Sam 7h30-17h", "is_approved": True, "rating": 4.6},
+        {"id": "d-006", "name": "CamVet Services", "description": "Services veterinaires et alimentation animale", "category": "veterinaire", "lat": 5.9631, "lon": 10.1591, "address": "Bamenda, Nord-Ouest", "phone": "+237677889900", "whatsapp": "+237677889900", "products": ["vaccins", "aliments betail", "consultation"], "cultures": [], "needs": ["formation"], "hours": "Lun-Ven 8h-17h", "is_approved": True, "rating": 4.3},
+        {"id": "d-007", "name": "Engrais Plus Garoua", "description": "Engrais et amendements pour le Nord", "category": "intrants", "lat": 9.3010, "lon": 13.3937, "address": "Garoua, Nord", "phone": "+237699101112", "whatsapp": "+237699101112", "products": ["uree", "NPK 20-10-10", "fumure organique", "chaux agricole"], "cultures": ["mais", "coton", "arachide", "oignon", "riz"], "needs": ["engrais"], "hours": "Lun-Sam 7h-17h", "is_approved": True, "rating": 4.4},
+        {"id": "d-008", "name": "Cacao Export Kumba", "description": "Achat et export de cacao et cafe", "category": "marche", "lat": 4.6363, "lon": 9.4469, "address": "Kumba, Sud-Ouest", "phone": "+237699131415", "whatsapp": "+237699131415", "products": ["achat cacao", "achat cafe", "sechage", "certification"], "cultures": ["cacao", "cafe", "palmier_huile"], "needs": ["stockage", "transport"], "hours": "Lun-Ven 8h-16h", "is_approved": True, "rating": 4.7},
+        {"id": "d-009", "name": "Microfinance Rurale Bertoua", "description": "Services financiers pour agriculteurs", "category": "finance", "lat": 4.5772, "lon": 13.6845, "address": "Bertoua, Est", "phone": "+237699161718", "whatsapp": "+237699161718", "products": ["epargne", "credit agricole", "transfert mobile"], "cultures": ["manioc", "mais", "banane_plantain", "cacao"], "needs": ["financement"], "hours": "Lun-Ven 8h-15h30", "is_approved": True, "rating": 3.9},
+        {"id": "d-010", "name": "Formation AgriTech Dschang", "description": "Centre de formation en agriculture moderne", "category": "services", "lat": 5.4474, "lon": 10.0670, "address": "Universite de Dschang", "phone": "+237699192021", "whatsapp": "+237699192021", "products": ["formation drone", "agriculture precision", "agroforesterie", "compostage"], "cultures": ["mais", "cafe", "tomate", "banane_plantain"], "needs": ["formation"], "hours": "Lun-Ven 8h-17h", "is_approved": True, "rating": 4.9},
+    ]
 
 # =============================================================================
 # API ROUTES - Parcels
