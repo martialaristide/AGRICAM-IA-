@@ -369,7 +369,7 @@ const Layout = () => {
                 <h1 className="font-bold text-lg text-white font-[Manrope]">
                   AGRICAM <span className="text-emerald-400">IA</span>
                 </h1>
-                <p className="text-xs text-slate-500">Agriculture de précision</p>
+                <p className="text-xs text-slate-500">{t("common.precisionAg") || "Agriculture de precision"}</p>
               </div>
             )}
           </div>
@@ -459,7 +459,7 @@ const Layout = () => {
               </Button>
             </ActionTooltip>
 
-            <ActionTooltip content={collapsed ? "Agrandir" : "Reduire"} side={isRTL ? "left" : "right"}>
+            <ActionTooltip content={collapsed ? t("common.expand") || "Agrandir" : t("common.collapse") || "Reduire"} side={isRTL ? "left" : "right"}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -472,7 +472,7 @@ const Layout = () => {
                 ) : (
                   <>
                     {isRTL ? <ChevronRight className="h-5 w-5 ml-2" /> : <ChevronLeft className="h-5 w-5 mr-2" />}
-                    <span>Reduire</span>
+                    <span>{t("common.collapse") || "Reduire"}</span>
                   </>
                 )}
               </Button>

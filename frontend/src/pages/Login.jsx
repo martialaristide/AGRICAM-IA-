@@ -8,12 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../co
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import api from "../services/api";
+import { useLanguage } from "../contexts/LanguageContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -60,10 +63,13 @@ const Login = () => {
       </div>
 
       <div className="relative w-full max-w-md z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-400 mb-6 transition-colors" data-testid="back-to-home">
-          <ArrowLeft className="h-4 w-4" />
-          <span>Retour</span>
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors" data-testid="back-to-home">
+            <ArrowLeft className="h-4 w-4" />
+            <span>{t("common.back")}</span>
+          </Link>
+          <LanguageSelector showLabel={false} />
+        </div>
 
         <Card className="bg-[#0b1120]/80 backdrop-blur-xl border-emerald-900/30 shadow-[0_0_40px_rgba(16,185,129,0.06)]" data-testid="login-card">
           <CardHeader className="text-center pb-2">
@@ -73,17 +79,17 @@ const Login = () => {
               </div>
             </div>
             <CardTitle className="text-2xl font-bold font-[Manrope] text-white">
-              Connexion <span className="text-emerald-400">AGRICAM IA</span>
+              {t("auth.login")} <span className="text-emerald-400">AGRICAM IA</span>
             </CardTitle>
             <CardDescription className="text-slate-500">
-              Entrez vos identifiants pour acceder
+              {t("auth.loginSubtitle") || "Entrez vos identifiants pour acceder"}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-400">Email</Label>
+                <Label htmlFor="email" className="text-slate-400">{t("auth.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                   <Input
@@ -97,7 +103,7 @@ const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-400">Mot de passe</Label>
+                <Label htmlFor="password" className="text-slate-400">{t("auth.password")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                   <Input
@@ -120,14 +126,14 @@ const Login = () => {
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Connexion...
+                    {t("common.loading")}
                   </div>
-                ) : "Se connecter"}
+                ) : t("nav.login")}
               </Button>
             </form>
 
             <div className="border-t border-slate-800 pt-4">
-              <p className="text-sm text-slate-600 text-center mb-3">Comptes de demonstration</p>
+              <p className="text-sm text-slate-600 text-center mb-3">{t("auth.demoAccounts") || "Comptes de demonstration"}</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: "Admin", email: "admin@agricam.ai", pw: "Admin@2026", id: "demo-admin" },
@@ -148,8 +154,8 @@ const Login = () => {
             </div>
 
             <p className="text-center text-sm text-slate-500">
-              Pas encore de compte ?{" "}
-              <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold">S'inscrire</Link>
+              {t("auth.noAccount")}{" "}
+              <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold">{t("nav.register")}</Link>
             </p>
           </CardContent>
         </Card>
