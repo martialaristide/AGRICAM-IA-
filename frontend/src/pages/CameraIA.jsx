@@ -29,7 +29,7 @@ const STATUS_CONFIG = {
 };
 
 // Permission Request Screen
-const PermissionScreen = ({ onRequestPermission, loading }) => (
+const PermissionScreen = ({ onRequestPermission, loading, t }) => (
   <div className="flex flex-col items-center justify-center py-16 px-6" data-testid="permission-screen">
     <div className="relative mb-8">
       <div className="h-28 w-28 rounded-full bg-emerald-900/20 flex items-center justify-center ring-2 ring-emerald-500/30">
@@ -40,27 +40,26 @@ const PermissionScreen = ({ onRequestPermission, loading }) => (
       </div>
     </div>
 
-    <h2 className="text-2xl font-bold text-white mb-3 text-center">Camera IA - Analyse Intelligente</h2>
+    <h2 className="text-2xl font-bold text-white mb-3 text-center">{t("pages.camera.title")} - {t("pages.camera.smartAnalysis") || "Analyse Intelligente"}</h2>
     <p className="text-slate-400 text-center max-w-md mb-2 text-sm leading-relaxed">
-      Pour analyser vos cultures en temps reel, AGRICAM IA a besoin d'acceder a votre camera.
-      Vos images sont analysees par l'IA et ne sont jamais partagees.
+      {t("pages.camera.permissionDesc") || "Pour analyser vos cultures en temps reel, AGRICAM IA a besoin d'acceder a votre camera. Vos images sont analysees par l'IA et ne sont jamais partagees."}
     </p>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 w-full max-w-lg">
       <div className="bg-[#111827] border border-slate-800 rounded-xl p-3 text-center">
         <ScanSearch className="h-5 w-5 text-emerald-400 mx-auto mb-1.5" />
-        <p className="text-xs text-slate-300 font-medium">Reconnaissance</p>
-        <p className="text-[10px] text-slate-500">Plantes & cultures</p>
+        <p className="text-xs text-slate-300 font-medium">{t("pages.camera.recognition") || "Reconnaissance"}</p>
+        <p className="text-[10px] text-slate-500">{t("pages.camera.plantsCrops") || "Plantes & cultures"}</p>
       </div>
       <div className="bg-[#111827] border border-slate-800 rounded-xl p-3 text-center">
         <Bug className="h-5 w-5 text-red-400 mx-auto mb-1.5" />
-        <p className="text-xs text-slate-300 font-medium">Detection</p>
-        <p className="text-[10px] text-slate-500">Maladies & ravageurs</p>
+        <p className="text-xs text-slate-300 font-medium">{t("pages.camera.detection") || "Detection"}</p>
+        <p className="text-[10px] text-slate-500">{t("pages.camera.diseasesPests") || "Maladies & ravageurs"}</p>
       </div>
       <div className="bg-[#111827] border border-slate-800 rounded-xl p-3 text-center">
         <Leaf className="h-5 w-5 text-green-400 mx-auto mb-1.5" />
-        <p className="text-xs text-slate-300 font-medium">Diagnostic</p>
-        <p className="text-[10px] text-slate-500">Nutrition & sante</p>
+        <p className="text-xs text-slate-300 font-medium">{t("pages.camera.diagnostic") || "Diagnostic"}</p>
+        <p className="text-[10px] text-slate-500">{t("pages.camera.nutritionHealth") || "Nutrition & sante"}</p>
       </div>
     </div>
 
@@ -71,39 +70,30 @@ const PermissionScreen = ({ onRequestPermission, loading }) => (
       data-testid="request-permission-btn"
     >
       {loading ? (
-        <><Loader2 className="h-5 w-5 animate-spin" /> Demarrage...</>
+        <><Loader2 className="h-5 w-5 animate-spin" /> {t("common.loading")}</>
       ) : (
-        <><Camera className="h-5 w-5" /> Autoriser la Camera</>
+        <><Camera className="h-5 w-5" /> {t("pages.camera.authorizeCamera") || "Autoriser la Camera"}</>
       )}
     </Button>
 
     <p className="text-xs text-slate-600 mt-4 text-center max-w-sm">
-      Vous pouvez aussi importer une photo depuis votre galerie sans activer la camera.
+      {t("pages.camera.uploadAlternative") || "Vous pouvez aussi importer une photo depuis votre galerie sans activer la camera."}
     </p>
   </div>
 );
 
 // Permission Denied Screen
-const PermissionDeniedScreen = ({ onRetry }) => (
+const PermissionDeniedScreen = ({ onRetry, t }) => (
   <div className="flex flex-col items-center justify-center py-16 px-6" data-testid="permission-denied-screen">
     <div className="h-20 w-20 rounded-full bg-red-900/20 flex items-center justify-center ring-2 ring-red-500/30 mb-6">
       <AlertTriangle className="h-10 w-10 text-red-400" />
     </div>
-    <h2 className="text-xl font-bold text-white mb-2">Acces camera refuse</h2>
+    <h2 className="text-xl font-bold text-white mb-2">{t("pages.camera.permissionDenied") || "Acces camera refuse"}</h2>
     <p className="text-slate-400 text-center max-w-md mb-6 text-sm">
-      Vous avez refuse l'acces a la camera. Pour utiliser la Camera IA, vous devez autoriser l'acces dans les parametres de votre navigateur.
+      {t("pages.camera.permissionDeniedDesc") || "Vous avez refuse l'acces a la camera. Pour utiliser la Camera IA, vous devez autoriser l'acces dans les parametres de votre navigateur."}
     </p>
-    <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 mb-6 max-w-md">
-      <p className="text-xs text-slate-300 font-medium mb-2">Comment autoriser :</p>
-      <ol className="text-xs text-slate-400 space-y-1 list-decimal list-inside">
-        <li>Cliquez sur l'icone cadenas dans la barre d'adresse</li>
-        <li>Trouvez "Camera" dans les permissions</li>
-        <li>Changez en "Autoriser"</li>
-        <li>Rechargez la page</li>
-      </ol>
-    </div>
     <Button onClick={onRetry} className="bg-emerald-600 hover:bg-emerald-500 gap-2" data-testid="retry-permission-btn">
-      <Camera className="h-4 w-4" /> Reessayer
+      <Camera className="h-4 w-4" /> {t("pages.camera.retry") || "Reessayer"}
     </Button>
   </div>
 );
@@ -340,6 +330,7 @@ const CameraIA = () => {
         <PermissionScreen
           onRequestPermission={requestPermission}
           loading={permissionState === "requesting"}
+          t={t}
         />
         {/* Still allow file upload without camera */}
         <div className="flex justify-center">
@@ -349,7 +340,7 @@ const CameraIA = () => {
             onClick={() => fileInputRef.current?.click()}
             data-testid="upload-without-camera-btn"
           >
-            <Upload className="h-4 w-4" /> Importer une photo
+            <Upload className="h-4 w-4" /> {t("pages.camera.importPhoto") || "Importer une photo"}
           </Button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
         </div>
@@ -359,11 +350,11 @@ const CameraIA = () => {
           <Card className="bg-[#111827] border-slate-800">
             <CardContent className="p-5 flex items-center justify-center gap-3">
               <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
-              <span className="text-emerald-400">Analyse IA en cours...</span>
+              <span className="text-emerald-400">{t("pages.camera.analyzing") || "Analyse IA en cours..."}</span>
             </CardContent>
           </Card>
         )}
-        <ResultDisplay result={result} analysisData={analysisData} statusConfig={statusConfig} StatusIcon={StatusIcon} currentMode={currentMode} capturedImage={capturedImage} onClose={() => { setResult(null); setCapturedImage(null); }} />
+        <ResultDisplay result={result} analysisData={analysisData} statusConfig={statusConfig} StatusIcon={StatusIcon} currentMode={currentMode} capturedImage={capturedImage} onClose={() => { setResult(null); setCapturedImage(null); }} t={t} />
       </div>
     );
   }
@@ -371,7 +362,7 @@ const CameraIA = () => {
   if (permissionState === "denied") {
     return (
       <div className="space-y-4" data-testid="camera-ia-page">
-        <PermissionDeniedScreen onRetry={requestPermission} />
+        <PermissionDeniedScreen onRetry={requestPermission} t={t} />
         <div className="flex justify-center">
           <Button
             variant="outline"
@@ -379,7 +370,7 @@ const CameraIA = () => {
             onClick={() => fileInputRef.current?.click()}
             data-testid="upload-without-camera-btn"
           >
-            <Upload className="h-4 w-4" /> Importer une photo
+            <Upload className="h-4 w-4" /> {t("pages.camera.importPhoto") || "Importer une photo"}
           </Button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
         </div>
@@ -387,11 +378,11 @@ const CameraIA = () => {
           <Card className="bg-[#111827] border-slate-800">
             <CardContent className="p-5 flex items-center justify-center gap-3">
               <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
-              <span className="text-emerald-400">Analyse IA en cours...</span>
+              <span className="text-emerald-400">{t("pages.camera.analyzing") || "Analyse IA en cours..."}</span>
             </CardContent>
           </Card>
         )}
-        <ResultDisplay result={result} analysisData={analysisData} statusConfig={statusConfig} StatusIcon={StatusIcon} currentMode={currentMode} capturedImage={capturedImage} onClose={() => { setResult(null); setCapturedImage(null); }} />
+        <ResultDisplay result={result} analysisData={analysisData} statusConfig={statusConfig} StatusIcon={StatusIcon} currentMode={currentMode} capturedImage={capturedImage} onClose={() => { setResult(null); setCapturedImage(null); }} t={t} />
       </div>
     );
   }
@@ -578,6 +569,7 @@ const CameraIA = () => {
           currentMode={currentMode}
           capturedImage={capturedImage}
           onClose={() => { setResult(null); setCapturedImage(null); }}
+          t={t}
         />
       )}
 
@@ -585,7 +577,7 @@ const CameraIA = () => {
       {!fullscreen && (
         <div>
           <Button variant="outline" className="border-slate-700 text-slate-400 gap-2 mb-3" onClick={() => setShowHistory(!showHistory)} data-testid="history-toggle">
-            <History className="h-4 w-4" /> Historique ({history.length})
+            <History className="h-4 w-4" /> {t("pages.camera.history") || "Historique"} ({history.length})
           </Button>
           {showHistory && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -629,7 +621,7 @@ const CameraIA = () => {
 };
 
 // Extracted Result Display Component
-const ResultDisplay = ({ result, analysisData, statusConfig, StatusIcon, currentMode, capturedImage, onClose }) => {
+const ResultDisplay = ({ result, analysisData, statusConfig, StatusIcon, currentMode, capturedImage, onClose, t }) => {
   if (!result) return null;
   return (
     <Card className="bg-[#111827] border-slate-800" data-testid="analysis-result">
@@ -641,7 +633,7 @@ const ResultDisplay = ({ result, analysisData, statusConfig, StatusIcon, current
               <Zap className="h-4 w-4 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-white font-semibold">Resultat d'analyse</h3>
+              <h3 className="text-white font-semibold">{t("pages.camera.result") || "Resultat d'analyse"}</h3>
               <p className="text-xs text-slate-500">Mode: {currentMode.label} | Modele: {result.model || "AI"} | {result.response_time_ms}ms</p>
             </div>
           </div>

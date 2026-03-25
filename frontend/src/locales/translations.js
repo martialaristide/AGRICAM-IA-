@@ -293,7 +293,24 @@ export const translations = {
         startCamera: "Demarrer la camera",
         stopCamera: "Arreter la camera",
         analyze: "Analyser",
-        export: "Exporter"
+        export: "Exporter",
+        smartAnalysis: "Analyse Intelligente",
+        permissionDesc: "Pour analyser vos cultures en temps reel, AGRICAM IA a besoin d'acceder a votre camera. Vos images sont analysees par l'IA et ne sont jamais partagees.",
+        authorizeCamera: "Autoriser la Camera",
+        importPhoto: "Importer une photo",
+        uploadAlternative: "Vous pouvez aussi importer une photo depuis votre galerie sans activer la camera.",
+        permissionDenied: "Acces camera refuse",
+        permissionDeniedDesc: "Vous avez refuse l'acces a la camera. Autorisez l'acces dans les parametres du navigateur.",
+        retry: "Reessayer",
+        recognition: "Reconnaissance",
+        plantsCrops: "Plantes & cultures",
+        detection: "Detection",
+        diseasesPests: "Maladies & ravageurs",
+        diagnostic: "Diagnostic",
+        nutritionHealth: "Nutrition & sante",
+        analyzing: "Analyse IA en cours...",
+        result: "Resultat d'analyse",
+        history: "Historique"
       },
       agribot: {
         title: "AGRI GENIUS",
@@ -703,7 +720,7 @@ export const translations = {
       formation: { title: "Training", createCourse: "Create Course", myCourses: "My Courses", category: "Category", level: "Level", price: "Price", duration: "Duration", students: "Students", instructor: "Instructor", certificate: "Certificate", publish: "Publish" },
       accessControl: { title: "Access Control", grantAccess: "Grant Access", revokeAccess: "Revoke Access", extendAccess: "Extend Access", trialDays: "Trial Days", expired: "Expired", active: "Active", onlineUsers: "Online Users", campaigns: "Campaigns", crm: "CRM", revenue: "Revenue", transactions: "Transactions" },
       satellite: { title: "Satellite Images", scheduledCaptures: "Scheduled Captures", scheduleCapture: "Schedule Capture", resolution: "Resolution", source: "Source" },
-      camera: { title: "AI Camera", startCamera: "Start Camera", stopCamera: "Stop Camera", analyze: "Analyze", export: "Export" },
+      camera: { title: "AI Camera", startCamera: "Start Camera", stopCamera: "Stop Camera", analyze: "Analyze", export: "Export", smartAnalysis: "Smart Analysis", permissionDesc: "To analyze your crops in real time, AGRICAM IA needs access to your camera. Your images are analyzed by AI and never shared.", authorizeCamera: "Authorize Camera", importPhoto: "Import a photo", uploadAlternative: "You can also import a photo from your gallery without activating the camera.", permissionDenied: "Camera access denied", permissionDeniedDesc: "You denied camera access. Please allow access in your browser settings.", retry: "Retry", recognition: "Recognition", plantsCrops: "Plants & Crops", detection: "Detection", diseasesPests: "Diseases & Pests", diagnostic: "Diagnostic", nutritionHealth: "Nutrition & Health", analyzing: "AI analysis in progress...", result: "Analysis Result", history: "History" },
       agribot: { title: "AGRI GENIUS", welcome: "Your intelligent agricultural assistant", placeholder: "Ask your question...", analyzing: "Analyzing..." }
     },
     roles: {
@@ -795,7 +812,7 @@ export const translations = {
       formation: { title: "Formacion", createCourse: "Crear curso", myCourses: "Mis cursos", category: "Categoria", level: "Nivel", price: "Precio", duration: "Duracion", students: "Estudiantes", instructor: "Instructor", certificate: "Certificado", publish: "Publicar" },
       accessControl: { title: "Control de Acceso", grantAccess: "Otorgar acceso", revokeAccess: "Revocar acceso", extendAccess: "Extender acceso", trialDays: "Dias de prueba", expired: "Expirado", active: "Activo", onlineUsers: "Usuarios en linea", campaigns: "Campanas", crm: "CRM", revenue: "Ingresos", transactions: "Transacciones" },
       satellite: { title: "Imagenes Satelitales", scheduledCaptures: "Capturas programadas", scheduleCapture: "Programar captura", resolution: "Resolucion", source: "Fuente" },
-      camera: { title: "Camara IA", startCamera: "Iniciar camara", stopCamera: "Detener camara", analyze: "Analizar", export: "Exportar" },
+      camera: { title: "Camara IA", startCamera: "Iniciar camara", stopCamera: "Detener camara", analyze: "Analizar", export: "Exportar", smartAnalysis: "Analisis Inteligente", permissionDesc: "Para analizar sus cultivos en tiempo real, AGRICAM IA necesita acceso a su camara. Sus imagenes son analizadas por IA y nunca se comparten.", authorizeCamera: "Autorizar Camara", importPhoto: "Importar una foto", uploadAlternative: "Tambien puede importar una foto de su galeria sin activar la camara.", permissionDenied: "Acceso a camara denegado", permissionDeniedDesc: "Ha denegado el acceso a la camara. Autorice el acceso en la configuracion del navegador.", retry: "Reintentar", recognition: "Reconocimiento", plantsCrops: "Plantas y Cultivos", detection: "Deteccion", diseasesPests: "Enfermedades y Plagas", diagnostic: "Diagnostico", nutritionHealth: "Nutricion y Salud", analyzing: "Analisis IA en curso...", result: "Resultado del Analisis", history: "Historial" },
       agribot: { title: "AGRI GENIUS", welcome: "Su asistente agricola inteligente", placeholder: "Haga su pregunta...", analyzing: "Analizando..." }
     },
     roles: {
@@ -887,7 +904,7 @@ export const translations = {
       formation: { title: "Ausbildung", createCourse: "Kurs erstellen", myCourses: "Meine Kurse", category: "Kategorie", level: "Niveau", price: "Preis", duration: "Dauer", students: "Studenten", instructor: "Ausbilder", certificate: "Zertifikat", publish: "Veroeffentlichen" },
       accessControl: { title: "Zugriffskontrolle", grantAccess: "Zugang gewaehren", revokeAccess: "Zugang widerrufen", extendAccess: "Zugang verlaengern", trialDays: "Testtage", expired: "Abgelaufen", active: "Aktiv", onlineUsers: "Online-Benutzer", campaigns: "Kampagnen", crm: "CRM", revenue: "Umsatz", transactions: "Transaktionen" },
       satellite: { title: "Satellitenbilder", scheduledCaptures: "Geplante Aufnahmen", scheduleCapture: "Aufnahme planen", resolution: "Aufloesung", source: "Quelle" },
-      camera: { title: "KI-Kamera", startCamera: "Kamera starten", stopCamera: "Kamera stoppen", analyze: "Analysieren", export: "Exportieren" },
+      camera: { title: "KI-Kamera", startCamera: "Kamera starten", stopCamera: "Kamera stoppen", analyze: "Analysieren", export: "Exportieren", smartAnalysis: "Intelligente Analyse", permissionDesc: "Um Ihre Kulturen in Echtzeit zu analysieren, benoetigt AGRICAM IA Zugriff auf Ihre Kamera. Ihre Bilder werden von KI analysiert und nie weitergegeben.", authorizeCamera: "Kamera autorisieren", importPhoto: "Foto importieren", uploadAlternative: "Sie koennen auch ein Foto aus Ihrer Galerie importieren ohne die Kamera zu aktivieren.", permissionDenied: "Kamerazugriff verweigert", permissionDeniedDesc: "Sie haben den Kamerazugriff verweigert. Erlauben Sie den Zugriff in den Browsereinstellungen.", retry: "Erneut versuchen", recognition: "Erkennung", plantsCrops: "Pflanzen & Kulturen", detection: "Erkennung", diseasesPests: "Krankheiten & Schaedlinge", diagnostic: "Diagnose", nutritionHealth: "Ernaehrung & Gesundheit", analyzing: "KI-Analyse laeuft...", result: "Analyseergebnis", history: "Verlauf" },
       agribot: { title: "AGRI GENIUS", welcome: "Ihr intelligenter Landwirtschaftsassistent", placeholder: "Stellen Sie Ihre Frage...", analyzing: "Analyse laeuft..." }
     },
     roles: {
@@ -976,7 +993,7 @@ export const translations = {
       formation: { title: "التدريب", createCourse: "إنشاء دورة", myCourses: "دوراتي", category: "الفئة", level: "المستوى", price: "السعر", duration: "المدة", students: "الطلاب", instructor: "المدرب", certificate: "الشهادة", publish: "نشر" },
       accessControl: { title: "التحكم في الوصول", grantAccess: "منح الوصول", revokeAccess: "إلغاء الوصول", extendAccess: "تمديد الوصول", trialDays: "أيام التجربة", expired: "منتهي", active: "نشط", onlineUsers: "المستخدمون المتصلون", campaigns: "الحملات", crm: "إدارة العملاء", revenue: "الإيرادات", transactions: "المعاملات" },
       satellite: { title: "صور الأقمار الصناعية", scheduledCaptures: "الالتقاطات المجدولة", scheduleCapture: "جدولة التقاط", resolution: "الدقة", source: "المصدر" },
-      camera: { title: "كاميرا الذكاء الاصطناعي", startCamera: "تشغيل الكاميرا", stopCamera: "إيقاف الكاميرا", analyze: "تحليل", export: "تصدير" },
+      camera: { title: "كاميرا الذكاء الاصطناعي", startCamera: "تشغيل الكاميرا", stopCamera: "إيقاف الكاميرا", analyze: "تحليل", export: "تصدير", smartAnalysis: "تحليل ذكي", permissionDesc: "لتحليل محاصيلك في الوقت الفعلي، يحتاج AGRICAM IA إلى الوصول إلى الكاميرا. يتم تحليل صورك بالذكاء الاصطناعي ولا تتم مشاركتها أبداً.", authorizeCamera: "السماح بالكاميرا", importPhoto: "استيراد صورة", uploadAlternative: "يمكنك أيضاً استيراد صورة من معرضك دون تفعيل الكاميرا.", permissionDenied: "تم رفض الوصول إلى الكاميرا", permissionDeniedDesc: "لقد رفضت الوصول إلى الكاميرا. اسمح بالوصول في إعدادات المتصفح.", retry: "إعادة المحاولة", recognition: "التعرف", plantsCrops: "النباتات والمحاصيل", detection: "الكشف", diseasesPests: "الأمراض والآفات", diagnostic: "التشخيص", nutritionHealth: "التغذية والصحة", analyzing: "جاري التحليل بالذكاء الاصطناعي...", result: "نتيجة التحليل", history: "السجل" },
       agribot: { title: "AGRI GENIUS", welcome: "مساعدك الزراعي الذكي", placeholder: "اطرح سؤالك...", analyzing: "جاري التحليل..." }
     },
     roles: {
@@ -1070,7 +1087,7 @@ export const translations = {
       formation: { title: "培训", createCourse: "创建课程", myCourses: "我的课程", category: "类别", level: "级别", price: "价格", duration: "时长", students: "学员", instructor: "讲师", certificate: "证书", publish: "发布" },
       accessControl: { title: "访问控制", grantAccess: "授予访问", revokeAccess: "撤销访问", extendAccess: "延长访问", trialDays: "试用天数", expired: "已过期", active: "活跃", onlineUsers: "在线用户", campaigns: "活动", crm: "客户管理", revenue: "收入", transactions: "交易" },
       satellite: { title: "卫星图像", scheduledCaptures: "计划捕获", scheduleCapture: "安排捕获", resolution: "分辨率", source: "来源" },
-      camera: { title: "AI摄像头", startCamera: "启动摄像头", stopCamera: "停止摄像头", analyze: "分析", export: "导出" },
+      camera: { title: "AI摄像头", startCamera: "启动摄像头", stopCamera: "停止摄像头", analyze: "分析", export: "导出", smartAnalysis: "智能分析", permissionDesc: "为了实时分析您的作物，AGRICAM IA 需要访问您的摄像头。您的图片由AI分析，不会被分享。", authorizeCamera: "授权摄像头", importPhoto: "导入照片", uploadAlternative: "您也可以从相册导入照片而无需启动摄像头。", permissionDenied: "摄像头访问被拒绝", permissionDeniedDesc: "您拒绝了摄像头访问。请在浏览器设置中允许访问。", retry: "重试", recognition: "识别", plantsCrops: "植物与作物", detection: "检测", diseasesPests: "病害与害虫", diagnostic: "诊断", nutritionHealth: "营养与健康", analyzing: "AI分析进行中...", result: "分析结果", history: "历史记录" },
       agribot: { title: "AGRI GENIUS", welcome: "您的智能农业助手", placeholder: "提出您的问题...", analyzing: "分析中..." }
     },
     roles: {

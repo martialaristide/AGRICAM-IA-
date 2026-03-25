@@ -9,7 +9,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - **AI**: Gemini via emergentintegrations with failover
 - **Storage**: Emergent Object Storage (videos, ebooks)
 - **Map**: OpenStreetMap + Leaflet (free, no API key)
-- **i18n**: 21+ languages, per-user persistence, RTL support for Arabic
+- **i18n**: 21+ languages, per-user persistence, full RTL support for Arabic
 
 ## User Roles (7)
 1. Admin, 2. Farmer, 3. Supplier, 4. Bank, 5. Seed Analyst, 6. Agronomist, 7. Trainer
@@ -24,49 +24,50 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - Trainer: formateur@agricam.ai / Trainer@2026
 
 ## Completed Features
-### Session 1 (Previous)
-- [x] 7 role dashboards, i18n 21+ languages, AGRICAMIA 2.0
 
-### Session 2 (13 Mar 2026)
-- [x] Payment bug fix + Success/Failure pages
-- [x] Theme customization (4 themes), Change password
-- [x] Profile photo + LinkedIn, Admin Analytics Export (CSV/Excel/PDF)
-- [x] Trainer role (trainings, ebooks, video upload, verification)
-- [x] Geolocation weather alerts, Per-user language persistence
-
-### Session 3 (19 Mar 2026)
-- [x] **Camera IA rewrite** - Live camera preview, capture+analyze in one click, mode selector, fullscreen, history
-- [x] **Carte Agricole** - Full-page Yango-style map with OpenStreetMap, 10 demo Cameroon suppliers, filter by category/culture/need/radius, season mode, WhatsApp/Call/Itineraire, search
-- [x] **Admin block/unblock** - Block users with security logging, blocked users cannot login
-- [x] **Security dashboard** - Intrusion detection stats, active protections panel
+### Session 1-3 (Previous)
+- [x] 7 role dashboards, 21+ language support, AGRICAMIA 2.0
+- [x] Payment flow, Trainer role, Theme customization, Profile photo
+- [x] Camera IA rewrite, Carte Agricole, Admin security, Data export
 
 ### Session 4 (19 Mar 2026)
-- [x] **RTL Layout Support** - Complete Right-to-Left layout for Arabic: sidebar moves to right, text alignment reversed, header controls flip, navigation borders flip, tooltips position correctly, mobile menu button position adapts. Uses `dir="rtl"` on HTML element + conditional CSS classes in Layout.jsx.
-- [x] **Camera IA Enhancement** - Added external camera selection via `navigator.mediaDevices.enumerateDevices()`, camera dropdown selector for multiple cameras, auto-start camera on mount, permission denied handling, improved UI with camera label display.
-- [x] **RTL Font Support** - Added Noto Sans Arabic font for proper Arabic text rendering.
+- [x] RTL Layout Support for Arabic
+- [x] Camera IA Enhancement with external camera selection
 
-## Map API Endpoints
-- GET /api/map/suppliers?lat=&lon=&radius=&category=&culture=&need=&search=
-- POST /api/map/suppliers (create supplier)
-- PUT /api/map/suppliers/{id} (update)
-- PUT /api/map/suppliers/{id}/approve (admin)
-- GET /api/map/seasons (current agricultural season)
-- GET /api/map/categories (all filter options)
+### Session 5 (25 Mar 2026)
+- [x] **Complete ES/DE/ZH translations**: Spanish, German, Chinese went from ~24-56 strings to ~393 each (matching FR/EN completeness). Added all sections: landing, parcels, analysis, drones, robots, marketplace, auth, leadCapture, exitIntent, privacy, pages (dashboard, irrigation, formation, accessControl, satellite, camera, agribot), roles (all 6), subscription, payment.
+- [x] **Login page i18n**: Added useLanguage() hook, LanguageSelector component on login page. All labels (email, password, login button, register link, demo accounts) now translated.
+- [x] **Camera IA i18n**: Permission screen, denied screen, buttons, status labels, result display, history all translated in 6 languages.
+- [x] **Layout i18n fixes**: "Reduire" -> t("common.collapse"), "Agriculture de precision" -> t("common.precisionAg"). Added expand/collapse/precisionAg keys to all 6 languages.
+- [x] **New translation keys**: auth.loginSubtitle, auth.demoAccounts, 15+ camera-specific keys across all languages.
+
+## Translation Coverage (6 main languages)
+| Language | Code | Strings | RTL | Status |
+|----------|------|---------|-----|--------|
+| French | fr | ~397 | No | Complete |
+| English | en | ~396 | No | Complete |
+| Spanish | es | ~396 | No | Complete |
+| German | de | ~396 | No | Complete |
+| Arabic | ar | ~396 | Yes | Complete |
+| Chinese | zh | ~396 | No | Complete |
+
+African languages (SW, HA, YO, WO, etc.): ~38 strings each, fallback to French for missing keys.
 
 ## P1 Remaining
 - [ ] Enhance Admin Security Dashboard (intrusion detection, resource monitoring)
 - [ ] Supplier self-registration with moderation workflow
 - [ ] Parcel drawing on map with nearby supplier recommendations
-- [ ] Full landing page multilingual (all sections)
 - [ ] WebSocket real-time notifications
 
 ## P2 Backlog
-- [ ] Real Mobile Money integration
+- [ ] Real Mobile Money integration (currently MOCKED)
 - [ ] Complete server.py refactoring
 - [ ] Offline map caching
 - [ ] Database protection dashboard
+- [ ] African language full translations
 
 ## Testing Status
-- Iteration 23-25: Payment, Trainer, Uploads - 100% pass
-- Iteration 26: Map + Camera + Admin Security - 13 backend + 21 frontend, 100% pass
-- Iteration 27: RTL Layout + Camera IA Enhancement - 100% pass (frontend only)
+- Iteration 23-26: All features 100% pass
+- Iteration 27: RTL Layout + Camera IA - 100% pass
+- Iteration 28: Camera IA backend code review - passed
+- Iteration 29: i18n ES/DE/ZH/Login/Camera - 95% pass (Camera content fixed after)
