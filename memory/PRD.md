@@ -9,7 +9,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - **AI**: Gemini via emergentintegrations with failover
 - **Storage**: Emergent Object Storage (videos, ebooks)
 - **Map**: OpenStreetMap + Leaflet (free, no API key)
-- **i18n**: 21+ languages, per-user persistence, full RTL support for Arabic
+- **i18n**: 21 languages, per-user persistence, full RTL support for Arabic
 
 ## User Roles (7)
 1. Admin, 2. Farmer, 3. Supplier, 4. Bank, 5. Seed Analyst, 6. Agronomist, 7. Trainer
@@ -22,6 +22,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - Seed Analyst: analyste@agricam.ai / Analyst@2026
 - Agronomist: agronome@agricam.ai / Agro@2026
 - Trainer: formateur@agricam.ai / Trainer@2026
+- Demo users (300): Demo@2026
 
 ## Completed Features
 
@@ -35,23 +36,50 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - [x] Camera IA Enhancement with external camera selection
 
 ### Session 5 (25 Mar 2026)
-- [x] **Complete ES/DE/ZH translations**: Spanish, German, Chinese went from ~24-56 strings to ~393 each (matching FR/EN completeness). Added all sections: landing, parcels, analysis, drones, robots, marketplace, auth, leadCapture, exitIntent, privacy, pages (dashboard, irrigation, formation, accessControl, satellite, camera, agribot), roles (all 6), subscription, payment.
-- [x] **Login page i18n**: Added useLanguage() hook, LanguageSelector component on login page. All labels (email, password, login button, register link, demo accounts) now translated.
-- [x] **Camera IA i18n**: Permission screen, denied screen, buttons, status labels, result display, history all translated in 6 languages.
-- [x] **Layout i18n fixes**: "Reduire" -> t("common.collapse"), "Agriculture de precision" -> t("common.precisionAg"). Added expand/collapse/precisionAg keys to all 6 languages.
-- [x] **New translation keys**: auth.loginSubtitle, auth.demoAccounts, 15+ camera-specific keys across all languages.
+- [x] Complete ES/DE/ZH translations (17 sections each)
+- [x] Login page i18n, Camera IA i18n
+- [x] Agribot quota limits removed
+- [x] 300 demo users seeded (307 total)
+- [x] Global theme initialization
+- [x] Word documentation generation (4 docs via python-docx)
+- [x] Documentation download page and API endpoints
 
-## Translation Coverage (6 main languages)
-| Language | Code | Strings | RTL | Status |
-|----------|------|---------|-----|--------|
-| French | fr | ~397 | No | Complete |
-| English | en | ~396 | No | Complete |
-| Spanish | es | ~396 | No | Complete |
-| German | de | ~396 | No | Complete |
-| Arabic | ar | ~396 | Yes | Complete |
-| Chinese | zh | ~396 | No | Complete |
+### Session 6 (26 Mar 2026)
+- [x] **CSS Compilation Fix**: Fixed orphaned CSS variables in index.css (lines 99-102) that blocked frontend build
+- [x] **Complete African Languages**: Added 11 missing sections (landing, parcels, analysis, drones, robots, marketplace, leadCapture, exitIntent, privacy, subscription, payment) to all 15 African/Cameroonian languages
+- [x] **Verified Documentation**: /api/docs/list and /api/docs/download/{filename} working, 4 Word documents downloadable
+- [x] **Verified 307 Users**: Admin dashboard correctly displays seeded data
 
-African languages (SW, HA, YO, WO, etc.): ~38 strings each, fallback to French for missing keys.
+## Translation Coverage
+
+### Main Languages (6) - 17 sections each
+| Language | Code | RTL | Status |
+|----------|------|-----|--------|
+| French | fr | No | Complete |
+| English | en | No | Complete |
+| Spanish | es | No | Complete |
+| German | de | No | Complete |
+| Arabic | ar | Yes | Complete |
+| Chinese | zh | No | Complete |
+
+### African Languages (15) - 17 sections each
+| Language | Code | Flag | Status |
+|----------|------|------|--------|
+| Kiswahili | sw | KE | Complete |
+| Hausa | ha | NG | Complete |
+| Yoruba | yo | NG | Complete |
+| Wolof | wo | SN | Complete |
+| Bambara | bam | ML | Complete |
+| Fulfulde | ff | CM | Complete |
+| Ewondo | ew | CM | Complete |
+| Bassa | bas | CM | Complete |
+| Douala | dua | CM | Complete |
+| Bafoussam | baf | CM | Complete |
+| Igbo | ig | NG | Complete |
+| Amharique | am | ET | Complete |
+| Lingala | ln | CD | Complete |
+| Malagasy | mg | MG | Complete |
+| Zulu | zu | ZA | Complete |
 
 ## P1 Remaining
 - [ ] Enhance Admin Security Dashboard (intrusion detection, resource monitoring)
@@ -61,13 +89,18 @@ African languages (SW, HA, YO, WO, etc.): ~38 strings each, fallback to French f
 
 ## P2 Backlog
 - [ ] Real Mobile Money integration (currently MOCKED)
-- [ ] Complete server.py refactoring
+- [ ] Complete server.py refactoring (>4600 lines)
 - [ ] Offline map caching
 - [ ] Database protection dashboard
-- [ ] African language full translations
+- [ ] Bank role features for agricultural credit
 
 ## Testing Status
-- Iteration 23-26: All features 100% pass
-- Iteration 27: RTL Layout + Camera IA - 100% pass
-- Iteration 28: Camera IA backend code review - passed
-- Iteration 29: i18n ES/DE/ZH/Login/Camera - 95% pass (Camera content fixed after)
+- Iteration 23-29: All features tested, 95-100% pass rates
+- Iteration 30: CSS fix, Documentation, Languages, RTL - 100% PASS (backend + frontend)
+
+## Key API Endpoints
+- `/api/docs/list` - List Word documents
+- `/api/docs/download/{filename}` - Download Word document
+- `/api/agribot/chat` - AI chat (no quota limits)
+- `/api/suppliers/map` - Geospatial supplier search
+- `/api/tracking/activity` - User activity tracking
