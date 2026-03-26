@@ -45,6 +45,7 @@ import SeedAnalystDashboard from "./pages/SeedAnalystDashboard";
 import AgronomistDashboard from "./pages/AgronomistDashboard";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import CarteAgricole from "./pages/CarteAgricole";
+import Documentation from "./pages/Documentation";
 import SubscriptionGate from "./components/SubscriptionGate";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -305,6 +306,7 @@ function App() {
               <Route path="analyse-avancee" element={<AnalyseAvancee />} />
               <Route path="trainer-dashboard" element={<TrainerDashboard />} />
               <Route path="carte-agricole" element={<CarteAgricole />} />
+              <Route path="documentation" element={<Documentation />} />
               <Route path="access-control" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AccessControl />

@@ -20,10 +20,16 @@ import { useAuth } from "../App";
 import { cn } from "../lib/utils";
 
 const THEMES = [
-  { id: "dark", label: "Sombre", icon: Moon, colors: "from-slate-900 to-slate-800" },
-  { id: "light", label: "Clair", icon: Sun, colors: "from-gray-100 to-white" },
-  { id: "emerald", label: "Emeraude", icon: Palette, colors: "from-emerald-900 to-teal-900" },
-  { id: "ocean", label: "Ocean", icon: Palette, colors: "from-blue-900 to-cyan-900" },
+  { id: "dark", label: "Sombre", icon: Moon, colors: "from-slate-900 to-slate-800", accent: "#10b981", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+  { id: "light", label: "Clair", icon: Sun, colors: "from-gray-100 to-white", accent: "#059669", bg: "#f8fafc", card: "#ffffff", text: "#1e293b" },
+  { id: "emerald", label: "Emeraude", icon: Palette, colors: "from-emerald-900 to-teal-900", accent: "#34d399", bg: "#022c22", card: "#064e3b", text: "#d1fae5" },
+  { id: "ocean", label: "Ocean", icon: Palette, colors: "from-blue-900 to-cyan-900", accent: "#22d3ee", bg: "#0c1929", card: "#0f2a47", text: "#cffafe" },
+  { id: "sunset", label: "Crepuscule", icon: Palette, colors: "from-orange-900 to-rose-900", accent: "#fb923c", bg: "#1c0f0a", card: "#3b1a0e", text: "#fed7aa" },
+  { id: "purple", label: "Violet Royal", icon: Palette, colors: "from-purple-900 to-indigo-900", accent: "#a78bfa", bg: "#0f0a1e", card: "#1e1145", text: "#e0d5ff" },
+  { id: "forest", label: "Foret", icon: Palette, colors: "from-green-950 to-lime-900", accent: "#84cc16", bg: "#0a1a0a", card: "#14341c", text: "#d9f99d" },
+  { id: "sahel", label: "Sahel", icon: Palette, colors: "from-amber-900 to-yellow-800", accent: "#fbbf24", bg: "#1a150a", card: "#3d2e0f", text: "#fef3c7" },
+  { id: "volcanic", label: "Volcanique", icon: Palette, colors: "from-red-950 to-slate-900", accent: "#ef4444", bg: "#1a0a0a", card: "#2d1111", text: "#fecaca" },
+  { id: "savanna", label: "Savane", icon: Palette, colors: "from-yellow-900 to-green-900", accent: "#a3e635", bg: "#1a1a0a", card: "#2e3311", text: "#ecfccb" },
 ];
 
 const Parametres = () => {
@@ -129,7 +135,15 @@ const Parametres = () => {
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
+    const themeData = THEMES.find(t => t.id === newTheme);
+    if (themeData) {
+      const root = document.documentElement;
+      root.setAttribute("data-theme", newTheme);
+      root.style.setProperty("--theme-accent", themeData.accent);
+      root.style.setProperty("--theme-bg", themeData.bg);
+      root.style.setProperty("--theme-card", themeData.card);
+      root.style.setProperty("--theme-text", themeData.text);
+    }
     localStorage.setItem("agricam_theme", newTheme);
   };
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Query, Depends, UploadFile, File, Form, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -672,8 +672,8 @@ Réponds toujours dans la langue demandée par l'utilisateur. Par défaut en fra
 Tu t'appelles AGRI GENIUS, l'assistant agricole intelligent d'AGRICAM IA.
 """
 
-# AgriBot Cache - TTL 1 hour, max 500 entries
-agribot_cache = TTLCache(maxsize=500, ttl=3600)
+# AgriBot Cache - TTL 24h, max 5000 entries (unlimited usage for presentation)
+agribot_cache = TTLCache(maxsize=5000, ttl=86400)
 
 AGRIBOT_FALLBACK_RESPONSES = {
     "mais": "Le mais necessite 500-800mm d'eau. Semez en mars-avril pour recolter en aout-septembre. Fertilisation recommandee: NPK 120-60-60 kg/ha. Espacez les rangs de 75cm et les plants de 25cm pour une densite optimale de 53000 plants/ha.",
@@ -2346,6 +2346,55 @@ async def seed_database():
          "created_at": datetime.now(timezone.utc).isoformat()}
     ]
     await db.users.insert_many(users_data)
+    
+    # Generate 300 additional demo users with Cameroonian names
+    import random as rng
+    
+    first_names_m = ["Jean-Pierre", "Paul", "Emmanuel", "Samuel", "David", "Joseph", "Pierre", "Michel", "Jacques", "Andre", "Francois", "Alain", "Henri", "Roger", "Gaston", "Leopold", "Martin", "Blaise", "Christian", "Philippe", "Bernard", "Charles", "Daniel", "Thomas", "Nicolas", "Albert", "Emile", "Etienne", "Vincent", "Celestin", "Rodrigue", "Sylvain", "Yves", "Maxime", "Fabrice", "Herve", "Desire", "Serge", "Aristide", "Norbert"]
+    first_names_f = ["Marie", "Fatimata", "Aminata", "Aissatou", "Rose", "Jeanne", "Beatrice", "Grace", "Esther", "Patience", "Clarisse", "Veronique", "Cecile", "Nathalie", "Florence", "Agnes", "Therese", "Christine", "Sylvie", "Bernadette", "Pascaline", "Viviane", "Colette", "Felicite", "Madeleine", "Marthe", "Antoinette", "Josephine", "Helene", "Pauline", "Angele", "Solange", "Mariette", "Victorine", "Odette", "Yvette", "Brigitte", "Lucie", "Adele", "Carine"]
+    last_names = ["Kamga", "Njoya", "Mbarga", "Tagne", "Fotso", "Nkeng", "Onana", "Ngono", "Eyinga", "Essomba", "Atangana", "Mvogo", "Biya", "Ndam", "Tchana", "Moussa", "Adamou", "Oumarou", "Saidou", "Ibrahim", "Hamadou", "Ousmanou", "Mohamadou", "Abubakar", "Talla", "Nganou", "Kenfack", "Tchatchoua", "Mbouda", "Tchoumi", "Nguepi", "Fomena", "Djimeli", "Takam", "Feujio", "Nkwenti", "Ayuk", "Enow", "Agbor", "Besong", "Tanyi", "Effa", "Mendouga", "Owona", "Zambo", "Meka", "Nanga", "Beyala", "Eko", "Abega"]
+    cities = ["Douala", "Yaounde", "Bafoussam", "Bamenda", "Garoua", "Maroua", "Bertoua", "Ebolowa", "Ngaoundere", "Buea", "Limbe", "Kumba", "Nkongsamba", "Dschang", "Kribi", "Edea", "Loum", "Foumban", "Sangmelima", "Mbalmayo"]
+    cultures = ["Mais, Manioc", "Cacao, Cafe", "Plantain, Macabo", "Tomate, Piment", "Riz, Sorgho", "Arachide, Soja", "Banane, Ananas", "Palmier a huile", "Coton, Mil", "Haricot, Igname", "Poivre, Gingembre", "Avocat, Mangue"]
+    companies_sup = ["AgroPlus", "SemencesCam", "PhytoCam", "AgroEquip", "BioFertil", "AgriTech Solutions", "CamSeeds", "TropicAgro", "SahelVert", "AgroDistrib"]
+    companies_bank = ["Afriland First Bank", "BICEC", "Ecobank Cameroun", "SCB", "UBA Cameroun"]
+    sub_types = ["basic", "premium", "freemium"]
+    
+    roles_dist = [("farmer", 180), ("seed_analyst", 40), ("agronomist", 40), ("trainer", 40)]
+    
+    bulk_users = []
+    user_counter = 0
+    for role, count in roles_dist:
+        for i in range(count):
+            user_counter += 1
+            is_female = rng.random() > 0.5
+            first = rng.choice(first_names_f if is_female else first_names_m)
+            last = rng.choice(last_names)
+            full_name = f"{first} {last}"
+            city = rng.choice(cities)
+            email = f"{first.lower().replace('-','').replace(' ','')}.{last.lower()}{'.' + str(rng.randint(1,99)) if rng.random() > 0.5 else ''}@{'gmail.com' if rng.random() > 0.3 else 'agricam.cm'}"
+            phone = f"+237{rng.choice(['6','65','69','67','68','66'])}{rng.randint(10000000,99999999)}"[:14]
+            
+            user_doc = {
+                "id": f"{role}-demo-{user_counter:04d}",
+                "email": email,
+                "password_hash": hash_password("Demo@2026"),
+                "full_name": full_name,
+                "phone": phone,
+                "role": role,
+                "company_name": f"Exploitation {last}" if role == "farmer" else (rng.choice(companies_sup) if role == "supplier" else f"Cabinet {last}"),
+                "address": f"{city}, Cameroun",
+                "culture_type": rng.choice(cultures) if role == "farmer" else None,
+                "subscription_type": rng.choice(sub_types),
+                "is_verified": True,
+                "is_active": True,
+                "trial_start": datetime.now(timezone.utc).isoformat(),
+                "trial_end": (datetime.now(timezone.utc) + timedelta(days=rng.randint(7, 365))).isoformat(),
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 180))).isoformat()
+            }
+            bulk_users.append(user_doc)
+    
+    if bulk_users:
+        await db.users.insert_many(bulk_users)
     
     # Create demo parcels
     parcels_data = [
@@ -4580,3 +4629,44 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+# Documentation download endpoints
+DOCS_DIR = "/app/backend/docs"
+
+@app.get("/api/docs/list")
+async def list_docs():
+    """List available documentation files"""
+    files = []
+    if os.path.exists(DOCS_DIR):
+        for f in sorted(os.listdir(DOCS_DIR)):
+            if f.endswith(".docx"):
+                fpath = os.path.join(DOCS_DIR, f)
+                files.append({
+                    "filename": f,
+                    "size": os.path.getsize(fpath),
+                    "label": f.replace("AGRICAM_IA_", "").replace(".docx", "").replace("_", " ")
+                })
+    return files
+
+@app.get("/api/docs/download/{filename}")
+async def download_doc(filename: str):
+    """Download a documentation file"""
+    filepath = os.path.join(DOCS_DIR, filename)
+    if not os.path.exists(filepath) or not filename.endswith(".docx"):
+        raise HTTPException(status_code=404, detail="Document non trouve")
+    return FileResponse(
+        filepath,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=filename
+    )
+
+@app.post("/api/docs/generate")
+async def regenerate_docs(user=Depends(get_current_user)):
+    """Regenerate all documentation files"""
+    try:
+        from docs_generator import generate_all
+        paths = generate_all()
+        return {"success": True, "files": [os.path.basename(p) for p in paths]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

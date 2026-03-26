@@ -33,7 +33,8 @@ import {
   KeyRound,
   Database,
   Package,
-  MapPin
+  MapPin,
+  FileText
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -151,6 +152,7 @@ const getNavItems = (role, t) => {
       { path: "/agronomist", icon: Lightbulb, label: t("roles.agronomist.title") || "Espace Agronome" },
       { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Controle Acces" },
       { path: "/carte-agricole", icon: MapPin, label: "Carte Agricole" },
+      { path: "/documentation", icon: FileText, label: "Documentation" },
       { path: "/database", icon: Database, label: t("nav.database") || "Base de Donnees" },
       { path: "/formation", icon: GraduationCap, label: t("nav.elearning") },
       { path: "/alertes", icon: Bell, label: t("nav.alerts") },
@@ -304,6 +306,34 @@ const Layout = () => {
   }, [exitShown, user?.subscription_type]);
 
   // Track page views
+  React.useEffect(() => {
+    // Apply saved theme on load
+    const savedTheme = localStorage.getItem("agricam_theme");
+    if (savedTheme) {
+      const THEME_MAP = {
+        dark: { accent: "#10b981", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+        light: { accent: "#059669", bg: "#f8fafc", card: "#ffffff", text: "#1e293b" },
+        emerald: { accent: "#34d399", bg: "#022c22", card: "#064e3b", text: "#d1fae5" },
+        ocean: { accent: "#22d3ee", bg: "#0c1929", card: "#0f2a47", text: "#cffafe" },
+        sunset: { accent: "#fb923c", bg: "#1c0f0a", card: "#3b1a0e", text: "#fed7aa" },
+        purple: { accent: "#a78bfa", bg: "#0f0a1e", card: "#1e1145", text: "#e0d5ff" },
+        forest: { accent: "#84cc16", bg: "#0a1a0a", card: "#14341c", text: "#d9f99d" },
+        sahel: { accent: "#fbbf24", bg: "#1a150a", card: "#3d2e0f", text: "#fef3c7" },
+        volcanic: { accent: "#ef4444", bg: "#1a0a0a", card: "#2d1111", text: "#fecaca" },
+        savanna: { accent: "#a3e635", bg: "#1a1a0a", card: "#2e3311", text: "#ecfccb" },
+      };
+      const th = THEME_MAP[savedTheme];
+      if (th) {
+        const root = document.documentElement;
+        root.setAttribute("data-theme", savedTheme);
+        root.style.setProperty("--theme-accent", th.accent);
+        root.style.setProperty("--theme-bg", th.bg);
+        root.style.setProperty("--theme-card", th.card);
+        root.style.setProperty("--theme-text", th.text);
+      }
+    }
+  }, []);
+
   React.useEffect(() => {
     const trackActivity = async () => {
       try {

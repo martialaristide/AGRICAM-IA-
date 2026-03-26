@@ -33,9 +33,71 @@
   --status-excellent: #10b981;
   --status-good: #3b82f6;
   --status-attention: #f59e0b;
+  --theme-accent: #10b981;
+  --theme-bg: #0a0f1a;
+  --theme-card: #111827;
+  --theme-text: #e2e8f0;
   --alert-critical: #ef4444;
   --alert-warning: #f59e0b;
   --alert-info: #3b82f6;
+}
+
+/* Theme application - overrides backgrounds and accent colors */
+[data-theme] .bg-\[\#0a0f1a\], [data-theme] .grid-bg {
+  background-color: var(--theme-bg) !important;
+}
+[data-theme] .bg-\[\#111827\] {
+  background-color: var(--theme-card) !important;
+}
+[data-theme] .bg-\[\#0b1120\] {
+  background-color: color-mix(in srgb, var(--theme-bg) 80%, black) !important;
+}
+[data-theme] .text-emerald-400 {
+  color: var(--theme-accent) !important;
+}
+[data-theme] .border-emerald-400 {
+  border-color: var(--theme-accent) !important;
+}
+[data-theme] .bg-emerald-600, [data-theme] .bg-emerald-500 {
+  background-color: var(--theme-accent) !important;
+}
+[data-theme] .ring-emerald-500\/30 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-accent) 30%, transparent) !important;
+}
+[data-theme] .border-emerald-900\/30, [data-theme] .border-emerald-900\/20 {
+  border-color: color-mix(in srgb, var(--theme-accent) 15%, transparent) !important;
+}
+[data-theme] .bg-emerald-900\/30, [data-theme] .bg-emerald-900\/40, [data-theme] .bg-emerald-900\/20 {
+  background-color: color-mix(in srgb, var(--theme-accent) 15%, transparent) !important;
+}
+[data-theme] .hover\:bg-emerald-900\/30:hover {
+  background-color: color-mix(in srgb, var(--theme-accent) 20%, transparent) !important;
+}
+[data-theme] .hover\:text-emerald-400:hover {
+  color: var(--theme-accent) !important;
+}
+[data-theme] .shadow-emerald-500\/20, [data-theme] .shadow-\[0_0_15px_rgba\(16\,185\,129\,0\.1\)\] {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-accent) 15%, transparent) !important;
+}
+
+/* Light theme special handling */
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="light"] .text-white {
+  color: #1e293b !important;
+}
+[data-theme="light"] .text-slate-300, [data-theme="light"] .text-slate-400 {
+  color: #475569 !important;
+}
+[data-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+[data-theme="light"] .bg-slate-800\/50 {
+  background-color: #f1f5f9 !important;
+}
+[data-theme="light"] .border-slate-800, [data-theme="light"] .border-slate-700 {
+  border-color: #e2e8f0 !important;
 }
 
 body {
