@@ -71,6 +71,8 @@ MIME_TYPES = {
     "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
     "gif": "image/gif", "webp": "image/webp", "pdf": "application/pdf",
     "mp4": "video/mp4", "avi": "video/avi", "mov": "video/quicktime",
+    "webm": "video/webm",
     "doc": "application/msword", "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "ppt": "application/vnd.ms-powerpoint", "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "epub": "application/epub+zip", "txt": "text/plain",
 }

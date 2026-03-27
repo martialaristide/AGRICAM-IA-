@@ -297,7 +297,7 @@ async def get_trainer_stats(user=Depends(get_current_user)):
 
 # --- File Uploads ---
 ALLOWED_VIDEO = {"mp4", "avi", "mov", "webm"}
-ALLOWED_DOCS = {"pdf", "epub", "doc", "docx", "txt"}
+ALLOWED_DOCS = {"pdf", "epub", "doc", "docx", "txt", "ppt", "pptx"}
 MAX_VIDEO_SIZE = 200 * 1024 * 1024  # 200MB
 MAX_DOC_SIZE = 50 * 1024 * 1024  # 50MB
 

@@ -49,7 +49,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - GET /api/digital-twin/export/{format} - Export CSV/JSON
 
 ### Session 8 (27 Mar 2026)
-- [x] **Trainer File Uploads Fixed**: Fixed critical NameError in `storage.py` (EMERGENT_KEY → emergent_key). Video and ebook uploads now working end-to-end via Object Storage.
+- [x] **Trainer File Uploads Fixed**: Fixed critical NameError in `storage.py` (EMERGENT_KEY → emergent_key). Fixed axios Content-Type header blocking multipart boundary in `api.js`. Added PPT/PPTX support to backend + frontend. Video and ebook uploads now working end-to-end.
 
 ## P0 Remaining
 - [ ] Admin Security Dashboard (intrusion detection, monitoring)

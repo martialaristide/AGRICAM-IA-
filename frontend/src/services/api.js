@@ -10,12 +10,16 @@ const api = axios.create({
   },
 });
 
-// Add token to all requests
+// Add token to all requests, and let axios handle Content-Type for FormData
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("agricam_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Let axios auto-set Content-Type with boundary for FormData
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
     }
     return config;
   },
