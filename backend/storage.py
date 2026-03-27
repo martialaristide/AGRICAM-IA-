@@ -24,7 +24,7 @@ def init_storage():
         logger.warning("EMERGENT_LLM_KEY not set - storage unavailable")
         return None
     try:
-        resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
+        resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": emergent_key}, timeout=30)
         resp.raise_for_status()
         storage_key = resp.json()["storage_key"]
         logger.info("Object storage initialized successfully")

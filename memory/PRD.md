@@ -48,6 +48,9 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - POST /api/digital-twin/upload-seed-data - Upload files
 - GET /api/digital-twin/export/{format} - Export CSV/JSON
 
+### Session 8 (27 Mar 2026)
+- [x] **Trainer File Uploads Fixed**: Fixed critical NameError in `storage.py` (EMERGENT_KEY → emergent_key). Video and ebook uploads now working end-to-end via Object Storage.
+
 ## P0 Remaining
 - [ ] Admin Security Dashboard (intrusion detection, monitoring)
 - [ ] Presentation Mode (guided tour)
@@ -60,3 +63,4 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 ## Testing
 - Iteration 30-31: i18n, docs, translations - 100% PASS
 - Iteration 32: Seed analysis module, dropdowns, AGRI GENIUS - 100% PASS (Backend 9/9)
+- Session 8: Trainer upload fix verified via curl (video + ebook + download) - ALL PASS
