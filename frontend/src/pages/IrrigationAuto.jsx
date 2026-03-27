@@ -207,7 +207,7 @@ const IrrigationAuto = () => {
                     <select
                       value={config.parcel_id}
                       onChange={(e) => setConfig({ ...config, parcel_id: e.target.value })}
-                      className="w-full h-10 px-3 border rounded-md"
+                      className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                     >
                       <option value="">Sélectionner une parcelle</option>
                       {parcels.map(parcel => (
@@ -223,7 +223,7 @@ const IrrigationAuto = () => {
                     <select
                       value={config.mode}
                       onChange={(e) => setConfig({ ...config, mode: e.target.value })}
-                      className="w-full h-10 px-3 border rounded-md"
+                      className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                     >
                       <option value="auto">Automatique (IA)</option>
                       <option value="schedule">Programmé</option>

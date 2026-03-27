@@ -477,7 +477,7 @@ const Parcelles = () => {
                         id="status"
                         value={newParcel.status}
                         onChange={(e) => setNewParcel({ ...newParcel, status: e.target.value })}
-                        className="w-full h-10 px-3 border rounded-md"
+                        className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                         data-testid="parcel-status-select"
                       >
                         <option value="excellent">Excellent</option>
@@ -491,7 +491,7 @@ const Parcelles = () => {
                         id="country"
                         value={newParcel.country || "Cameroun"}
                         onChange={(e) => setNewParcel({ ...newParcel, country: e.target.value })}
-                        className="w-full h-10 px-3 border rounded-md"
+                        className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                         data-testid="parcel-country-select"
                       >
                         <option value="Cameroun">Cameroun</option>

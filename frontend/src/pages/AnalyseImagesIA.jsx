@@ -187,7 +187,7 @@ const AnalyseImagesIA = () => {
                       <select
                         value={selectedParcel}
                         onChange={(e) => setSelectedParcel(e.target.value)}
-                        className="w-full h-10 px-3 border rounded-md"
+                        className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                         data-testid="analysis-parcel-select"
                       >
                         <option value="">Sélectionner une parcelle</option>

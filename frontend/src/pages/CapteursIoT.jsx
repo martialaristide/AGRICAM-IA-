@@ -279,7 +279,7 @@ const CapteursIoT = () => {
                     <select
                       value={newSensor.type}
                       onChange={(e) => setNewSensor({ ...newSensor, type: e.target.value })}
-                      className="w-full h-10 px-3 border rounded-md"
+                      className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                       data-testid="sensor-type-select"
                     >
                       <option value="humidity">Humidité du sol</option>
@@ -296,7 +296,7 @@ const CapteursIoT = () => {
                     <select
                       value={newSensor.parcel_id}
                       onChange={(e) => setNewSensor({ ...newSensor, parcel_id: e.target.value })}
-                      className="w-full h-10 px-3 border rounded-md"
+                      className="w-full h-10 px-3 border rounded-md bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                       data-testid="sensor-parcel-select"
                     >
                       <option value="">Sélectionner une parcelle</option>
