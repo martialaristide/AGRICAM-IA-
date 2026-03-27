@@ -31,6 +31,9 @@ const ELearning = () => {
   const [certificate, setCertificate] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newCourse, setNewCourse] = useState({ title: "", description: "", category: "agriculture", level: "debutant", price: 0, type: "video", duration: "" });
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -528,20 +531,88 @@ const ELearning = () => {
               <div><Label>Prix (FCFA)</Label><Input type="number" value={newCourse.price} onChange={e => setNewCourse(p => ({...p, price: parseInt(e.target.value) || 0}))} /></div>
             </div>
             <div><Label>Fichiers (videos, documents, images)</Label>
-              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors cursor-pointer">
+              <div 
+                className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+                data-testid="file-drop-zone"
+              >
                 <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">Glissez vos fichiers ici ou cliquez</p>
-                <p className="text-xs text-slate-400 mt-1">PDF, PPTX, MP4, MOV, JPEG, PNG (max 500MB)</p>
-                <input type="file" className="hidden" multiple accept=".pdf,.pptx,.mp4,.mov,.jpg,.jpeg,.png,.epub" />
+                {uploadFile ? (
+                  <p className="text-sm text-indigo-600 font-medium">{uploadFile.name} ({(uploadFile.size / 1024 / 1024).toFixed(1)} Mo)</p>
+                ) : (
+                  <p className="text-sm text-slate-500">Glissez vos fichiers ici ou cliquez</p>
+                )}
+                <p className="text-xs text-slate-400 mt-1">PDF, PPTX, MP4, MOV, JPEG, PNG, DOCX (max 200MB)</p>
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  className="hidden" 
+                  accept=".pdf,.pptx,.ppt,.mp4,.mov,.avi,.webm,.jpg,.jpeg,.png,.epub,.doc,.docx,.txt"
+                  data-testid="file-upload-input"
+                  onChange={(e) => {
+                    if (e.target.files[0]) {
+                      setUploadFile(e.target.files[0]);
+                      toast.success(`Fichier selectionne: ${e.target.files[0].name}`);
+                    }
+                  }}
+                />
               </div>
             </div>
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-700" data-testid="create-course-btn" onClick={() => {
+            <Button className="w-full bg-indigo-600 hover:bg-indigo-700" data-testid="create-course-btn" disabled={uploading} onClick={async () => {
               if (!newCourse.title) { toast.error("Titre requis"); return; }
-              setCourses(prev => [...prev, { ...newCourse, id: `course_${Date.now()}`, instructor: "Admin", students: 0, rating: 0, progress: 0, created_at: new Date().toISOString() }]);
-              toast.success("Formation creee avec succes !");
-              setShowCreateDialog(false);
-              setNewCourse({ title: "", description: "", category: "agriculture", level: "debutant", price: 0, type: "video", duration: "" });
-            }}><Plus className="h-4 w-4 mr-2" /> Publier la formation</Button>
+              setUploading(true);
+              try {
+                // Determine if video or document based on type/file
+                const isVideo = uploadFile && /\.(mp4|avi|mov|webm)$/i.test(uploadFile.name);
+                
+                // Create training via API
+                const res = await api.post("/trainer/trainings", {
+                  title: newCourse.title,
+                  description: newCourse.description || newCourse.title,
+                  category: newCourse.category,
+                  target_roles: ["farmer", "agronomist"],
+                  difficulty: newCourse.level,
+                  duration_minutes: parseInt(newCourse.duration) || 60,
+                  price: newCourse.price || 0,
+                  is_published: true,
+                });
+                const trainingId = res.data?.training?.id;
+                
+                // Upload file if selected
+                if (uploadFile && trainingId) {
+                  toast.info("Upload du fichier en cours...");
+                  const fd = new FormData();
+                  fd.append("file", uploadFile);
+                  if (isVideo) {
+                    await api.post(`/trainer/upload-video?training_id=${trainingId}`, fd);
+                  } else {
+                    // Create ebook linked to this training, then upload
+                    const ebRes = await api.post("/trainer/ebooks", {
+                      title: newCourse.title,
+                      description: newCourse.description || newCourse.title,
+                      category: newCourse.category,
+                      price: newCourse.price || 0,
+                    });
+                    const ebookId = ebRes.data?.ebook?.id;
+                    if (ebookId) {
+                      await api.post(`/trainer/upload-ebook?ebook_id=${ebookId}`, fd);
+                    }
+                  }
+                  toast.success("Fichier uploade avec succes !");
+                }
+                
+                toast.success("Formation creee avec succes !");
+                setShowCreateDialog(false);
+                setUploadFile(null);
+                setNewCourse({ title: "", description: "", category: "agriculture", level: "debutant", price: 0, type: "video", duration: "" });
+                fetchData();
+              } catch (err) {
+                console.error("Create training error:", err);
+                toast.error(err.response?.data?.detail || "Erreur lors de la creation");
+              } finally {
+                setUploading(false);
+              }
+            }}><Plus className="h-4 w-4 mr-2" /> {uploading ? "Upload en cours..." : "Publier la formation"}</Button>
           </div>
         </DialogContent>
       </Dialog>

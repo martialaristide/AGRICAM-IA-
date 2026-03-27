@@ -50,6 +50,7 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 
 ### Session 8 (27 Mar 2026)
 - [x] **Trainer File Uploads Fixed**: Fixed critical NameError in `storage.py` (EMERGENT_KEY → emergent_key). Fixed axios Content-Type header blocking multipart boundary in `api.js`. Added PPT/PPTX support to backend + frontend. Video and ebook uploads now working end-to-end.
+- [x] **Training Page Upload Fixed**: Connected ELearning.jsx file upload zone to backend API. Previously, the file input was hidden with no click handler and the submit button only added to local state. Now properly creates training via API and uploads files to Object Storage.
 
 ## P0 Remaining
 - [ ] Admin Security Dashboard (intrusion detection, monitoring)
