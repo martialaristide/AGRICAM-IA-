@@ -5,70 +5,58 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 
 ## Core Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + react-leaflet
-- **Backend**: FastAPI + MongoDB (motor async), modular routes
-- **AI**: Gemini via emergentintegrations with failover
-- **Storage**: Emergent Object Storage (videos, ebooks)
-- **Map**: OpenStreetMap + Leaflet (free, no API key)
-- **i18n**: 21 languages, per-user persistence, full RTL support for Arabic
-
-## User Roles (7)
-1. Admin, 2. Farmer, 3. Supplier, 4. Bank, 5. Seed Analyst, 6. Agronomist, 7. Trainer
+- **Backend**: FastAPI + MongoDB (motor async)
+- **AI**: Gemini via emergentintegrations
+- **Storage**: Emergent Object Storage
+- **i18n**: 21 languages, RTL Arabic
 
 ## Demo Accounts
 - Admin: admin@agricam.ai / Admin@2026
 - Farmer: agriculteur@agricam.ai / Farmer@2026
-- Supplier: fournisseur@agricam.ai / Supplier@2026
-- Bank: banque@agricam.ai / Bank@2026
 - Seed Analyst: analyste@agricam.ai / Analyst@2026
 - Agronomist: agronome@agricam.ai / Agro@2026
 - Trainer: formateur@agricam.ai / Trainer@2026
+- Supplier: fournisseur@agricam.ai / Supplier@2026
+- Bank: banque@agricam.ai / Bank@2026
 
 ## Completed Features
 
-### Session 1-3 (Previous)
-- [x] 7 role dashboards, 21+ language support
-- [x] Payment flow, Trainer role, Theme customization, Profile photo
-- [x] Camera IA rewrite, Carte Agricole, Admin security, Data export
-
-### Session 4 (19 Mar 2026)
-- [x] RTL Layout Support for Arabic
-- [x] Camera IA with external camera selection
-
-### Session 5 (25 Mar 2026)
-- [x] Complete ES/DE/ZH translations (17 sections each)
-- [x] Agribot quota limits removed, 300 demo users seeded
-- [x] Word documentation generation + download endpoint
-
 ### Session 6 (26 Mar 2026)
-- [x] **CSS Compilation Fix**: Fixed orphaned CSS variables blocking frontend build
-- [x] **15 African Languages Completed**: All 17 sections for sw, ha, yo, wo, bam, ff, ew, bas, dua, baf, ig, am, ln, mg, zu
-- [x] **Landing Page Full i18n**: HomePage.jsx, WebsiteNavbar.jsx, WebsiteFooter.jsx rewritten with 60+ translation keys
-- [x] **Enhanced Word Documents**: Professional cover pages with structured layout, TOC, tables
-- [x] **Theme Isolation**: Confirmed per-user via localStorage (no cross-user leaks)
+- [x] CSS Compilation Fix
+- [x] 15 African Languages (17 sections each)
+- [x] Landing Page Full i18n (60+ keys)
+- [x] Enhanced Word Documents (pro cover pages)
 
-## Translation Coverage - 21 Languages, 17 Sections Each
-FR, EN, ES, DE, AR (RTL), ZH, SW, HA, YO, WO, BAM, FF, EW, BAS, DUA, BAF, IG, AM, LN, MG, ZU
+### Session 7 (27 Mar 2026)
+- [x] **Advanced Seed Analysis Module**: Complete rebuild with 6 tabs
+  - Lots: Create, view all, filter by status (certifie/test/attente/rejete), change status
+  - Upload: 6 data types (images, genomes, growth indices, climate, soil, phyto)
+  - Jumeaux Numeriques: Full digital twin view with genetic profile, metadata
+  - Genomique: AI-powered gene analysis with CRISPR feasibility, expression scores
+  - Croisement: AI crossing simulator with multi-generation results, protocol guide
+  - Climat: Climate adaptation evaluation with projections 2030-2070, stress indices
+- [x] **Dropdown Visibility Fix**: bg-white text-slate-900 on Parcelles, CapteursIoT, AnalyseImages, Irrigation
+- [x] **AGRI GENIUS**: Verified naming throughout chatbot and sidebar
+- [x] **Export**: CSV and JSON report downloads from seed analysis
 
-## P0 Remaining (User Requested)
-- [ ] Admin Security Dashboard (intrusion detection, resource monitoring)
+## API Endpoints (New)
+- POST /api/digital-twin/seed-batches - Create batch
+- PUT /api/digital-twin/seed-batches/{id}/status - Update status
+- POST /api/digital-twin/crossing-simulation - AI crossing sim
+- POST /api/digital-twin/climate-adaptation - Climate evaluation
+- POST /api/digital-twin/genomic-analysis - Gene analysis
+- POST /api/digital-twin/upload-seed-data - Upload files
+- GET /api/digital-twin/export/{format} - Export CSV/JSON
+
+## P0 Remaining
+- [ ] Admin Security Dashboard (intrusion detection, monitoring)
 - [ ] Presentation Mode (guided tour)
-- [ ] Supplier self-registration with admin moderation
+- [ ] Supplier self-registration
 
 ## P1 Backlog
-- [ ] Real-time WebSocket notifications
-- [ ] Refactor server.py (>4600 lines) into modular routers
+- [ ] WebSocket notifications
+- [ ] Refactor server.py (>4600 lines)
 
-## P2 Future
-- [ ] Real Mobile Money integration (currently MOCKED)
-- [ ] Offline map caching
-- [ ] Bank role features for agricultural credit
-
-## Testing Status
-- Iteration 30: CSS fix, translations, docs API - 100% PASS
-- Iteration 31: Landing i18n, language switching, docs, theme - 100% PASS
-
-## Key API Endpoints
-- `/api/docs/list`, `/api/docs/download/{filename}` - Documentation
-- `/api/agribot/chat` - AI chat (unlimited)
-- `/api/suppliers/map` - Geospatial search
-- `/api/tracking/activity` - User activity tracking
+## Testing
+- Iteration 30-31: i18n, docs, translations - 100% PASS
+- Iteration 32: Seed analysis module, dropdowns, AGRI GENIUS - 100% PASS (Backend 9/9)
