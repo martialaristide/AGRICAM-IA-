@@ -28,6 +28,7 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
     image_base64: Optional[str] = None
+    context: Optional[str] = None
 
 class ImageAnalysisRequest(BaseModel):
     image_base64: str
@@ -111,7 +112,8 @@ async def agribot_chat(request: ChatRequest, user_id: str = "default_user"):
     result = await agribot_service.chat(
         user_id=user_id,
         message=request.message,
-        image_base64=request.image_base64
+        image_base64=request.image_base64,
+        context=request.context
     )
     return result
 

@@ -82,20 +82,25 @@ class AgribotAIService:
         
         return self.sessions[session_id]
     
-    async def chat(self, user_id: str, message: str, image_base64: Optional[str] = None) -> Dict[str, Any]:
+    async def chat(self, user_id: str, message: str, image_base64: Optional[str] = None, context: Optional[str] = None) -> Dict[str, Any]:
         """Chat avec AgriBot IA"""
         chat = self._get_or_create_session(user_id)
         
         try:
+            # Prepend language context if provided
+            full_message = message
+            if context:
+                full_message = f"{context}\n\n{message}"
+            
             if image_base64:
                 # Analyse avec image
                 image_content = ImageContent(image_base64=image_base64)
                 user_message = UserMessage(
-                    text=message,
+                    text=full_message,
                     file_contents=[image_content]
                 )
             else:
-                user_message = UserMessage(text=message)
+                user_message = UserMessage(text=full_message)
             
             response = await chat.send_message(user_message)
             
