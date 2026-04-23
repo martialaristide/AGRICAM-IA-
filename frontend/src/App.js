@@ -46,11 +46,13 @@ import AgronomistDashboard from "./pages/AgronomistDashboard";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import CarteAgricole from "./pages/CarteAgricole";
 import Documentation from "./pages/Documentation";
+import SecurityDashboard from "./pages/SecurityDashboard";
 import SubscriptionGate from "./components/SubscriptionGate";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import LeadCaptureModal from "./components/LeadCaptureModal";
 import ExitIntentPopup from "./components/ExitIntentPopup";
+import NetworkStatus from "./components/NetworkStatus";
 
 // Auth Context
 const AuthContext = createContext(null);
@@ -307,6 +309,11 @@ function App() {
               <Route path="trainer-dashboard" element={<TrainerDashboard />} />
               <Route path="carte-agricole" element={<CarteAgricole />} />
               <Route path="documentation" element={<Documentation />} />
+              <Route path="security" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <SecurityDashboard />
+                </ProtectedRoute>
+              } />
               <Route path="access-control" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AccessControl />
@@ -335,6 +342,7 @@ function App() {
         />
         
         <Toaster position="top-right" richColors />
+        <NetworkStatus />
       </AuthProvider>
     </LanguageProvider>
   </HelmetProvider>

@@ -22,6 +22,7 @@ import {
   LogOut,
   User,
   Shield,
+  ShieldAlert,
   Banknote,
   GraduationCap,
   X,
@@ -50,6 +51,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
 import LanguageSelector from "./LanguageSelector";
+import GuidedTour from "./GuidedTour";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -133,6 +135,7 @@ const getNavItems = (role, t) => {
     return [
       ...baseItems,
       { path: "/admin", icon: Shield, label: t("nav.admin") || "Administration" },
+      { path: "/security", icon: ShieldAlert, label: t("nav.security") || "Centre de Securite" },
       { path: "/parcelles", icon: Map, label: t("nav.parcels") },
       { path: "/capteurs", icon: Wifi, label: t("nav.sensors") },
       { path: "/drones-avance", icon: Plane, label: t("nav.drones") },
@@ -288,6 +291,13 @@ const Layout = () => {
   
   const navItems = getNavItems(user?.role, t);
   const roleBadge = getRoleBadge(user?.role);
+  
+  // Guided Tour
+  const [showTour, setShowTour] = useState(false);
+  useEffect(() => {
+    const done = localStorage.getItem("agricam_tour_done");
+    if (!done) { const timer = setTimeout(() => setShowTour(true), 2000); return () => clearTimeout(timer); }
+  }, []);
   
   // Exit intent detection
   const [showExitModal, setShowExitModal] = useState(false);
@@ -583,6 +593,7 @@ const Layout = () => {
         </footer>
       </main>
       <ExitIntentModal isOpen={showExitModal} onClose={() => setShowExitModal(false)} />
+      {showTour && <GuidedTour onComplete={() => setShowTour(false)} />}
     </div>
   );
 };

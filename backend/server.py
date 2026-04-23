@@ -358,13 +358,30 @@ async def register(data: UserCreate):
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
-async def login(data: UserLogin):
+async def login(data: UserLogin, request: Request):
     user = await db.users.find_one({"email": data.email})
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+    
     if not user or not verify_password(data.password, user.get("password_hash", "")):
+        # Log failed login
+        await db.security_logs.insert_one({
+            "action": "login_failed", "email": data.email, "ip": client_ip,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
     
+    if user.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Compte bloque. Contactez l'administrateur.")
+    
     if not user.get("is_active", True):
-        raise HTTPException(status_code=401, detail="Compte désactivé")
+        raise HTTPException(status_code=401, detail="Compte desactive")
+    
+    # Log successful login
+    await db.security_logs.insert_one({
+        "action": "login_success", "user_id": user["id"], "email": data.email,
+        "ip": client_ip, "role": user["role"],
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
     
     token = create_token(user["id"], user["role"], user["email"])
     
@@ -483,7 +500,9 @@ async def get_payment_status(session_id: str, user = Depends(get_current_user)):
                 {"id": user["id"]},
                 {"$set": {
                     "subscription_type": subscription_type,
-                    "subscription_end": subscription_end
+                    "subscription_end": subscription_end,
+                    "ai_tokens_unlimited": True,
+                    "ai_token_balance": 999999
                 }}
             )
         
@@ -1671,6 +1690,47 @@ async def block_user(user_id: str, user = Depends(require_roles([UserRole.ADMIN]
 async def unblock_user(user_id: str, user = Depends(require_roles([UserRole.ADMIN]))):
     await db.users.update_one({"id": user_id}, {"$set": {"is_blocked": False, "is_active": True}})
     return {"message": "Utilisateur debloque"}
+
+# =============================================================================
+# ADMIN SECURITY DASHBOARD
+# =============================================================================
+
+@api_router.get("/admin/security/dashboard")
+async def admin_security_dashboard(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Get security dashboard data"""
+    total_users = await db.users.count_documents({})
+    blocked_users = await db.users.count_documents({"is_blocked": True})
+    active_sessions = await db.users.count_documents({"is_active": True})
+    
+    # Recent security logs
+    logs_cursor = db.security_logs.find({}, {"_id": 0}).sort("timestamp", -1).limit(50)
+    security_logs = await logs_cursor.to_list(50)
+    
+    # Recent activity (last 24h)
+    from_time = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    recent_activity = await db.activity_logs.count_documents({"timestamp": {"$gte": from_time}})
+    
+    # Login attempts
+    login_cursor = db.security_logs.find({"action": {"$in": ["login_success", "login_failed", "block", "unblock"]}}, {"_id": 0}).sort("timestamp", -1).limit(20)
+    login_logs = await login_cursor.to_list(20)
+    
+    # Suspicious patterns (multiple failed logins from same IP)
+    suspicious_cursor = db.security_logs.find({"action": "login_failed"}, {"_id": 0}).sort("timestamp", -1).limit(10)
+    suspicious = await suspicious_cursor.to_list(10)
+    
+    return {
+        "stats": {
+            "total_users": total_users,
+            "blocked_users": blocked_users,
+            "active_sessions": active_sessions,
+            "recent_activity_24h": recent_activity,
+            "security_score": max(0, 100 - (blocked_users * 5) - (len(suspicious) * 10)),
+        },
+        "security_logs": security_logs,
+        "login_activity": login_logs,
+        "suspicious_activity": suspicious,
+        "blocked_list": await (db.users.find({"is_blocked": True}, {"_id": 0, "password_hash": 0}).to_list(50)),
+    }
 
 # =============================================================================
 # API ROUTES - Supplier Map (Cartographie Intelligente)

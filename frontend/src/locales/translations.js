@@ -32,7 +32,12 @@ export const translations = {
       elearning: "Formation",
       financial: "Finances",
       accessControl: "Controle Acces",
-      database: "Base de Donnees"
+      database: "Base de Donnees",
+      security: "Centre de Securite"
+    },
+    security: {
+      title: "Centre de Securite",
+      subtitle: "Surveillance et protection de la plateforme"
     },
     // Landing page
     landing: {
@@ -117,6 +122,41 @@ export const translations = {
       footerCopyright: "Tous droits reserves.",
       precision: "Precision",
       maladies: "Maladies",
+      login: "Connexion",
+      register: "S'inscrire",
+      featureIrrigation: "Irrigation Intelligente",
+      featureIrrigationDesc: "Optimisation automatique de l'arrosage avec capteurs IoT et previsions meteo.",
+      featureAnalytics: "Analytics Avances",
+      featureAnalyticsDesc: "Tableaux de bord, prediction de rendement et rapports exportables.",
+      featureMarketplace: "Marketplace",
+      featureMarketplaceDesc: "Achetez et vendez vos produits agricoles en toute securite.",
+      pricingTitle: "Tarifs adaptes a vos besoins",
+      pricingSubtitle: "Commencez gratuitement et evoluez selon vos besoins",
+      perMonth: "/mois",
+      popular: "Populaire",
+      choosePlan: "Choisir",
+      priceFree1: "1 parcelle",
+      priceFree2: "Donnees satellite",
+      priceFree3: "Alertes basiques",
+      priceFree4: "Marketplace (consultation)",
+      priceBasic1: "3 parcelles",
+      priceBasic2: "Meteo avancee",
+      priceBasic3: "Analyse IA basique",
+      priceBasic4: "Support email",
+      priceBasic5: "Export donnees",
+      pricePrem1: "Parcelles illimitees",
+      pricePrem2: "Capteurs IoT inclus",
+      pricePrem3: "Drones + IA avancee",
+      pricePrem4: "Support 24/7",
+      pricePrem5: "Analytics complets",
+      pricePrem6: "Prediction rendement",
+      ctaSubtitle: "Rejoignez des milliers d'agriculteurs qui utilisent deja AGRICAM IA",
+      ctaButton: "Creer un compte gratuit",
+      developedBy: "Developpe par",
+      allRights: "Tous droits reserves.",
+      analysisInProgress: "Analyse en cours",
+      parcelName: "Parcelle Nord - Ble",
+      cropHealth: "Sante culture",
     },
     // Common
     common: {
@@ -604,7 +644,12 @@ export const translations = {
       elearning: "Training",
       financial: "Finances",
       accessControl: "Access Control",
-      database: "Database"
+      database: "Database",
+      security: "Security Center"
+    },
+    security: {
+      title: "Security Center",
+      subtitle: "Platform monitoring and protection"
     },
     landing: {
       heroTitle1: "Smart",
