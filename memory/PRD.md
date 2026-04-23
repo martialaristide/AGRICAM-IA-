@@ -52,6 +52,12 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - [x] **Trainer File Uploads Fixed**: Fixed critical NameError in `storage.py` (EMERGENT_KEY → emergent_key). Fixed axios Content-Type header blocking multipart boundary in `api.js`. Added PPT/PPTX support to backend + frontend. Video and ebook uploads now working end-to-end.
 - [x] **Training Page Upload Fixed**: Connected ELearning.jsx file upload zone to backend API. Previously, the file input was hidden with no click handler and the submit button only added to local state. Now properly creates training via API and uploads files to Object Storage.
 - [x] **AGRI GENIUS Voice**: Added free browser-based speech-to-text (SpeechRecognition) and text-to-speech (SpeechSynthesis) to AGRI GENIUS chatbot. Microphone button, auto-speak toggle, per-message replay. All responses now sent in user's selected language via context injection. Mobile responsive with overlay sidebar.
+- [x] **PWA Offline/Online**: Registered Service Worker in index.js, cache static assets + API routes for offline use. Added NetworkStatus component showing online/offline banner.
+- [x] **Landing Page i18n**: Rewrote LandingPage.jsx to use translations from LanguageContext. Added LanguageSelector in navbar. Added 30+ new translation keys for pricing, CTA, features.
+- [x] **Admin Security Dashboard**: Created /security route with SecurityDashboard.jsx. Backend endpoint /api/admin/security/dashboard returns stats (score, users, blocked, activity). Login logging (success/failed) in security_logs collection. 4 tabs: Vue d'ensemble, Logs, Bloques, Menaces.
+- [x] **Token Auto-Deduction**: Updated payment status handler to set ai_tokens_unlimited=True and ai_token_balance=999999 on successful payment.
+- [x] **Guided Tour**: Created GuidedTour.jsx with 7 interactive steps targeting nav elements. Shows on first visit, dismissable, with progress bar.
+- [x] **Blocked User Protection**: Login now checks is_blocked flag and returns 403 if blocked.
 
 ## P0 Remaining
 - [ ] Admin Security Dashboard (intrusion detection, monitoring)
