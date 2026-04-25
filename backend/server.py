@@ -4653,6 +4653,7 @@ from routes.blockchain import router as blockchain_router
 from routes.epidemiology import router as epidemiology_router
 from routes.supplier_analytics import router as supplier_analytics_router
 from routes.trainer import router as trainer_router
+from routes.drone_manager import router as drone_router
 
 app.include_router(agriscore_router)
 app.include_router(digital_twin_router)
@@ -4661,6 +4662,7 @@ app.include_router(blockchain_router)
 app.include_router(epidemiology_router)
 app.include_router(supplier_analytics_router)
 app.include_router(trainer_router)
+app.include_router(drone_router)
 
 app.include_router(api_router)
 

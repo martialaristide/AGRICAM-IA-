@@ -39,6 +39,25 @@ export const translations = {
       title: "Centre de Securite",
       subtitle: "Surveillance et protection de la plateforme"
     },
+    tour: {
+      dashboard: "Dashboard",
+      dashboardDesc: "Vue d'ensemble de votre exploitation avec statistiques en temps reel.",
+      parcelles: "Parcelles",
+      parcellesDesc: "Gerez vos parcelles agricoles, ajoutez des cultures et suivez leur evolution.",
+      agribot: "AGRI GENIUS",
+      agribotDesc: "Assistant IA intelligent avec commande vocale. Posez des questions ou envoyez des images.",
+      capteurs: "Capteurs IoT",
+      capteursDesc: "Surveillez vos capteurs de temperature, humidite et qualite du sol en temps reel.",
+      formation: "Formation",
+      formationDesc: "Accedez aux cours, videos et ebooks pour ameliorer vos techniques agricoles.",
+      alerts: "Alertes",
+      alertsDesc: "Recevez des alertes climatiques en temps reel pour proteger vos cultures.",
+      profile: "Profil",
+      profileDesc: "Gerez votre profil, changez de theme et personnalisez votre experience.",
+      back: "Retour",
+      next: "Suivant",
+      finish: "Terminer"
+    },
     // Landing page
     landing: {
       heroTitle1: "L'Agriculture",
@@ -650,6 +669,25 @@ export const translations = {
     security: {
       title: "Security Center",
       subtitle: "Platform monitoring and protection"
+    },
+    tour: {
+      dashboard: "Dashboard",
+      dashboardDesc: "Overview of your farm with real-time statistics.",
+      parcelles: "Parcels",
+      parcellesDesc: "Manage your agricultural parcels, add crops and track their progress.",
+      agribot: "AGRI GENIUS",
+      agribotDesc: "Intelligent AI assistant with voice commands. Ask questions or send images for analysis.",
+      capteurs: "IoT Sensors",
+      capteursDesc: "Monitor your temperature, humidity and soil quality sensors in real time.",
+      formation: "Training",
+      formationDesc: "Access courses, videos and ebooks to improve your farming techniques.",
+      alerts: "Alerts",
+      alertsDesc: "Receive real-time weather alerts to protect your crops.",
+      profile: "Profile",
+      profileDesc: "Manage your profile, change theme and customize your experience.",
+      back: "Back",
+      next: "Next",
+      finish: "Finish"
     },
     landing: {
       heroTitle1: "Smart",

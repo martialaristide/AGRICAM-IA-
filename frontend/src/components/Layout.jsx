@@ -35,7 +35,8 @@ import {
   Database,
   Package,
   MapPin,
-  FileText
+  FileText,
+  Navigation
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -140,6 +141,7 @@ const getNavItems = (role, t) => {
       { path: "/capteurs", icon: Wifi, label: t("nav.sensors") },
       { path: "/drones-avance", icon: Plane, label: t("nav.drones") },
       { path: "/robots-avance", icon: Bot, label: t("nav.robots") },
+      { path: "/drone-dji", icon: Navigation, label: "DJI Mini 3 Pro" },
       { path: "/satellites", icon: Satellite, label: t("nav.satellites") || "Satellites" },
       { path: "/agribot-ia", icon: ScanSearch, label: t("nav.agribot") },
       { path: "/analyse-avancee", icon: Microscope, label: t("nav.advancedAnalysis") || "Analyse Avancee" },

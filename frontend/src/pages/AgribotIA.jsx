@@ -84,23 +84,78 @@ const AgribotIA = () => {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages.length, loading]);
 
   // Init SpeechRecognition
+  const pendingSendRef = useRef(false);
+  
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = getSpeechLang(language);
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results).map(r => r[0].transcript).join("");
-        setInput(transcript);
-      };
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = () => setIsListening(false);
-      recognitionRef.current = recognition;
+    if (!SpeechRecognition) {
+      console.warn("[AGRI GENIUS] SpeechRecognition not available in this browser");
+      return;
     }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.lang = getSpeechLang(language);
+    
+    recognition.onresult = (event) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      // Show interim results in input
+      setInput(finalTranscript || interimTranscript);
+      // Mark for auto-send when we get a final result
+      if (finalTranscript) {
+        pendingSendRef.current = true;
+      }
+    };
+    
+    recognition.onend = () => {
+      setIsListening(false);
+      // Auto-send if we got a final transcript
+      if (pendingSendRef.current) {
+        pendingSendRef.current = false;
+        // Small delay to let state update
+        setTimeout(() => {
+          const sendBtn = document.querySelector('[data-testid="send-btn"]');
+          if (sendBtn && !sendBtn.disabled) sendBtn.click();
+        }, 300);
+      }
+    };
+    
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      console.error("[AGRI GENIUS] Speech error:", event.error);
+      if (event.error === "not-allowed") {
+        toast.error("Microphone bloque. Autorisez l'acces au micro dans les parametres du navigateur.");
+      } else if (event.error === "no-speech") {
+        toast.info("Aucune voix detectee. Reessayez en parlant plus fort.");
+      } else if (event.error === "network") {
+        toast.error("Erreur reseau. La reconnaissance vocale necessite une connexion internet.");
+      } else {
+        toast.error("Erreur micro: " + event.error);
+      }
+    };
+    
+    recognitionRef.current = recognition;
     return () => { recognitionRef.current?.abort(); };
   }, [language]);
+
+  // Text-to-Speech - load voices
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices(); // Trigger voice loading
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+  }, []);
 
   // Text-to-Speech
   const speakText = useCallback((text) => {
@@ -124,13 +179,30 @@ const AgribotIA = () => {
 
   const stopSpeaking = () => { window.speechSynthesis?.cancel(); setIsSpeaking(false); };
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) { toast.error("Reconnaissance vocale non supportee par ce navigateur"); return; }
-    if (isListening) { recognitionRef.current.stop(); } 
-    else {
+  const toggleListening = async () => {
+    if (!recognitionRef.current) { 
+      toast.error("Reconnaissance vocale non supportee. Utilisez Chrome, Edge ou Safari."); 
+      return; 
+    }
+    if (isListening) { 
+      recognitionRef.current.stop(); 
+      return;
+    }
+    try {
+      // Request mic permission explicitly first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
       recognitionRef.current.lang = getSpeechLang(language);
+      pendingSendRef.current = false;
       recognitionRef.current.start();
       setIsListening(true);
+      toast.info("Parlez maintenant...", { duration: 2000 });
+    } catch (err) {
+      console.error("[AGRI GENIUS] Mic start error:", err);
+      if (err.name === "NotAllowedError") {
+        toast.error("Acces au microphone refuse. Autorisez le micro dans les parametres du navigateur.");
+      } else {
+        toast.error("Impossible d'activer le microphone: " + err.message);
+      }
     }
   };
 

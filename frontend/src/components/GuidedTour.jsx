@@ -2,31 +2,77 @@ import React, { useState, useEffect, useCallback } from "react";
 import { X, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const TOUR_STEPS = [
-  { target: '[data-testid="nav-dashboard"]', title: "Dashboard", desc: "Vue d'ensemble de votre exploitation avec statistiques en temps reel.", position: "right" },
-  { target: '[data-testid="nav-parcelles"]', title: "Parcelles", desc: "Gerez vos parcelles agricoles, ajoutez des cultures et suivez leur evolution.", position: "right" },
-  { target: '[data-testid="nav-agribot-ia"]', title: "AGRI GENIUS", desc: "Votre assistant IA intelligent. Posez des questions, envoyez des images pour analyse, et utilisez la commande vocale.", position: "right" },
-  { target: '[data-testid="nav-capteurs"]', title: "Capteurs IoT", desc: "Surveillez vos capteurs de temperature, humidite et qualite du sol en temps reel.", position: "right" },
-  { target: '[data-testid="nav-formation"]', title: "Formation", desc: "Accedez aux cours, videos et ebooks pour ameliorer vos techniques agricoles.", position: "right" },
-  { target: '[data-testid="notification-bell"]', title: "Alertes Meteo", desc: "Recevez des alertes climatiques en temps reel pour proteger vos cultures.", position: "bottom" },
-  { target: '[data-testid="user-menu-btn"]', title: "Profil", desc: "Gerez votre profil, changez de theme et personnalisez votre experience.", position: "bottom" },
+const getTourSteps = (t) => [
+  { 
+    target: '[data-testid="nav-dashboard"]', 
+    title: t("tour.dashboard") || "Dashboard", 
+    desc: t("tour.dashboardDesc") || "Vue d'ensemble de votre exploitation avec statistiques en temps reel.",
+    position: "right" 
+  },
+  { 
+    target: '[data-testid="nav-parcelles"]', 
+    title: t("tour.parcelles") || "Parcelles", 
+    desc: t("tour.parcellesDesc") || "Gerez vos parcelles agricoles, ajoutez des cultures et suivez leur evolution.",
+    position: "right" 
+  },
+  { 
+    target: '[data-testid="nav-agribot-ia"]', 
+    title: t("tour.agribot") || "AGRI GENIUS", 
+    desc: t("tour.agribotDesc") || "Assistant IA intelligent avec commande vocale. Posez des questions, envoyez des images pour analyse.",
+    position: "right" 
+  },
+  { 
+    target: '[data-testid="nav-capteurs"]', 
+    title: t("tour.capteurs") || "Capteurs IoT", 
+    desc: t("tour.capteursDesc") || "Surveillez vos capteurs de temperature, humidite et qualite du sol en temps reel.",
+    position: "right" 
+  },
+  { 
+    target: '[data-testid="nav-formation"]', 
+    title: t("tour.formation") || "Formation", 
+    desc: t("tour.formationDesc") || "Accedez aux cours, videos et ebooks pour ameliorer vos techniques agricoles.",
+    position: "right" 
+  },
+  { 
+    target: '[data-testid="notification-bell"]', 
+    title: t("tour.alerts") || "Alertes", 
+    desc: t("tour.alertsDesc") || "Recevez des alertes climatiques en temps reel pour proteger vos cultures.",
+    position: "bottom" 
+  },
+  { 
+    target: '[data-testid="user-menu-btn"]', 
+    title: t("tour.profile") || "Profil", 
+    desc: t("tour.profileDesc") || "Gerez votre profil, changez de theme et personnalisez votre experience.",
+    position: "bottom" 
+  },
 ];
 
 const GuidedTour = ({ onComplete }) => {
+  const { t } = useLanguage();
+  const steps = getTourSteps(t);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [visible, setVisible] = useState(true);
 
   const updatePosition = useCallback(() => {
-    const step = TOUR_STEPS[currentStep];
+    const step = steps[currentStep];
+    if (!step) return;
     const el = document.querySelector(step.target);
     if (el) {
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
       el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+      // Skip steps with missing targets
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(s => s + 1);
+      } else {
+        finish();
+      }
     }
-  }, [currentStep]);
+  }, [currentStep, steps]);
 
   useEffect(() => {
     updatePosition();
@@ -34,17 +80,30 @@ const GuidedTour = ({ onComplete }) => {
     return () => window.removeEventListener("resize", updatePosition);
   }, [updatePosition]);
 
-  const next = () => { if (currentStep < TOUR_STEPS.length - 1) setCurrentStep(s => s + 1); else finish(); };
+  const next = () => { if (currentStep < steps.length - 1) setCurrentStep(s => s + 1); else finish(); };
   const prev = () => { if (currentStep > 0) setCurrentStep(s => s - 1); };
   const finish = () => { setVisible(false); localStorage.setItem("agricam_tour_done", "true"); onComplete?.(); };
 
   if (!visible || !targetRect) return null;
 
-  const step = TOUR_STEPS[currentStep];
-  const tooltipStyle = {};
-  if (step.position === "right") { tooltipStyle.top = targetRect.top; tooltipStyle.left = targetRect.right + 16; }
-  else if (step.position === "bottom") { tooltipStyle.top = targetRect.bottom + 12; tooltipStyle.left = Math.max(16, targetRect.left - 100); }
-  else { tooltipStyle.top = targetRect.top; tooltipStyle.left = targetRect.left - 320; }
+  const step = steps[currentStep];
+  
+  // Smart positioning that stays within viewport
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const tooltipW = Math.min(320, vw - 32);
+  
+  let top, left;
+  if (step.position === "right" && targetRect.right + tooltipW + 20 < vw) {
+    top = Math.max(16, Math.min(targetRect.top, vh - 200));
+    left = targetRect.right + 16;
+  } else if (step.position === "bottom" || targetRect.right + tooltipW + 20 >= vw) {
+    top = Math.min(targetRect.bottom + 12, vh - 200);
+    left = Math.max(16, Math.min(targetRect.left, vw - tooltipW - 16));
+  } else {
+    top = Math.max(16, Math.min(targetRect.top, vh - 200));
+    left = Math.max(16, targetRect.left - tooltipW - 16);
+  }
 
   return (
     <>
@@ -56,30 +115,33 @@ const GuidedTour = ({ onComplete }) => {
         style={{ top: targetRect.top - 4, left: targetRect.left - 4, width: targetRect.width + 8, height: targetRect.height + 8 }} />
       
       {/* Tooltip */}
-      <div className="fixed z-[92] w-72 sm:w-80 bg-[#111827] border border-emerald-500/30 rounded-xl shadow-2xl p-4 transition-all duration-300"
-        style={tooltipStyle} data-testid="tour-tooltip">
+      <div className="fixed z-[92] bg-[#111827] border border-emerald-500/30 rounded-xl shadow-2xl p-4 transition-all duration-300"
+        style={{ top, left, width: tooltipW }} data-testid="tour-tooltip">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-emerald-400" />
             <span className="text-sm font-semibold text-emerald-400">{step.title}</span>
           </div>
-          <button onClick={finish} className="text-slate-500 hover:text-white"><X className="h-4 w-4" /></button>
+          <button onClick={finish} className="text-slate-500 hover:text-white" data-testid="tour-close"><X className="h-4 w-4" /></button>
         </div>
         <p className="text-sm text-slate-300 mb-4">{step.desc}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500">{currentStep + 1} / {TOUR_STEPS.length}</span>
+          <span className="text-xs text-slate-500">{currentStep + 1} / {steps.length}</span>
           <div className="flex gap-2">
             {currentStep > 0 && (
-              <Button size="sm" variant="ghost" onClick={prev} className="text-slate-400 h-8 px-3"><ArrowLeft className="h-3 w-3 mr-1" /> Retour</Button>
+              <Button size="sm" variant="ghost" onClick={prev} className="text-slate-400 h-8 px-3">
+                <ArrowLeft className="h-3 w-3 mr-1" /> {t("tour.back") || "Retour"}
+              </Button>
             )}
             <Button size="sm" onClick={next} className="bg-emerald-600 hover:bg-emerald-500 h-8 px-3" data-testid="tour-next">
-              {currentStep === TOUR_STEPS.length - 1 ? "Terminer" : "Suivant"} <ArrowRight className="h-3 w-3 ml-1" />
+              {currentStep === steps.length - 1 ? (t("tour.finish") || "Terminer") : (t("tour.next") || "Suivant")} 
+              <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           </div>
         </div>
         {/* Progress bar */}
         <div className="mt-3 h-1 bg-slate-700 rounded-full overflow-hidden">
-          <div className="h-full bg-emerald-400 rounded-full transition-all duration-300" style={{ width: `${((currentStep + 1) / TOUR_STEPS.length) * 100}%` }} />
+          <div className="h-full bg-emerald-400 rounded-full transition-all duration-300" style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }} />
         </div>
       </div>
     </>

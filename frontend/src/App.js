@@ -37,6 +37,7 @@ import PaymentFailure from "./pages/PaymentFailure";
 import DevAnalytics from "./pages/DevAnalytics";
 import AgribotIA from "./pages/AgribotIA";
 import GestionDronesAvance from "./pages/GestionDronesAvance";
+import DroneManagement from "./pages/DroneManagement";
 import GestionRobotsAvance from "./pages/GestionRobotsAvance";
 import AnalyseAvancee from "./pages/AnalyseAvancee";
 import AccessControl from "./pages/AccessControl";
@@ -304,6 +305,7 @@ function App() {
               } />
               <Route path="agribot-ia" element={<AgribotIA />} />
               <Route path="drones-avance" element={<GestionDronesAvance />} />
+              <Route path="drone-dji" element={<SubscriptionGate><DroneManagement /></SubscriptionGate>} />
               <Route path="robots-avance" element={<GestionRobotsAvance />} />
               <Route path="analyse-avancee" element={<AnalyseAvancee />} />
               <Route path="trainer-dashboard" element={<TrainerDashboard />} />
