@@ -58,6 +58,14 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
 - [x] **Token Auto-Deduction**: Updated payment status handler to set ai_tokens_unlimited=True and ai_token_balance=999999 on successful payment.
 - [x] **Guided Tour**: Created GuidedTour.jsx with 7 interactive steps targeting nav elements. Shows on first visit, dismissable, with progress bar.
 - [x] **Blocked User Protection**: Login now checks is_blocked flag and returns 403 if blocked.
+- [x] **AGRI GENIUS Micro Fix**: Improved SpeechRecognition with explicit mic permission request, error messages (not-allowed, no-speech, network), auto-send after final transcript, voice loading for TTS.
+- [x] **Guided Tour i18n**: Tour steps now translated via LanguageContext. Added tour translation keys for FR and EN. Smart positioning to stay within viewport.
+- [x] **DJI Mini 3 Pro Module**: Complete drone management dashboard at /drone-dji with:
+  - Fleet management (register/view drones, battery/status monitoring)
+  - Mission planning (create missions with altitude, speed, overlap, waypoints)
+  - Live telemetry simulation (real-time GPS, altitude, battery, wind, temperature)
+  - Photo gallery with AI analysis (NDVI, health status, disease detection, crop identification)
+  - Backend API at /api/drone-manager/ with 8 endpoints
 
 ## P0 Remaining
 - [ ] Admin Security Dashboard (intrusion detection, monitoring)
