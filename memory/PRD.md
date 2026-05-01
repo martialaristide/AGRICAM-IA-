@@ -68,15 +68,36 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
   - Backend API at /api/drone-manager/ with 8 endpoints
 
 ## P0 Remaining
-- [ ] Admin Security Dashboard (intrusion detection, monitoring)
-- [ ] Presentation Mode (guided tour)
-- [ ] Supplier self-registration
+- [ ] Supplier self-registration with admin moderation
 
 ## P1 Backlog
 - [ ] WebSocket notifications
-- [ ] Refactor server.py (>4600 lines)
+- [ ] Real drone/robot connection guide (replace simulation)
+- [ ] Refactor server.py (>4700 lines) into /routes modules
 
 ## Testing
 - Iteration 30-31: i18n, docs, translations - 100% PASS
 - Iteration 32: Seed analysis module, dropdowns, AGRI GENIUS - 100% PASS (Backend 9/9)
 - Session 8: Trainer upload fix verified via curl (video + ebook + download) - ALL PASS
+- Session 9 (1 May 2026): NetWalletPay integration verified via live curl tests
+  - Token endpoint OK (200) with `primary_key + Email + grant_type=primary_key`
+  - /providers endpoint live (4 providers: MTN, Orange, NetWallet, EU)
+  - /countries endpoint live (15 countries)
+  - /request-payment correctly rejects invalid phone (NetWalletPay error 4007)
+
+## Session 9 (1 May 2026) - NetWalletPay Mobile Money Integration
+- [x] **Real NetWalletPay API integration** (replacing Stripe mock):
+  - Live token authentication via `POST /api/v1/token` (primary_key + Email + grant_type)
+  - Token caching (15 min expiry per NetWalletPay spec)
+  - Collection request via `POST /api/v1/global/collection/request-payment`
+  - Webhook handler at `POST /api/webhook/netwalletpay` with X-CallbackToken
+  - SHA-256 hash support (toggleable via NETWALLETPAY_USE_HASH env var)
+  - Phone number normalization (auto-prefix 237 for Cameroon)
+  - Real error handling with NetWalletPay error codes (4007, etc.)
+- [x] **Credentials configured in .env**:
+  - NETWALLETPAY_PRIMARY_KEY, NETWALLETPAY_SECONDARY_KEY
+  - NETWALLETPAY_MERCHANT_ID, NETWALLETPAY_EMAIL
+  - NETWALLETPAY_BASE_URL=https://netwalletpay.com
+  - PUBLIC_BACKEND_URL for webhook callback
+- [x] **Frontend** (`/paiements`): existing UI works as-is, calls new live endpoints
+- [x] **Subscription auto-activation** on successful payment (via webhook + status check)

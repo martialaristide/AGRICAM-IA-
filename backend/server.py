@@ -4536,9 +4536,10 @@ except ImportError as e:
 
 # Import and include NetWalletPay payment routes
 try:
-    from routes.payments import router as payments_router, init_db as payments_init
+    from routes.payments import router as payments_router, webhook_router as nwp_webhook_router, init_db as payments_init
     payments_init(db, get_current_user)
     app.include_router(payments_router)
+    app.include_router(nwp_webhook_router)
     logger.info("NetWalletPay payment routes loaded successfully")
 except ImportError as e:
     logger.warning(f"Payment routes not loaded: {e}")
