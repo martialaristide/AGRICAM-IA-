@@ -135,7 +135,7 @@ const SplashScreen = ({ onComplete }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 2500);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
@@ -168,10 +168,7 @@ const SplashScreen = ({ onComplete }) => {
 };
 
 function App() {
-  const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash once per browser session
-    return !sessionStorage.getItem("agricam_splash_shown");
-  });
+  const [showSplash, setShowSplash] = useState(false);  // DISABLED: splash was blocking app rendering
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [showExitIntent, setShowExitIntent] = useState(false);
 

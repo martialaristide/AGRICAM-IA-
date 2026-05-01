@@ -1,16 +1,12 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'agricam-ia-v1';
+const CACHE_NAME = 'agricam-ia-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/offline.html',
-  'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap',
-  'https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png'
 ];
 
 // API routes to cache for offline access
@@ -32,6 +28,13 @@ self.addEventListener('install', (event) => {
     })
   );
   self.skipWaiting();
+});
+
+// Listen for SKIP_WAITING message from app
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate event - clean up old caches
@@ -101,7 +104,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle static assets with cache-first strategy
+  // CRITICAL: Network-first for app shell, JS bundles, CSS, and HTML navigations
+  // (otherwise stale bundle.js will be served forever, causing splash freeze)
+  const isAppShell = request.mode === 'navigate'
+    || url.pathname === '/'
+    || url.pathname === '/index.html'
+    || url.pathname.startsWith('/static/js/')
+    || url.pathname.startsWith('/static/css/')
+    || url.pathname.endsWith('.js')
+    || url.pathname.endsWith('.css')
+    || url.pathname.endsWith('.html');
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
+    );
+    return;
+  }
+
+  // Handle other static assets (images, fonts) with cache-first strategy
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) {
