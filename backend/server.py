@@ -1649,6 +1649,138 @@ async def get_admin_dashboard(user = Depends(require_roles([UserRole.ADMIN]))):
         "transactions_month": transactions_month
     }
 
+
+@api_router.get("/admin/analytics-presentation")
+async def get_admin_analytics(user = Depends(require_roles([UserRole.ADMIN]))):
+    """Rich analytics for admin dashboard / presentation — aggregations across collections."""
+    
+    # KPIs globaux
+    total_users = await db.users.count_documents({})
+    active_users = await db.users.count_documents({"is_active": True})
+    total_parcels = await db.parcels.count_documents({})
+    total_sensors = await db.sensors.count_documents({})
+    sensors_active = await db.sensors.count_documents({"status": "actif"})
+    
+    # Surface totale
+    surface_pipeline = [{"$group": {"_id": None, "total": {"$sum": "$area_hectares"}}}]
+    surface_result = await db.parcels.aggregate(surface_pipeline).to_list(1)
+    total_surface = round(surface_result[0]["total"] if surface_result else 0, 1)
+    
+    # Revenu (paiements réussis)
+    revenue_pipeline = [
+        {"$match": {"status": "success"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}, "count": {"$sum": 1}}}
+    ]
+    rev_result = await db.payments.aggregate(revenue_pipeline).to_list(1)
+    total_revenue = rev_result[0]["total"] if rev_result else 0
+    successful_payments = rev_result[0]["count"] if rev_result else 0
+    
+    # Distribution par rôle
+    role_pipeline = [{"$group": {"_id": "$role", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]
+    role_dist = await db.users.aggregate(role_pipeline).to_list(20)
+    role_distribution = [{"role": r["_id"], "count": r["count"]} for r in role_dist if r["_id"]]
+    
+    # Distribution par pays
+    country_pipeline = [
+        {"$match": {"country": {"$exists": True, "$ne": None}}},
+        {"$group": {"_id": "$country", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    country_dist = await db.users.aggregate(country_pipeline).to_list(20)
+    country_distribution = [{"country": c["_id"], "count": c["count"]} for c in country_dist]
+    
+    # Distribution par type d'abonnement
+    sub_pipeline = [{"$group": {"_id": "$subscription_type", "count": {"$sum": 1}}}]
+    sub_dist = await db.users.aggregate(sub_pipeline).to_list(10)
+    subscription_distribution = [{"type": s["_id"] or "freemium", "count": s["count"]} for s in sub_dist]
+    
+    # Top cultures
+    crop_pipeline = [
+        {"$match": {"crop_type": {"$exists": True, "$ne": None}}},
+        {"$group": {"_id": "$crop_type", "count": {"$sum": 1}, "surface": {"$sum": "$area_hectares"}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    crop_dist = await db.parcels.aggregate(crop_pipeline).to_list(10)
+    top_crops = [{"crop": c["_id"], "count": c["count"], "surface": round(c.get("surface", 0), 1)} for c in crop_dist]
+    
+    # Statut parcelles
+    status_pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    status_dist = await db.parcels.aggregate(status_pipeline).to_list(10)
+    parcel_status = [{"status": s["_id"] or "unknown", "count": s["count"]} for s in status_dist]
+    
+    # Croissance utilisateurs sur 12 mois
+    twelve_months_ago = datetime.now(timezone.utc) - timedelta(days=365)
+    growth_pipeline = [
+        {"$match": {"created_at": {"$gte": twelve_months_ago.isoformat()}}},
+        {"$group": {
+            "_id": {"$substr": ["$created_at", 0, 7]},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    growth_data = await db.users.aggregate(growth_pipeline).to_list(13)
+    user_growth = [{"month": g["_id"], "count": g["count"]} for g in growth_data]
+    
+    # Revenu mensuel
+    rev_growth_pipeline = [
+        {"$match": {"status": "success", "created_at": {"$gte": twelve_months_ago.isoformat()}}},
+        {"$group": {
+            "_id": {"$substr": ["$created_at", 0, 7]},
+            "amount": {"$sum": "$amount"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    rev_growth_data = await db.payments.aggregate(rev_growth_pipeline).to_list(13)
+    revenue_growth = [{"month": r["_id"], "amount": r["amount"], "count": r["count"]} for r in rev_growth_data]
+    
+    # Alertes par sévérité
+    alert_pipeline = [{"$group": {"_id": "$severity", "count": {"$sum": 1}}}]
+    alert_dist = await db.alerts.aggregate(alert_pipeline).to_list(10)
+    alert_severity = [{"severity": a["_id"] or "unknown", "count": a["count"]} for a in alert_dist]
+    
+    # Total alertes + non lues
+    total_alerts = await db.alerts.count_documents({})
+    unread_alerts = await db.alerts.count_documents({"is_read": False})
+    
+    # Marketplace
+    total_orders = await db.orders.count_documents({})
+    delivered_orders = await db.orders.count_documents({"status": "delivered"})
+    orders_revenue_pipeline = [
+        {"$match": {"status": {"$in": ["delivered", "shipped"]}}},
+        {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+    ]
+    orders_rev = await db.orders.aggregate(orders_revenue_pipeline).to_list(1)
+    marketplace_gmv = orders_rev[0]["total"] if orders_rev else 0
+    
+    # Performance par pays (mix users x revenue)
+    return {
+        "kpi": {
+            "total_users": total_users,
+            "active_users": active_users,
+            "total_parcels": total_parcels,
+            "total_surface_ha": total_surface,
+            "total_sensors": total_sensors,
+            "sensors_active": sensors_active,
+            "total_revenue_xaf": total_revenue,
+            "successful_payments": successful_payments,
+            "marketplace_gmv_xaf": marketplace_gmv,
+            "total_orders": total_orders,
+            "delivered_orders": delivered_orders,
+            "total_alerts": total_alerts,
+            "unread_alerts": unread_alerts,
+        },
+        "role_distribution": role_distribution,
+        "country_distribution": country_distribution,
+        "subscription_distribution": subscription_distribution,
+        "top_crops": top_crops,
+        "parcel_status": parcel_status,
+        "user_growth": user_growth,
+        "revenue_growth": revenue_growth,
+        "alert_severity": alert_severity,
+    }
+
 @api_router.get("/admin/users")
 async def get_all_users(role: Optional[str] = None, user = Depends(require_roles([UserRole.ADMIN]))):
     query = {"role": role} if role else {}
@@ -2510,8 +2642,176 @@ async def seed_database():
     
     if bulk_users:
         await db.users.insert_many(bulk_users)
+
+    # =================================================================
+    # MASSIVE SEED — generate parcels, sensors, transactions, alerts
+    # to make analytics dashboard look impressive for presentation
+    # =================================================================
+    farmer_users = [u for u in bulk_users if u["role"] == "farmer"]
+    crop_choices = ["Mais", "Manioc", "Cacao", "Cafe", "Plantain", "Tomate", "Riz", "Arachide", "Banane", "Palmier a huile", "Coton", "Mil", "Haricot", "Igname", "Avocat", "Mangue", "Piment", "Sorgho"]
+    parcel_status = ["excellent", "bon", "attention"]
     
-    # Create demo parcels
+    # Country-based GPS centers for realistic locations
+    country_gps = {
+        "Cameroun": (5.9631, 10.1591),
+        "Cote d'Ivoire": (7.5400, -5.5471),
+        "Senegal": (14.4974, -14.4524),
+        "Mali": (17.5707, -3.9962),
+        "Burkina Faso": (12.2383, -1.5616),
+        "Ghana": (7.9465, -1.0232),
+        "Togo": (8.6195, 0.8248),
+        "Benin": (9.3077, 2.3158),
+        "Nigeria": (9.0820, 8.6753),
+        "Kenya": (-0.0236, 37.9062),
+        "Rwanda": (-1.9403, 29.8739),
+    }
+    
+    bulk_parcels = []
+    bulk_sensors = []
+    bulk_alerts = []
+    bulk_payments = []
+    bulk_orders = []
+    parcel_counter = 0
+    
+    # Each farmer gets 1-4 parcels
+    for farmer in farmer_users:
+        n_parcels = rng.randint(1, 4)
+        center_lat, center_lon = country_gps.get(farmer["country"], (5.9631, 10.1591))
+        for j in range(n_parcels):
+            parcel_counter += 1
+            jitter_lat = (rng.random() - 0.5) * 2.0  # ±1° around center
+            jitter_lon = (rng.random() - 0.5) * 2.0
+            parcel_id = f"parcel-demo-{parcel_counter:05d}"
+            crop = rng.choice(crop_choices)
+            humidity = rng.randint(35, 90)
+            temperature = round(rng.uniform(18, 35), 1)
+            status = rng.choices(parcel_status, weights=[0.3, 0.5, 0.2])[0]
+            
+            bulk_parcels.append({
+                "id": parcel_id,
+                "user_id": farmer["id"],
+                "name": rng.choice([f"Parcelle {rng.choice(['Nord', 'Sud', 'Est', 'Ouest', 'Centre'])}", f"Champ {crop} {j+1}", f"Exploitation {farmer['city']} {j+1}"]),
+                "crop_type": crop,
+                "culture_type": crop,
+                "area_hectares": round(rng.uniform(0.5, 25), 1),
+                "surface_hectares": round(rng.uniform(0.5, 25), 1),
+                "humidity": humidity,
+                "temperature": temperature,
+                "soil_analysis": {
+                    "nitrogen": rng.randint(30, 95),
+                    "phosphorus": rng.randint(25, 85),
+                    "potassium": rng.randint(40, 95),
+                    "ph": round(rng.uniform(5.5, 7.8), 1),
+                    "organic_matter": round(rng.uniform(2.0, 5.5), 1),
+                },
+                "planting_date": (datetime.now(timezone.utc) - timedelta(days=rng.randint(30, 200))).strftime("%Y-%m-%d"),
+                "status": status,
+                "country": farmer["country"],
+                "latitude": center_lat + jitter_lat,
+                "longitude": center_lon + jitter_lon,
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 300))).isoformat(),
+            })
+            
+            # 1-3 sensors per parcel
+            n_sensors = rng.randint(1, 3)
+            sensor_types = rng.sample(["humidity", "temperature", "ph", "npk"], n_sensors)
+            for st in sensor_types:
+                bulk_sensors.append({
+                    "id": f"sensor-{parcel_counter}-{st}",
+                    "name": {"humidity": "Humidite", "temperature": "Temperature", "ph": "pH du sol", "npk": "NPK"}[st],
+                    "type": st,
+                    "parcel_id": parcel_id,
+                    "parcel_name": bulk_parcels[-1]["name"],
+                    "user_id": farmer["id"],
+                    "value": {"humidity": humidity, "temperature": temperature, "ph": round(rng.uniform(5.5, 7.8), 1), "npk": rng.randint(50, 90)}[st],
+                    "unit": {"humidity": "%", "temperature": "°C", "ph": "pH", "npk": "ppm"}[st],
+                    "status": rng.choices(["actif", "actif", "actif", "erreur"], weights=[0.85, 0.05, 0.05, 0.05])[0],
+                    "battery_level": rng.randint(35, 100),
+                    "last_update": (datetime.now(timezone.utc) - timedelta(minutes=rng.randint(0, 120))).isoformat(),
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 180))).isoformat(),
+                })
+            
+            # Generate 0-2 alerts for this parcel
+            if rng.random() < 0.3:
+                alert_types = ["Stress hydrique detecte", "Maladie suspectee", "Carence en azote", "Temperature elevee", "pH du sol acide", "Capteur hors ligne"]
+                bulk_alerts.append({
+                    "id": f"alert-{parcel_counter}",
+                    "user_id": farmer["id"],
+                    "parcel_id": parcel_id,
+                    "type": rng.choice(["climat", "maladie", "capteur", "carence"]),
+                    "severity": rng.choice(["faible", "moyenne", "haute", "critique"]),
+                    "message": rng.choice(alert_types),
+                    "is_read": rng.random() > 0.6,
+                    "created_at": (datetime.now(timezone.utc) - timedelta(hours=rng.randint(1, 96))).isoformat(),
+                })
+    
+    # Payment transactions — 60% of farmers paid for subscription
+    for farmer in farmer_users:
+        if rng.random() < 0.6:
+            packages = [
+                ("basic_monthly", 5000),
+                ("basic_quarterly", 12000),
+                ("basic_annual", 40000),
+                ("premium_monthly", 15000),
+                ("premium_quarterly", 35000),
+                ("premium_annual", 120000),
+            ]
+            pkg, amt = rng.choice(packages)
+            providers = ["mtn_cm", "orange_cm", "netwallet_cm"]
+            bulk_payments.append({
+                "id": f"AGRICAM-{rng.randint(100000, 999999):06d}",
+                "order_id": f"AGRICAM-{rng.randint(100000, 999999):06d}",
+                "user_id": farmer["id"],
+                "user_email": farmer["email"],
+                "amount": amt,
+                "currency": "XAF",
+                "phone": farmer["phone"].replace("+", ""),
+                "method": "MOBILE_MONEY",
+                "method_type": rng.choice(["MOMO", "ORANGE_MONEY"]),
+                "provider": rng.choice(providers),
+                "package_id": pkg,
+                "status": rng.choices(["success", "failed", "pending"], weights=[0.85, 0.10, 0.05])[0],
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 365))).isoformat(),
+            })
+    
+    # Marketplace orders
+    suppliers = [u for u in bulk_users if u["role"] == "supplier"]
+    products = ["Semences Mais Hybride", "Engrais NPK 17-17-17", "Pesticide Bio Neem", "Outils agricoles", "Tracteur compact", "Pulverisateur", "Kit irrigation goutte-a-goutte", "Stockage cereales", "Films plastique mulch", "Compost organique"]
+    if suppliers and farmer_users:
+        for _ in range(min(150, len(farmer_users) // 3)):
+            buyer = rng.choice(farmer_users)
+            seller = rng.choice(suppliers)
+            bulk_orders.append({
+                "id": f"order-{rng.randint(100000, 999999)}",
+                "buyer_id": buyer["id"],
+                "buyer_name": buyer["full_name"],
+                "seller_id": seller["id"],
+                "seller_name": seller["company_name"],
+                "product_name": rng.choice(products),
+                "quantity": rng.randint(1, 50),
+                "unit_price": rng.randint(2000, 80000),
+                "total_amount": rng.randint(5000, 500000),
+                "currency": "XAF",
+                "status": rng.choices(["delivered", "shipped", "pending", "cancelled"], weights=[0.6, 0.2, 0.15, 0.05])[0],
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 180))).isoformat(),
+            })
+    
+    # Bulk insert in batches (Mongo handles up to 100MB at once)
+    if bulk_parcels:
+        await db.parcels.insert_many(bulk_parcels)
+    if bulk_sensors:
+        await db.sensors.insert_many(bulk_sensors)
+    if bulk_alerts:
+        await db.alerts.insert_many(bulk_alerts)
+    if bulk_payments:
+        await db.payments.insert_many(bulk_payments)
+        await db.payment_transactions.insert_many(bulk_payments)
+    if bulk_orders:
+        await db.orders.insert_many(bulk_orders)
+
+    logger.info(f"MASSIVE SEED: {len(bulk_users)} users, {len(bulk_parcels)} parcels, {len(bulk_sensors)} sensors, {len(bulk_alerts)} alerts, {len(bulk_payments)} payments, {len(bulk_orders)} orders")
+
+    # Create demo parcels (legacy demo - keep for the original farmer-001)
     parcels_data = [
         {"id": "p1", "user_id": "farmer-001", "name": "Parcelle Nord", "crop_type": "Blé",
          "area_hectares": 15.5, "humidity": 68, "temperature": 22,

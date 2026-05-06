@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import Parcelles from "./pages/Parcelles";
 import CapteursIoT from "./pages/CapteursIoT";
 import GestionDrones from "./pages/GestionDrones";
@@ -252,6 +253,11 @@ function App() {
               <Route path="admin" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="admin-analytics" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminAnalytics />
                 </ProtectedRoute>
               } />
               <Route path="seed-analyst" element={

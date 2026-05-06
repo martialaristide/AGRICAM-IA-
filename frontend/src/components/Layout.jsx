@@ -135,6 +135,7 @@ const LOGO_URL = "/branding/agricam-logo.png";
 const MODULE_DESCRIPTIONS = {
   "/dashboard":       "Vue d'ensemble : vos parcelles, alertes, météo et indicateurs clés en temps réel.",
   "/admin":           "Gestion globale : utilisateurs, permissions, surveillance système.",
+  "/admin-analytics": "Tableau de bord exécutif : KPIs, graphiques, analyse de la plateforme — idéal pour présentations.",
   "/security":        "Centre de sécurité : tentatives d'intrusion, blocage d'utilisateurs, audit.",
   "/access-control":  "Définissez les droits d'accès par rôle et par module.",
   "/database":        "Explorateur de la base de données MongoDB (admin uniquement).",
@@ -251,6 +252,7 @@ const getNavGroups = (role, t) => {
     description: GROUP_DESCRIPTIONS.admin,
     items: [
       { path: "/admin", icon: Shield, label: t("nav.admin") || "Administration" },
+      { path: "/admin-analytics", icon: BarChart3, label: "Analytics Présentation" },
       { path: "/security", icon: ShieldAlert, label: t("nav.security") || "Centre de Sécurité" },
       { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Contrôle Accès" },
       { path: "/database", icon: Database, label: t("nav.database") || "Base de Données" },

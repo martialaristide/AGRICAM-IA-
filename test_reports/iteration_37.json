@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration 37 — Admin Analytics Presentation page + new /api/admin/analytics-presentation endpoint tested end-to-end. Backend 6/6 pytest pass (admin 200, 403 non-admin, 401/403 unauth, all 9 top-level keys present, KPI thresholds met: 577 users >=500, 873 parcels >=800, 1753 sensors >=1500, non-empty role/crop/alert arrays). Frontend fully functional: admin can access /admin-analytics (data-testid='admin-analytics-page' renders), all 6 KPI cards show real seeded values, 18 Recharts SVGs render without React errors, Actualiser button re-fetches successfully, Exporter button triggers JSON file download (agricam-analytics-2026-05-06.json), 'Analytics Présentation' sidebar entry (data-testid='nav-admin-analytics') is visible in Administration group. Zero console errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/admin-analytics", "issues": ["GuidedTour popup 'Dashboard 1/7' auto-opens over the analytics page on arrival and partially covers the first KPI card (kpi-users). On a presentation demo, the tour overlay can distract / block Exporter clicks unless dismissed. Consider disabling the GuidedTour on /admin-analytics route, or auto-skipping it when already dismissed once."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration37_admin_analytics.py",
+    "/app/test_reports/pytest/pytest_iteration37.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Suppress the 7-step GuidedTour on /admin-analytics (or at least auto-close it when the page exposes data-testid='admin-analytics-page') so the Exporter/Actualiser buttons are immediately clickable in the presentation demo.",
+    "OPTIONAL polish (exportData): append the temporary <a> to document.body before a.click() then remove it, for maximum Playwright/Firefox/Safari compatibility. Current Chromium-only path works but is fragile."
+  ],
+  "critical_code_review_comments": [
+    "Endpoint uses proper role guard (require_roles([UserRole.ADMIN])) — non-admin correctly gets 403 (verified with farmer token).",
+    "All Mongo aggregations done async and return plain dicts (no ObjectId leakage) — response is clean JSON.",
+    "KPI aggregates match seed snapshot exactly: 577 users / 873 parcels / 1753 sensors / 6,747,000 XAF revenue / 22,996,670 XAF marketplace GMV / 249 alerts / 116 orders.",
+    "Frontend AdminAnalytics.jsx (332 lines) is within size budget. Uses Recharts ResponsiveContainer for all 8 chart types — 18 SVG surfaces render (charts + sparklines/legends).",
+    "kpi-*, refresh-analytics-btn, export-analytics-btn, admin-analytics-page and nav-admin-analytics data-testids are all correctly wired."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration37_admin_analytics.py (NEW — 6 pytest cases covering the new /api/admin/analytics-presentation endpoint)"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 passed)",
+    "frontend": "100% (admin-analytics-page, 6/6 KPIs, 18 charts, refresh, export download, sidebar nav — all verified, 0 console errors)"
+  },
+  "test_credentials": {
+    "admin": "admin@agricam.ai / Admin@2026 (WORKING)",
+    "farmer": "agriculteur@agricam.ai / Farmer@2026 (WORKING, confirmed 403 on admin endpoint)"
+  },
+  "seed_data_creation": "No new seed data created. Verified existing seed: 577 users, 873 parcels, 1753 sensors (active 1675), 249 alerts, 177 successful payments (6,747,000 XAF), 116 orders (22,996,670 XAF GMV).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Presentation-ready. The new /api/admin/analytics-presentation endpoint and /admin-analytics page both work end-to-end. Admin login -> page renders KPIs + all 8 Recharts visualizations -> Actualiser re-fetches -> Exporter downloads JSON. One UX nit: the GuidedTour popup auto-opens on page mount and covers part of the first KPI card; it can be dismissed via its X button. Recommend E1 disable GuidedTour on /admin-analytics before the actual presentation. Endpoint correctly 403s non-admin users. All seed counts match the request thresholds.",
+  "rca of the issue": "N/A — no failures. First Playwright run hit a transient timeout on `networkidle` (due to long-polling requests from the dashboard) and a download timeout that was caused by the GuidedTour overlay intercepting the Exporter click. Both were resolved by switching waits to `domcontentloaded` and dismissing the tour via its Skip button; the subsequent run succeeded (download filename agricam-analytics-2026-05-06.json captured)."
+}
