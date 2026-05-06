@@ -18,9 +18,28 @@ const SubscriptionGate = ({ children }) => {
   const [subStatus, setSubStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Demo accounts whitelist — they always have full access for demo/presentation purposes
+  const DEMO_EMAILS = [
+    "admin@agricam.ai",
+    "agriculteur@agricam.ai",
+    "fournisseur@agricam.ai",
+    "banque@agricam.ai",
+    "analyste@agricam.ai",
+    "agronome@agricam.ai",
+    "formateur@agricam.ai",
+  ];
+  const isDemoAccount = user?.email && DEMO_EMAILS.includes(user.email);
+
   useEffect(() => {
+    // Skip API call entirely for demo/admin
+    if (isDemoAccount || user?.role === "admin") {
+      setSubStatus({ has_full_access: true, is_subscribed: true, is_demo: true });
+      setLoading(false);
+      return;
+    }
     checkSubscription();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email, user?.role]);
 
   const checkSubscription = async () => {
     try {
@@ -41,8 +60,8 @@ const SubscriptionGate = ({ children }) => {
     );
   }
 
-  // Admin always has access
-  if (user?.role === "admin" || subStatus?.has_full_access) {
+  // Admin and demo accounts always have access
+  if (user?.role === "admin" || isDemoAccount || subStatus?.has_full_access) {
     return <>{children}</>;
   }
 

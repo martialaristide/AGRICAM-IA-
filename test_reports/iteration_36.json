@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 36 re-test of parcel creation UX - ALL 3 iteration-35 blockers are FIXED. Backend 6/6 pass (incl. new empty-name 422 check). Frontend fully functional: farmer demo reaches /parcelles (no subscription gate), 'Maximum update depth exceeded' render loop is GONE (0 occurrences in console), help popup renders with 4 numbered steps, inline errors show correctly (error-name, error-crop), toast displays 'Champs à corriger : Nom, Type de culture', valid submission closes dialog and persists the parcel (verified via API - 13 parcels, 'Parcelle Test E2E' present). Sidebar i18n keys are translated (no NAV.GROUPANALYSIS raw keys).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Parcelles (Nouvelle parcelle dialog)", "issues": ["'Type de culture' is a plain text input, not a Select dropdown — user must type free text. A shadcn Select with preset options (Maïs, Cacao, Manioc, Arachide, Blé) would be more robust and align with the help popup examples. Currently free-text works but is inconsistent with crop-type validation expectations."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration35_parcels.py",
+    "/app/test_reports/pytest/pytest_iteration36.xml"
+  ],
+  "action_items": [
+    "OPTIONAL polish: Convert 'Type de culture' input to a shadcn Select with preset crop options (Maïs, Cacao, Manioc, Arachide, Blé) + 'Autre' free-text fallback for consistency and better UX.",
+    "OPTIONAL: Add data-testid='parcel-name-input' and 'parcel-crop-input' to the dialog inputs to simplify future Playwright tests (currently selected via placeholder substring)."
+  ],
+  "critical_code_review_comments": [
+    "GuidedTour useMemo + skipCountRef guard successfully eliminated the infinite re-render loop (0 'Maximum update depth' errors observed across 3 test runs on /parcelles).",
+    "SubscriptionGate DEMO_EMAILS whitelist works — farmer demo passes through to /parcelles without trial paywall.",
+    "Backend Pydantic Field(min_length=1) on ParcelCreate.name correctly rejects empty strings with 422 string_too_short — tested and passing.",
+    "i18n keys (groupAnalysis, groupField, groupFleet, groupMarket, groupLearning, groupAdmin, farmMap) are rendered in both fr/en without leaking raw keys."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration35_parcels.py (upgraded empty-name test from informational to strict 422 assertion with string_too_short validation)"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 passed)",
+    "frontend": "100% (all 6 frontend requirements verified: render loop gone, page loads, help popup, inline errors, success flow, sidebar i18n)"
+  },
+  "test_credentials": {
+    "farmer": "agriculteur@agricam.ai / Farmer@2026 (WORKING, reaches /parcelles)",
+    "admin": "admin@agricam.ai / Admin@2026"
+  },
+  "seed_data_creation": "Created 'Parcelle Test E2E', TEST_Parcel_Minimal_I35, TEST_Parcel_Full_I35 via pytest/UI. Total parcels for farmer: 13.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 3 iteration-35 blockers (render loop, subscription paywall, sidebar i18n) verified fixed. Parcel creation end-to-end flow works: login farmer -> /parcelles -> Nouvelle parcelle -> help popup -> inline validation -> success toast -> persisted (API confirmed). Backend Pydantic min_length=1 on name enforces empty-name 422. Only minor polish remaining (crop-type as Select vs text input).",
+  "rca of the issue": "Main agent's fixes in iteration 36 correctly addressed all 3 bugs from iteration 35: (1) GuidedTour infinite loop fixed via useMemo for steps + useCallback for finish + skipCountRef guard to prevent onSkip cascade; (2) SubscriptionGate.jsx DEMO_EMAILS whitelist bypasses paywall for demo farmer account; (3) translations.js added the missing groupAnalysis/groupField/etc keys in fr+en. Backend defense-in-depth (Field min_length=1 on ParcelCreate.name) also added. All verified in browser + pytest."
+}

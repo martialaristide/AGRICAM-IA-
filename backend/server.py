@@ -254,7 +254,7 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 class ParcelCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=200)
     crop_type: Optional[str] = None
     culture_type: Optional[str] = None  # Alias for crop_type (French)
     variety: Optional[str] = None

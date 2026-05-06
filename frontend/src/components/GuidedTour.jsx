@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { X, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
@@ -51,28 +51,48 @@ const getTourSteps = (t) => [
 
 const GuidedTour = ({ onComplete }) => {
   const { t } = useLanguage();
-  const steps = getTourSteps(t);
+  // Memoize steps so its identity is stable across renders (was the source of the infinite loop)
+  const steps = useMemo(() => getTourSteps(t), [t]);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [visible, setVisible] = useState(true);
+  const skipCountRef = useRef(0);
+
+  const finish = useCallback(() => {
+    setVisible(false);
+    localStorage.setItem("agricam_tour_done", "true");
+    onComplete?.();
+  }, [onComplete]);
 
   const updatePosition = useCallback(() => {
     const step = steps[currentStep];
     if (!step) return;
     const el = document.querySelector(step.target);
     if (el) {
+      skipCountRef.current = 0;
       const rect = el.getBoundingClientRect();
-      setTargetRect(rect);
+      // Only update if rect actually changed — avoids unnecessary re-renders
+      setTargetRect(prev => {
+        if (prev && prev.top === rect.top && prev.left === rect.left && prev.width === rect.width && prev.height === rect.height) {
+          return prev;
+        }
+        return rect;
+      });
       el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } else {
-      // Skip steps with missing targets
+      // Guard against runaway skip cascades when many targets are missing (e.g. nav inside collapsed groups)
+      skipCountRef.current += 1;
+      if (skipCountRef.current > steps.length) {
+        finish();
+        return;
+      }
       if (currentStep < steps.length - 1) {
         setCurrentStep(s => s + 1);
       } else {
         finish();
       }
     }
-  }, [currentStep, steps]);
+  }, [currentStep, steps, finish]);
 
   useEffect(() => {
     updatePosition();
@@ -82,7 +102,6 @@ const GuidedTour = ({ onComplete }) => {
 
   const next = () => { if (currentStep < steps.length - 1) setCurrentStep(s => s + 1); else finish(); };
   const prev = () => { if (currentStep > 0) setCurrentStep(s => s - 1); };
-  const finish = () => { setVisible(false); localStorage.setItem("agricam_tour_done", "true"); onComplete?.(); };
 
   if (!visible || !targetRect) return null;
 

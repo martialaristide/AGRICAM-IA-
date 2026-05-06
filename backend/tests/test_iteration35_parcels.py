@@ -65,13 +65,16 @@ class TestParcelsAPI:
         r = requests.post(f"{BASE_URL}/api/parcels", json=payload, headers=headers, timeout=30)
         assert r.status_code == 422, f"Expected 422, got {r.status_code}: {r.text}"
 
-    def test_create_empty_name_behavior(self, headers):
-        """Empty string may be accepted by Pydantic by default (not constrained)."""
+    def test_create_empty_name_returns_422(self, headers):
+        """Iteration 36: min_length=1 should be enforced on name."""
         payload = {"name": "", "crop_type": "Blé"}
         r = requests.post(f"{BASE_URL}/api/parcels", json=payload, headers=headers, timeout=30)
-        # Document actual behavior - this is informational
-        assert r.status_code in (200, 201, 422)
-        print(f"Empty name status: {r.status_code}")
+        assert r.status_code == 422, f"Expected 422 (string_too_short), got {r.status_code}: {r.text}"
+        err = r.json()
+        # pydantic v2 returns detail list with type 'string_too_short'
+        detail = err.get("detail", [])
+        types = [d.get("type") for d in detail if isinstance(d, dict)]
+        assert any("too_short" in (t or "") for t in types), f"Expected string_too_short, got detail: {detail}"
 
     def test_list_parcels(self, headers):
         r = requests.get(f"{BASE_URL}/api/parcels", headers=headers, timeout=30)
