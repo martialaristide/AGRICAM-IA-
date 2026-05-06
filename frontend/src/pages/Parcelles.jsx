@@ -16,7 +16,8 @@ import {
   Droplets, Thermometer, MapPin, Calendar, FlaskConical, 
   Plus, Upload, Map, Layers, Navigation, Target, 
   Satellite, FileSpreadsheet, LocateFixed, Trash2, Edit,
-  Eye, Download, RefreshCw, Info, HelpCircle, Crosshair, Leaf
+  Eye, Download, RefreshCw, Info, HelpCircle, Crosshair, Leaf,
+  AlertCircle, X
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -110,6 +111,28 @@ const Parcelles = () => {
 
   // Coordinate input state
   const [coordInput, setCoordInput] = useState("");
+
+  // Form validation errors (per field) + help popup auto-shown
+  const [formErrors, setFormErrors] = useState({});
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
+
+  // Auto-show help popup the first time the user opens the create dialog
+  useEffect(() => {
+    if (showAddDialog) {
+      const helpSeen = localStorage.getItem("agricam_parcel_help_seen");
+      if (!helpSeen) {
+        setShowHelpPopup(true);
+        const timer = setTimeout(() => {
+          setShowHelpPopup(false);
+          localStorage.setItem("agricam_parcel_help_seen", "1");
+        }, 8000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // Reset errors when dialog closes
+      setFormErrors({});
+    }
+  }, [showAddDialog]);
 
   useEffect(() => {
     fetchParcels();
@@ -212,14 +235,79 @@ const Parcelles = () => {
   };
 
   const handleCreateParcel = async () => {
-    try {
-      if (!newParcel.name || !newParcel.crop_type) {
-        toast.error("Veuillez remplir tous les champs obligatoires");
-        return;
-      }
+    // === Per-field validation with specific guidance ===
+    const errors = {};
+    const name = (newParcel.name || "").trim();
+    const crop = (newParcel.crop_type || "").trim();
+    const area = parseFloat(newParcel.area_hectares);
 
-      await createParcel(newParcel);
-      toast.success(`Parcelle "${newParcel.name}" créée avec succès!`);
+    if (!name) {
+      errors.name = "Donnez un nom à votre parcelle (ex : « Parcelle Nord »).";
+    } else if (name.length < 3) {
+      errors.name = "Le nom doit contenir au moins 3 caractères.";
+    }
+
+    if (!crop) {
+      errors.crop_type = "Indiquez la culture principale (ex : Maïs, Cacao, Manioc).";
+    }
+
+    if (!isNaN(area) && (area <= 0 || area > 10000)) {
+      errors.area_hectares = "La surface doit être comprise entre 0,1 et 10 000 hectares.";
+    }
+
+    if (newParcel.latitude !== null && newParcel.latitude !== undefined && newParcel.latitude !== "") {
+      const lat = parseFloat(newParcel.latitude);
+      if (isNaN(lat) || lat < -90 || lat > 90) {
+        errors.latitude = "Latitude invalide (doit être entre -90 et 90).";
+      }
+    }
+    if (newParcel.longitude !== null && newParcel.longitude !== undefined && newParcel.longitude !== "") {
+      const lon = parseFloat(newParcel.longitude);
+      if (isNaN(lon) || lon < -180 || lon > 180) {
+        errors.longitude = "Longitude invalide (doit être entre -180 et 180).";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const fieldNames = {
+        name: "Nom",
+        crop_type: "Type de culture",
+        area_hectares: "Surface",
+        latitude: "Latitude",
+        longitude: "Longitude",
+      };
+      const missingFields = Object.keys(errors).map(k => fieldNames[k]).join(", ");
+      toast.error(`Champs à corriger : ${missingFields}`, {
+        description: Object.values(errors)[0],
+        duration: 6000,
+      });
+      // Auto-focus first field with error
+      const firstErrorField = Object.keys(errors)[0];
+      const fieldIdMap = { name: "name", crop_type: "crop_type", area_hectares: "area" };
+      setTimeout(() => {
+        const el = document.getElementById(fieldIdMap[firstErrorField] || firstErrorField);
+        if (el) el.focus();
+      }, 100);
+      return;
+    }
+
+    // Submit to backend
+    try {
+      setFormErrors({});
+      // Sanitize payload — coerce empty strings and NaN to safe defaults
+      const payload = {
+        ...newParcel,
+        name,
+        crop_type: crop,
+        area_hectares: isNaN(area) ? 1 : area,
+        latitude: newParcel.latitude !== null && newParcel.latitude !== "" ? parseFloat(newParcel.latitude) : null,
+        longitude: newParcel.longitude !== null && newParcel.longitude !== "" ? parseFloat(newParcel.longitude) : null,
+      };
+      await createParcel(payload);
+      toast.success(`Parcelle « ${name} » créée avec succès !`, {
+        description: "Vous pouvez maintenant suivre vos cultures et capteurs.",
+      });
       setShowAddDialog(false);
       setNewParcel({
         name: "",
@@ -238,7 +326,16 @@ const Parcelles = () => {
       setDrawnPoints([]);
       fetchParcels();
     } catch (error) {
-      toast.error("Erreur lors de la création de la parcelle");
+      // Show real backend error to help the user
+      const detail = error?.response?.data?.detail;
+      let message = "Erreur lors de la création de la parcelle.";
+      if (typeof detail === "string") {
+        message = detail;
+      } else if (Array.isArray(detail)) {
+        // Pydantic validation errors → friendly message
+        message = detail.map(d => `${(d.loc || []).slice(-1)[0] || "champ"} : ${d.msg}`).join(" • ");
+      }
+      toast.error(message, { duration: 7000 });
     }
   };
 
@@ -438,38 +535,92 @@ const Parcelles = () => {
                     Créer une nouvelle parcelle
                   </DialogTitle>
                 </DialogHeader>
+
+                {/* Auto-disappearing help popup — guides the farmer step by step */}
+                {showHelpPopup && (
+                  <div className="relative bg-gradient-to-r from-lime-50 to-amber-50 dark:from-lime-950/40 dark:to-amber-950/30 border border-lime-300 dark:border-lime-700 rounded-lg p-4 mb-2 animate-in fade-in slide-in-from-top-2" data-testid="parcel-help-popup">
+                    <button
+                      onClick={() => { setShowHelpPopup(false); localStorage.setItem("agricam_parcel_help_seen", "1"); }}
+                      className="absolute top-2 right-2 text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                      aria-label="Fermer l'aide"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <div className="flex items-start gap-3">
+                      <div className="h-9 w-9 rounded-full bg-lime-500/20 flex items-center justify-center flex-shrink-0">
+                        <HelpCircle className="h-5 w-5 text-lime-600 dark:text-lime-400" />
+                      </div>
+                      <div className="flex-1 text-sm">
+                        <p className="font-semibold text-slate-900 dark:text-white mb-1">Comment créer ma parcelle ?</p>
+                        <ol className="list-decimal list-inside space-y-0.5 text-slate-700 dark:text-slate-300">
+                          <li><strong>Donnez un nom</strong> à votre parcelle (ex : Parcelle Nord, Champ de Cacao).</li>
+                          <li><strong>Indiquez la culture</strong> principale (Maïs, Cacao, Manioc, Arachide…).</li>
+                          <li>Renseignez la <strong>surface en hectares</strong> (optionnel mais recommandé).</li>
+                          <li>Ajoutez les <strong>coordonnées GPS</strong> ou dessinez la zone sur la carte.</li>
+                        </ol>
+                        <p className="text-xs text-slate-500 mt-2 italic">Cette aide disparaît automatiquement dans quelques secondes.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nom de la parcelle *</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="name" className="flex items-center gap-1.5">
+                        Nom de la parcelle <span className="text-red-500">*</span>
+                        <ActionTooltip content="Choisissez un nom court et reconnaissable, ex : Parcelle Nord, Champ Bastos">
+                          <HelpCircle className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                        </ActionTooltip>
+                      </Label>
                       <Input
                         id="name"
                         value={newParcel.name}
-                        onChange={(e) => setNewParcel({ ...newParcel, name: e.target.value })}
+                        onChange={(e) => { setNewParcel({ ...newParcel, name: e.target.value }); if (formErrors.name) setFormErrors({ ...formErrors, name: undefined }); }}
                         placeholder="Ex: Parcelle Nord"
                         data-testid="parcel-name-input"
+                        className={cn(formErrors.name && "border-red-500 focus-visible:ring-red-500")}
+                        aria-invalid={!!formErrors.name}
                       />
+                      {formErrors.name && <p className="text-xs text-red-500 flex items-center gap-1" data-testid="error-name"><AlertCircle className="h-3 w-3" />{formErrors.name}</p>}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="crop_type">Type de culture *</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="crop_type" className="flex items-center gap-1.5">
+                        Type de culture <span className="text-red-500">*</span>
+                        <ActionTooltip content="La culture principale de cette parcelle. Vous pourrez ajouter des cultures secondaires plus tard.">
+                          <HelpCircle className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                        </ActionTooltip>
+                      </Label>
                       <Input
                         id="crop_type"
                         value={newParcel.crop_type}
-                        onChange={(e) => setNewParcel({ ...newParcel, crop_type: e.target.value })}
+                        onChange={(e) => { setNewParcel({ ...newParcel, crop_type: e.target.value }); if (formErrors.crop_type) setFormErrors({ ...formErrors, crop_type: undefined }); }}
                         placeholder="Ex: Maïs, Blé, Cacao"
                         data-testid="parcel-crop-input"
+                        className={cn(formErrors.crop_type && "border-red-500 focus-visible:ring-red-500")}
+                        aria-invalid={!!formErrors.crop_type}
                       />
+                      {formErrors.crop_type && <p className="text-xs text-red-500 flex items-center gap-1" data-testid="error-crop"><AlertCircle className="h-3 w-3" />{formErrors.crop_type}</p>}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="area">Surface (hectares)</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="area" className="flex items-center gap-1.5">
+                        Surface (hectares)
+                        <ActionTooltip content="1 hectare = 10 000 m². Astuce : une terrain de foot ≈ 0,7 ha.">
+                          <HelpCircle className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                        </ActionTooltip>
+                      </Label>
                       <Input
                         id="area"
                         type="number"
+                        min="0"
+                        step="0.1"
                         value={newParcel.area_hectares}
-                        onChange={(e) => setNewParcel({ ...newParcel, area_hectares: parseFloat(e.target.value) })}
+                        onChange={(e) => { setNewParcel({ ...newParcel, area_hectares: e.target.value === "" ? "" : parseFloat(e.target.value) }); if (formErrors.area_hectares) setFormErrors({ ...formErrors, area_hectares: undefined }); }}
                         data-testid="parcel-area-input"
+                        className={cn(formErrors.area_hectares && "border-red-500 focus-visible:ring-red-500")}
                       />
+                      {formErrors.area_hectares && <p className="text-xs text-red-500 flex items-center gap-1" data-testid="error-area"><AlertCircle className="h-3 w-3" />{formErrors.area_hectares}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="status">Statut</Label>

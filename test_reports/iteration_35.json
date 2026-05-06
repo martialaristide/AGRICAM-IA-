@@ -1,0 +1,52 @@
+{
+  "summary": "Iteration 35 - Parcel creation bug fix & help-popup UX. Backend: 6/6 tests passed for POST/GET /api/parcels (minimal payload, full payload, 422 for missing name, unauthorized rejected, list). Frontend: BLOCKED - farmer demo user is redirected to an 'Abonnement requis' (trial expired) subscription gate when navigating to /parcelles, so the parcelles-page, help popup, inline errors, and success flow could NOT be exercised via UI. Additionally, a critical React 'Maximum update depth exceeded' infinite re-render loop floods the console on /parcelles (hundreds of identical errors).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/parcels", "issue": "Empty-string name is accepted by backend (no min_length constraint on Pydantic model). Frontend validates min 3 chars but backend should also enforce to prevent API misuse."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Parcelles page access", "issue": "Farmer demo user (agriculteur@agricam.ai) hits 'Abonnement requis' subscription gate when visiting /parcelles. Trial expired message: 'Votre periode d essai de 14 jours est terminee'. The parcelles-page test-id is never rendered, blocking all UX validation of the new help popup and inline errors.", "selector": "[data-testid='parcelles-page']", "priority": "CRITICAL"},
+      {"component": "React render loop", "issue": "Console floods with 'Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.' — hundreds of repeats. Likely in GuidedTour, SubscriptionGate, or a useEffect that sets state on every render. This would likely cause severe performance issues for end users.", "selector": "n/a", "priority": "CRITICAL"},
+      {"component": "Sidebar navigation i18n", "issue": "Untranslated keys visible: NAV.GROUPANALYSIS, NAV.GROUPFIELD, NAV.GROUPFLEET, NAV.GROUPMARKET, NAV.GROUPLEARNING, nav.farmMap", "selector": "sidebar nav items", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Farmer parcel creation UX (help popup, inline errors, toast, success create)", "issue": "Could not be tested because the farmer account cannot reach /parcelles due to subscription gate. Main agent must either (a) extend trial for demo farmer, (b) exempt demo accounts from the paywall, or (c) test with a different account path.", "affected_selectors": ["[data-testid='parcel-help-popup']", "[data-testid='error-name']", "[data-testid='error-crop']", "[data-testid='error-area']", "[data-testid='create-parcel-btn']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration35_parcels.py",
+    "/app/test_reports/pytest/pytest_iteration35.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Farmer demo user (agriculteur@agricam.ai) cannot access /parcelles due to expired-trial subscription gate. Extend trial, seed as paid subscriber, or whitelist demo accounts so QA can validate the new parcel UX.",
+    "CRITICAL: Fix the 'Maximum update depth exceeded' infinite useEffect render loop. Inspect GuidedTour, SubscriptionGate, Parcelles useEffect [showAddDialog], and any context providers (Auth/Language) for missing dependency arrays or state-dependent re-renders.",
+    "MEDIUM: Add i18n translations for sidebar group keys (NAV.GROUPANALYSIS, NAV.GROUPFIELD, NAV.GROUPFLEET, NAV.GROUPMARKET, NAV.GROUPLEARNING, nav.farmMap).",
+    "LOW: Add Pydantic min_length=1 constraint on ParcelCreate.name to enforce non-empty name server-side (currently only enforced client-side)."
+  ],
+  "critical_code_review_comments": [
+    "Parcelles.jsx useEffect dep array: useEffect([showAddDialog]) correctly guards the help popup, this one seems fine. The render-loop likely originates elsewhere (GuidedTour or SubscriptionGate).",
+    "handleCreateParcel in Parcelles.jsx looks correct: per-field validation with specific messages, focus management, sanitized payload, pydantic error formatting.",
+    "Backend ParcelCreate model allows empty name - add min_length=1 for defense-in-depth.",
+    "Backend POST /api/parcels accepts minimal and full payloads correctly; validation for missing name returns 422."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration35_parcels.py"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 passed)",
+    "frontend": "0% (blocked by subscription gate - unable to reach /parcelles UI)"
+  },
+  "test_credentials": {
+    "farmer": "agriculteur@agricam.ai / Farmer@2026 (BLOCKED by expired trial)",
+    "admin": "admin@agricam.ai / Admin@2026"
+  },
+  "seed_data_creation": "Created TEST_Parcel_Minimal_I35 and TEST_Parcel_Full_I35 via backend API during pytest.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend POST /api/parcels is working correctly and covered by /app/backend/tests/test_iteration35_parcels.py. Frontend UX validation of the new help popup (data-testid='parcel-help-popup'), inline field errors (data-testid='error-name', 'error-crop', 'error-area'), and success path is BLOCKED because the farmer demo account hits a subscription paywall at /parcelles. The React 'Maximum update depth exceeded' infinite loop also needs investigation (very noisy, hundreds of console errors). Once the main agent fixes the paywall for demo users and the render loop, re-run the Playwright flow: login as farmer -> goto /parcelles -> click add-parcel-btn -> verify help popup, then submit empty form and verify error-name & error-crop, then fill valid values and verify dialog close + toast success.",
+  "rca of the issue": "User-reported parcel creation bug: backend POST /api/parcels works correctly (verified via pytest), so the original bug was almost certainly frontend-side payload sanitization or validation feedback. Main agent added per-field validation, help popup, and real backend error display in Parcelles.jsx. These code changes LOOK correct upon review, but could NOT be validated end-to-end in browser because farmer demo account is blocked by a new subscription gate (likely introduced in a previous iteration). Additionally, an infinite render loop on the authenticated layout (likely GuidedTour/SubscriptionGate) further degrades UX."
+}
