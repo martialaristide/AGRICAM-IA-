@@ -528,12 +528,14 @@ const Layout = () => {
     });
   };
   
-  // Guided Tour
+  // Guided Tour — skip on analytics/presentation routes to keep KPIs unobstructed
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
     const done = localStorage.getItem("agricam_tour_done");
+    const skipRoutes = ["/admin-analytics", "/admin"];
+    if (skipRoutes.includes(location.pathname)) return;
     if (!done) { const timer = setTimeout(() => setShowTour(true), 2000); return () => clearTimeout(timer); }
-  }, []);
+  }, [location.pathname]);
   
   // Exit intent detection
   const [showExitModal, setShowExitModal] = useState(false);
