@@ -1,7 +1,7 @@
 // Image URLs for the website
 export const IMAGES = {
   // Logo
-  logo: "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png",
+  logo: "/branding/agricam-logo.png",
   
   // Generated images
   heroAI: "https://static.prod-images.emergentagent.com/jobs/b908d1b4-6084-4393-92f3-93b7a7437a93/images/ff78116e69c3e68d29798d7abd06481288da46b84dd4fa2a1306eae736622ab7.png",

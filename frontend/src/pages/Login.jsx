@@ -11,7 +11,7 @@ import api from "../services/api";
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
+const LOGO_URL = "/branding/agricam-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();

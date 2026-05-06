@@ -144,23 +144,23 @@ const SplashScreen = ({ onComplete }) => {
       <div className="absolute inset-0 grid-bg opacity-30" />
       <div className="relative z-10 flex flex-col items-center">
         <div className="animate-pulse mb-8">
-          <img src="https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png"
-            alt="African AI Solutions" className="h-32 w-auto drop-shadow-2xl" />
+          <img src="/branding/agricam-logo.png"
+            alt="AGRICAM IA" className="h-32 w-auto rounded-2xl shadow-[0_0_60px_rgba(132,204,22,0.4)]" />
         </div>
         <h1 className="text-5xl font-bold text-white mb-4 font-[Manrope] tracking-tight">
-          AGRICAM <span className="text-emerald-400">IA</span>
+          AGRICAM <span className="text-lime-400">IA</span>
         </h1>
-        <p className="text-xl text-slate-400 mb-8">Agriculture de precision intelligente</p>
+        <p className="text-xl text-amber-300/80 mb-8">Agriculture de précision intelligente</p>
         <div className="flex space-x-2">
-          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+          <div className="w-3 h-3 bg-lime-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+          <div className="w-3 h-3 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+          <div className="w-3 h-3 bg-lime-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
         </div>
         <div className="absolute bottom-[-120px] text-center">
           <p className="text-slate-600 text-sm">
-            Developpe par <span className="font-semibold text-emerald-400">Barra Martial Aristide</span>
+            Développé par <span className="font-semibold text-lime-400">Barra Martial Aristide</span>
           </p>
-          <p className="text-emerald-500/60 text-sm mt-1 font-semibold">African AI Solutions</p>
+          <p className="text-amber-400/60 text-sm mt-1 font-semibold">African AI Solutions</p>
         </div>
       </div>
     </div>
@@ -168,7 +168,8 @@ const SplashScreen = ({ onComplete }) => {
 };
 
 function App() {
-  const [showSplash, setShowSplash] = useState(false);  // DISABLED: splash was blocking app rendering
+  // Splash disabled — was causing render lock. Re-enable later when investigated.
+  const [showSplash, setShowSplash] = useState(false);
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [showExitIntent, setShowExitIntent] = useState(false);
 

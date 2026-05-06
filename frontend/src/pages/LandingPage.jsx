@@ -10,7 +10,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1651944432354-0dcd74b6c1bf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwzfHxhZ3JpY3VsdHVyZSUyMGRyb25lJTIwc3ByYXlpbmclMjBjcm9wcyUyMHNtYXJ0JTIwZmFybWluZyUyMHRlY2hub2xvZ3l8ZW58MHx8fHwxNzY5NTc4NzE1fDA&ixlib=rb-4.1.0&q=85";
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
+const LOGO_URL = "/branding/agricam-logo.png";
 
 const LandingPage = () => {
   const { t, isRTL } = useLanguage();

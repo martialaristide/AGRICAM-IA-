@@ -101,3 +101,18 @@ Enterprise-grade precision agriculture platform with AI, multi-role dashboards, 
   - PUBLIC_BACKEND_URL for webhook callback
 - [x] **Frontend** (`/paiements`): existing UI works as-is, calls new live endpoints
 - [x] **Subscription auto-activation** on successful payment (via webhook + status check)
+
+## Session 10 (6 May 2026) - Sidebar reorganization + new branding
+- [x] **Service Worker bug fix**: app shell (JS/CSS bundles) now uses network-first strategy (was cache-first → caused stale bundle freeze on splash screen). CACHE_NAME bumped to v3, auto-update on every load with controllerchange listener.
+- [x] **New AGRICAM IA logo** integrated (camera+leaves+circuit motif): `/branding/agricam-logo.png` (678 KB).
+  - Updated: SplashScreen, Sidebar header, Login, Register, LandingPage, manifest.json (192/512), index.html (favicon, apple-touch-icon, theme_color #84cc16).
+- [x] **Sidebar reorganized into 6 collapsible groups** (was 25+ flat items):
+  - Direct: Dashboard, role-specific dashboard
+  - Groups: Analyse & IA / Cultures & Terrain / Flotte autonome / Marketplace & Finance / Formation & Conseil / Administration (admin only)
+  - Bottom: Alertes, Paramètres
+  - Auto-expand the group containing the active route
+  - Group state persisted in localStorage `agricam_nav_groups`
+- [x] **Rich tooltip descriptions** on every module + every group (MODULE_DESCRIPTIONS dict, 30+ entries) — guides user on what each feature does.
+- [x] **Lime/amber color palette** matching new logo (replaced emerald accents in Layout, Splash, header, footer, hover states, active states).
+- [x] Google Play Console developer account ID recorded: 7354790267085214824 (entity: African AI Solutions).
+- [x] Splash temporarily disabled (latent re-render bug under investigation — not blocking).

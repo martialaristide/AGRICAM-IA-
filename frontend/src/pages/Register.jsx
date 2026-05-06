@@ -10,7 +10,7 @@ import { User, Mail, Lock, Phone, Building, ArrowLeft, Eye, EyeOff, Tractor } fr
 import { toast } from "sonner";
 import api from "../services/api";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_agricam-ia/artifacts/pkl5v1nd_logo%20Afrian%20ai%20solutions.png";
+const LOGO_URL = "/branding/agricam-logo.png";
 
 const roles = [
   { value: "farmer", label: "Agriculteur", icon: Tractor },
