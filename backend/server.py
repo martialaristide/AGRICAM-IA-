@@ -2414,15 +2414,43 @@ async def seed_database():
     first_names_f = ["Marie", "Fatimata", "Aminata", "Aissatou", "Rose", "Jeanne", "Beatrice", "Grace", "Esther", "Patience", "Clarisse", "Veronique", "Cecile", "Nathalie", "Florence", "Agnes", "Therese", "Christine", "Sylvie", "Bernadette", "Pascaline", "Viviane", "Colette", "Felicite", "Madeleine", "Marthe", "Antoinette", "Josephine", "Helene", "Pauline", "Angele", "Solange", "Mariette", "Victorine", "Odette", "Yvette", "Brigitte", "Lucie", "Adele", "Carine"]
     last_names = ["Kamga", "Njoya", "Mbarga", "Tagne", "Fotso", "Nkeng", "Onana", "Ngono", "Eyinga", "Essomba", "Atangana", "Mvogo", "Biya", "Ndam", "Tchana", "Moussa", "Adamou", "Oumarou", "Saidou", "Ibrahim", "Hamadou", "Ousmanou", "Mohamadou", "Abubakar", "Talla", "Nganou", "Kenfack", "Tchatchoua", "Mbouda", "Tchoumi", "Nguepi", "Fomena", "Djimeli", "Takam", "Feujio", "Nkwenti", "Ayuk", "Enow", "Agbor", "Besong", "Tanyi", "Effa", "Mendouga", "Owona", "Zambo", "Meka", "Nanga", "Beyala", "Eko", "Abega"]
     cities = ["Douala", "Yaounde", "Bafoussam", "Bamenda", "Garoua", "Maroua", "Bertoua", "Ebolowa", "Ngaoundere", "Buea", "Limbe", "Kumba", "Nkongsamba", "Dschang", "Kribi", "Edea", "Loum", "Foumban", "Sangmelima", "Mbalmayo"]
-    cultures = ["Mais, Manioc", "Cacao, Cafe", "Plantain, Macabo", "Tomate, Piment", "Riz, Sorgho", "Arachide, Soja", "Banane, Ananas", "Palmier a huile", "Coton, Mil", "Haricot, Igname", "Poivre, Gingembre", "Avocat, Mangue"]
-    companies_sup = ["AgroPlus", "SemencesCam", "PhytoCam", "AgroEquip", "BioFertil", "AgriTech Solutions", "CamSeeds", "TropicAgro", "SahelVert", "AgroDistrib"]
-    companies_bank = ["Afriland First Bank", "BICEC", "Ecobank Cameroun", "SCB", "UBA Cameroun"]
-    sub_types = ["basic", "premium", "freemium"]
+    cities_other = {
+        "Cote d'Ivoire": ["Abidjan", "Bouake", "Yamoussoukro", "Korhogo", "San Pedro", "Daloa"],
+        "Senegal": ["Dakar", "Thies", "Kaolack", "Saint-Louis", "Ziguinchor"],
+        "Mali": ["Bamako", "Sikasso", "Mopti", "Segou", "Kayes"],
+        "Burkina Faso": ["Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora"],
+        "Ghana": ["Accra", "Kumasi", "Tamale", "Cape Coast"],
+        "Togo": ["Lome", "Sokode", "Kara", "Atakpame"],
+        "Benin": ["Cotonou", "Porto-Novo", "Parakou", "Abomey"],
+        "Nigeria": ["Lagos", "Abuja", "Kano", "Ibadan", "Port Harcourt"],
+        "Kenya": ["Nairobi", "Mombasa", "Kisumu", "Nakuru"],
+        "Rwanda": ["Kigali", "Butare", "Gisenyi"],
+    }
+    country_phone_prefix = {
+        "Cameroun": "+237", "Cote d'Ivoire": "+225", "Senegal": "+221", "Mali": "+223",
+        "Burkina Faso": "+226", "Ghana": "+233", "Togo": "+228", "Benin": "+229",
+        "Nigeria": "+234", "Kenya": "+254", "Rwanda": "+250",
+    }
+    cultures = ["Mais, Manioc", "Cacao, Cafe", "Plantain, Macabo", "Tomate, Piment", "Riz, Sorgho", "Arachide, Soja", "Banane, Ananas", "Palmier a huile", "Coton, Mil", "Haricot, Igname", "Poivre, Gingembre", "Avocat, Mangue", "Karite, Anacarde", "Hevea, Coton", "The, Cafe Arabica"]
+    companies_sup = ["AgroPlus SARL", "SemencesCam", "PhytoCam", "AgroEquip", "BioFertil", "AgriTech Solutions", "CamSeeds", "TropicAgro", "SahelVert", "AgroDistrib", "Yara Africa", "Notore Chemical", "OCP Africa", "Syngenta Africa", "Bayer CropScience", "FasoSeeds", "WestSeed Africa", "Aliko AgroChem"]
+    companies_bank = ["Afriland First Bank", "BICEC", "Ecobank", "SCB", "UBA", "Societe Generale", "BGFI Bank", "Standard Chartered", "Equity Bank", "KCB Bank", "Stanbic Bank", "Zenith Bank", "Access Bank", "Coris Bank", "BOA"]
+    sub_types = ["basic", "premium", "freemium", "premium", "basic"]  # Weight basic+premium higher
     
-    roles_dist = [("farmer", 180), ("seed_analyst", 40), ("agronomist", 40), ("trainer", 40)]
+    roles_dist = [
+        ("farmer", 350),
+        ("seed_analyst", 45),
+        ("agronomist", 60),
+        ("trainer", 35),
+        ("supplier", 55),
+        ("financial", 25),
+    ]
     
     bulk_users = []
     user_counter = 0
+    countries_list = list(cities_other.keys())
+    # Pre-compute the bcrypt hash ONCE (all demo users share password "Demo@2026")
+    # bcrypt is intentionally slow (~250ms) — hashing 570 times would take 2+ minutes
+    demo_password_hash = hash_password("Demo@2026")
     for role, count in roles_dist:
         for i in range(count):
             user_counter += 1
@@ -2430,26 +2458,53 @@ async def seed_database():
             first = rng.choice(first_names_f if is_female else first_names_m)
             last = rng.choice(last_names)
             full_name = f"{first} {last}"
-            city = rng.choice(cities)
+            # 70% Cameroun, 30% other African countries
+            if rng.random() < 0.70:
+                country = "Cameroun"
+                city = rng.choice(cities)
+            else:
+                country = rng.choice(countries_list)
+                city = rng.choice(cities_other[country])
             email = f"{first.lower().replace('-','').replace(' ','')}.{last.lower()}{'.' + str(rng.randint(1,99)) if rng.random() > 0.5 else ''}@{'gmail.com' if rng.random() > 0.3 else 'agricam.cm'}"
-            phone = f"+237{rng.choice(['6','65','69','67','68','66'])}{rng.randint(10000000,99999999)}"[:14]
+            prefix = country_phone_prefix.get(country, "+237")
+            phone = f"{prefix}{rng.randint(600000000, 699999999)}"
             
+            # Company name based on role
+            if role == "farmer":
+                company = f"Exploitation {last}" if rng.random() > 0.4 else f"Ferme {first} {last}"
+            elif role == "supplier":
+                company = rng.choice(companies_sup)
+            elif role == "financial":
+                company = f"{rng.choice(companies_bank)} - Agence {city}"
+            elif role == "agronomist":
+                company = f"Cabinet AgroConsult {last}" if rng.random() > 0.5 else f"Conseil {first} {last}"
+            elif role == "seed_analyst":
+                company = rng.choice(["Centre Semencier National", "Lab Phytosanitaire", f"SeedLab {city}", "ISRA", "IRAD"])
+            elif role == "trainer":
+                company = rng.choice(["AgroFormation Pro", "Institut Agricole", f"Centre Formation {city}", "FAO Training", "IFAD Africa"])
+            else:
+                company = f"AGRICAM Member {last}"
+
             user_doc = {
                 "id": f"{role}-demo-{user_counter:04d}",
                 "email": email,
-                "password_hash": hash_password("Demo@2026"),
+                "password_hash": demo_password_hash,
                 "full_name": full_name,
                 "phone": phone,
                 "role": role,
-                "company_name": f"Exploitation {last}" if role == "farmer" else (rng.choice(companies_sup) if role == "supplier" else f"Cabinet {last}"),
-                "address": f"{city}, Cameroun",
+                "company_name": company,
+                "address": f"{city}, {country}",
+                "country": country,
+                "city": city,
                 "culture_type": rng.choice(cultures) if role == "farmer" else None,
                 "subscription_type": rng.choice(sub_types),
                 "is_verified": True,
-                "is_active": True,
+                "is_active": rng.random() > 0.05,  # 95% active
                 "trial_start": datetime.now(timezone.utc).isoformat(),
                 "trial_end": (datetime.now(timezone.utc) + timedelta(days=rng.randint(7, 365))).isoformat(),
-                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 180))).isoformat()
+                "ai_token_balance": rng.randint(100, 10000),
+                "last_login": (datetime.now(timezone.utc) - timedelta(days=rng.randint(0, 30))).isoformat(),
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=rng.randint(1, 365))).isoformat()
             }
             bulk_users.append(user_doc)
     
