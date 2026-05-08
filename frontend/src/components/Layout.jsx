@@ -26,6 +26,8 @@ import {
   Banknote,
   ChevronDown,
   Sparkles,
+  Crown,
+  LifeBuoy,
   TreePine,
   Cog,
   GraduationCap,
@@ -228,6 +230,7 @@ const getNavGroups = (role, t) => {
     description: GROUP_DESCRIPTIONS.market,
     items: [
       { path: "/marketplace", icon: ShoppingCart, label: t("nav.marketplace") },
+      { path: "/licences", icon: Crown, label: "Plans & Licences" },
       { path: "/paiements", icon: Smartphone, label: t("payment.title") || "Paiements" },
       { path: "/financial", icon: Banknote, label: t("nav.financial") || "Finances" },
       { path: "/analytics", icon: BarChart3, label: t("nav.analytics") },
@@ -253,6 +256,7 @@ const getNavGroups = (role, t) => {
     items: [
       { path: "/admin", icon: Shield, label: t("nav.admin") || "Administration" },
       { path: "/admin-analytics", icon: BarChart3, label: "Analytics Présentation" },
+      { path: "/admin-support", icon: LifeBuoy, label: "Tickets Support" },
       { path: "/security", icon: ShieldAlert, label: t("nav.security") || "Centre de Sécurité" },
       { path: "/access-control", icon: KeyRound, label: t("nav.accessControl") || "Contrôle Accès" },
       { path: "/database", icon: Database, label: t("nav.database") || "Base de Données" },
@@ -262,6 +266,7 @@ const getNavGroups = (role, t) => {
   };
 
   // Direct items at the bottom
+  const support = { path: "/support", icon: LifeBuoy, label: "Support", tooltip: MODULE_DESCRIPTIONS["/support"] };
   const alertes = { path: "/alertes", icon: Bell, label: t("nav.alerts"), tooltip: MODULE_DESCRIPTIONS["/alertes"] };
   const settings = { path: "/parametres", icon: Settings, label: t("nav.settings"), tooltip: MODULE_DESCRIPTIONS["/parametres"] };
 
@@ -272,7 +277,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard],
       groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning), enrich(groupAdmin)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -280,7 +285,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard],
       groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -288,7 +293,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard, { path: "/supplier-dashboard", icon: Package, label: t("roles.supplier.title") || "Mon Espace", tooltip: MODULE_DESCRIPTIONS["/supplier-dashboard"] }],
       groups: [enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -296,7 +301,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard, { path: "/bank-dashboard", icon: Banknote, label: t("roles.bank.title") || "Mon Espace", tooltip: MODULE_DESCRIPTIONS["/bank-dashboard"] }],
       groups: [enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -304,7 +309,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard],
       groups: [enrich(groupAnalysis), enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -312,7 +317,7 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard, { path: "/agronomist", icon: Lightbulb, label: t("roles.agronomist.title") || "Mon Espace", tooltip: MODULE_DESCRIPTIONS["/agronomist"] }],
       groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
@@ -320,14 +325,14 @@ const getNavGroups = (role, t) => {
     return {
       direct: [dashboard, { path: "/trainer-dashboard", icon: GraduationCap, label: "Espace Formateur", tooltip: MODULE_DESCRIPTIONS["/trainer-dashboard"] }],
       groups: [enrich(groupAnalysis), enrich(groupMarket), enrich(groupLearning)],
-      bottom: [alertes, settings],
+      bottom: [support, alertes, settings],
     };
   }
 
   return {
     direct: [dashboard],
     groups: [enrich(groupMarket), enrich(groupLearning)],
-    bottom: [alertes, settings],
+    bottom: [support, alertes, settings],
   };
 };
 

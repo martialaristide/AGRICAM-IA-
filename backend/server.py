@@ -4896,6 +4896,22 @@ try:
     app.include_router(payments_router)
     app.include_router(nwp_webhook_router)
     logger.info("NetWalletPay payment routes loaded successfully")
+
+    # === New modular systems (Session 11) — additive, isolated ===
+    from routes.licensing import router as licensing_router, init_db as licensing_init
+    licensing_init(db, get_current_user)
+    app.include_router(licensing_router)
+    logger.info("Licensing system loaded successfully")
+
+    from routes.support import router as support_router, init_db as support_init
+    support_init(db, get_current_user)
+    app.include_router(support_router)
+    logger.info("Support center loaded successfully")
+
+    from routes.marketplace_v2 import router as mkt_v2_router, init_db as mkt_v2_init
+    mkt_v2_init(db, get_current_user)
+    app.include_router(mkt_v2_router)
+    logger.info("Marketplace V2 (secure purchase flow) loaded successfully")
 except ImportError as e:
     logger.warning(f"Payment routes not loaded: {e}")
 

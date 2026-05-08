@@ -15,6 +15,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminSupport from "./pages/AdminSupport";
+import Licensing from "./pages/Licensing";
+import SupportCenter from "./pages/SupportCenter";
 import Parcelles from "./pages/Parcelles";
 import CapteursIoT from "./pages/CapteursIoT";
 import GestionDrones from "./pages/GestionDrones";
@@ -260,6 +263,13 @@ function App() {
                   <AdminAnalytics />
                 </ProtectedRoute>
               } />
+              <Route path="admin-support" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminSupport />
+                </ProtectedRoute>
+              } />
+              <Route path="licences" element={<Licensing />} />
+              <Route path="support" element={<SupportCenter />} />
               <Route path="seed-analyst" element={
                 <ProtectedRoute allowedRoles={["admin", "seed_analyst"]}>
                   <SeedAnalystDashboard />

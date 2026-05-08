@@ -1,0 +1,57 @@
+{
+  "summary": "Iteration 38 — Licensing + Support + Marketplace V2 + Security helpers tested. Backend 22/22 pytest pass (4 regression + 7 licensing + 7 support + 4 marketplace_v2). All NEW endpoints behave per contract: /api/licensing/plans returns 4 XAF-priced plans, /subscribe?free → instant active license, /subscribe?premium_farmer monthly→amount=15000 / annual→amount=120000, /admin/all gates non-admin to 403. Support: 8 categories + 4 priorities, ticket creation returns TK-yymmdd-XXXXXX number, <3-char subject → 422, admin reply auto-flips status to in_progress, /admin/tickets returns full stats dict, rate_limit triggers 429 after 5 calls/hour. Marketplace V2: /purchase/initiate returns confirmation_required + summary, replay nonce → 409, /purchase/confirm with confirmed=false → cancelled. NO REGRESSION on existing /api/dashboard/stats, /api/parcels, /api/payments/packages, /api/admin/analytics-presentation. Frontend: /licences page renders all 4 plan cards (data-testid plan-free/premium_farmer/cooperative/enterprise) with Mensuel/Annuel toggle, Activer on free succeeds (current plan badge updates). /support page renders ticket list with TK- numbers + status badges; previously-created ticket from backend tests shows 'En cours' status (proves admin-reply-triggers-status-change flow end-to-end through DB).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/support/tickets (rate_limit)", "issue": "In-memory rate limiter keyed on request.client.host can be partially bypassed when multiple ingress proxy IPs fan-out requests to the same backend pod. Verified manually that limiter triggers correctly for rapid back-to-back calls from a single connection (1 success then 7×429). For production hardening, key on X-Forwarded-For (real client IP) or move bucket to Redis."},
+      {"endpoint": "POST /api/marketplace-v2/purchase/initiate", "issue": "Reads product from db.marketplace_products / db.products, but the existing /api/marketplace/products endpoint returns 2 hardcoded mock products (prod1/prod2) that are NOT in MongoDB and use 'price_per_unit' field instead of 'price'/'unit_price'. Result: real users browsing the legacy marketplace cannot purchase via marketplace-v2 — initiate returns 404 ('Produit introuvable') or 400 ('Prix produit invalide'). Either (a) seed marketplace_products collection from the hardcoded list, (b) make initiate fall back to read from the in-memory list used by /api/marketplace/products, or (c) extend price extraction to also accept 'price_per_unit'."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "GuidedTour overlay", "issue": "Same as iter 37 — the 7-step Dashboard tour auto-opens on EVERY route mount (including /licences and /support) and intercepts clicks on the 'Nouveau ticket' (data-testid='create-ticket-btn') button, preventing the create-ticket dialog from opening in fresh sessions. Setting localStorage flags didn't dismiss it. Must be skipped via the X button manually before users can interact with primary CTAs.", "selector": "[data-testid='create-ticket-btn']", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/licences", "issues": ["Premium Agriculteur card already shows 'Actuel' badge after ANY pending subscription was created — it should only mark the plan whose license is in 'active' status, not 'pending'. Currently a user who clicks 'S\u2019abonner' but never pays will still see 'Actuel' on the paid card."]},
+      {"screen": "/support", "issues": ["Ticket list rows have low contrast (light-grey-on-near-black). Subject text 'TEST_rl_2_5ca7' is barely readable. Bump foreground contrast for ticket subjects (currently ~AA-fail at WCAG)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration38_licensing_support_marketplace.py",
+    "/app/test_reports/pytest/iteration38.xml"
+  ],
+  "action_items": [
+    "MUST FIX (HIGH): Disable / auto-dismiss GuidedTour on /licences, /support, /admin-support routes (or once user has visited dashboard). Currently it blocks the create-ticket flow.",
+    "SHOULD FIX: Marketplace V2 product lookup — the legacy /api/marketplace/products returns hardcoded mocks not in DB; either persist them on startup or make /api/marketplace-v2/purchase/initiate read from the same source. Otherwise the popup feature is unreachable from the UI.",
+    "SHOULD FIX: 'Actuel' badge on /licences should require status='active', not just any license existing for the plan_id.",
+    "NICE TO HAVE: Move rate-limit bucket key to X-Forwarded-For header (or Redis) to be reliable behind multi-replica ingress.",
+    "NICE TO HAVE: Improve contrast on /support ticket list rows for WCAG-AA compliance."
+  ],
+  "critical_code_review_comments": [
+    "security_helpers.py is clean and well-structured (sliding-window rate limit + nonce TTL purge + magic-bytes file validator + HTML/regex sanitizer). One concern: _rate_buckets and _seen_nonces are in-process dicts — won't survive backend restarts and don't share across workers. Document that or move to Redis for prod.",
+    "licensing.py / support.py / marketplace_v2.py all duplicate the same 12-line _user_from_request JWT helper. Consider extracting into routes/_auth.py to follow DRY and avoid drift if JWT_SECRET_KEY env var changes.",
+    "marketplace_v2.initiate_purchase reads only 'price' and 'unit_price' fields, but legacy products use 'price_per_unit'. Add fallback OR document required schema.",
+    "support.py admin_set_status uses a query parameter `status: str` instead of a Pydantic body model — easy to misuse (any string accepted before the in-block validation). Switch to Pydantic Literal for cleaner OpenAPI docs.",
+    "license activation endpoint (/api/licensing/activate/{license_id}) is exposed to the user themselves — they can call it directly without payment. Should be limited to webhook secret + admin role. Currently the user can self-activate any pending license.",
+    "All Mongo reads correctly project out _id with {'_id': 0} — no ObjectId leakage.",
+    "Pydantic models on TicketCreate / PurchaseInitiate enforce min_length and regex patterns — good validation hygiene. PurchaseInitiate.nonce min 8 chars is OK but should add a server-side check that nonce is hex/url-safe to prevent injection of weird unicode."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration38_licensing_support_marketplace.py (NEW — 22 pytest cases)",
+    "MongoDB: inserted seed product 'TEST_prod_v2_iter38' into test_database.marketplace_products for marketplace_v2 testing"
+  ],
+  "success_rate": {
+    "backend": "100% (22/22 passed)",
+    "frontend": "60% (Licensing page fully verified, /support page renders + persisted ticket from backend test visible with correct 'En cours' status, but New Ticket dialog open blocked by GuidedTour overlay so create-ticket UI flow not playwright-verified end-to-end. Backend equivalent IS verified.)"
+  },
+  "test_credentials": {
+    "admin": "admin@agricam.ai / Admin@2026 (working)",
+    "farmer": "agriculteur@agricam.ai / Farmer@2026 (working, 403 confirmed on admin endpoints)"
+  },
+  "seed_data_creation": "Inserted 1 product (id='TEST_prod_v2_iter38', price=5000 XAF) into marketplace_products collection to enable marketplace_v2 testing — legacy /api/marketplace/products endpoint serves only hardcoded EUR-priced mocks not present in DB.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend (22/22) regression-clean. The new modules (licensing, support, marketplace_v2, security_helpers) are isolated and don't break existing endpoints. Two real bugs found and reported (above). The same GuidedTour overlay issue from iter 37 still blocks /support primary CTA — main agent should disable the tour on non-dashboard routes. Marketplace V2 initiate cannot find legacy products; needs schema bridge. Test seed product 'TEST_prod_v2_iter38' was inserted manually to allow marketplace tests to pass.",
+  "rca of the issue": "Marketplace V2 'Prix produit invalide' RCA: legacy /api/marketplace/products serves 2 hardcoded products from in-code list — they are NEVER inserted into MongoDB. The new /api/marketplace-v2/purchase/initiate reads via _db.marketplace_products.find_one(...) and falls back to _db.products.find_one(...) — both return None for the legacy mocks. Even if found, the code reads product['price'] or product['unit_price'], but legacy mocks only have 'price_per_unit'. Fix path: (a) on backend startup, upsert the hardcoded list into _db.marketplace_products with normalized 'price' field; or (b) change marketplace_v2 to delegate product lookup to the same source as /api/marketplace/products. GuidedTour blocking /support 'Nouveau ticket' RCA: GuidedTour component mounts globally and renders a fixed-position overlay that wins z-index over the page-level dialog trigger; clicking 'Nouveau ticket' fires the React handler but the dialog opens behind the tour, OR the tour's full-screen overlay blocks the click entirely (we verified the dialog never appears in DOM). Fix path: gate GuidedTour render on currentRoute === '/dashboard' or check a route allowlist."
+}
