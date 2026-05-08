@@ -17,6 +17,7 @@ import {
   Package, DollarSign, Phone, User, Image
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import PurchaseConfirmDialog from "../components/PurchaseConfirmDialog";
 
 const categories = [
   { id: "all", name: "Tout", icon: Package },
@@ -147,6 +148,7 @@ const MarketplaceEnhanced = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [purchaseProduct, setPurchaseProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "seeds",
@@ -433,7 +435,12 @@ const MarketplaceEnhanced = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+                <Button
+                  size="sm"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => setPurchaseProduct(product)}
+                  data-testid={`buy-${product.id}`}
+                >
                   <ShoppingCart className="h-4 w-4 mr-1" />
                   Acheter
                 </Button>
@@ -491,6 +498,16 @@ const MarketplaceEnhanced = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Secure purchase confirmation popup */}
+      <PurchaseConfirmDialog
+        open={!!purchaseProduct}
+        onClose={() => setPurchaseProduct(null)}
+        product={purchaseProduct}
+        onSuccess={(orderId) => {
+          toast.success(`Commande ${orderId} créée !`);
+        }}
+      />
     </div>
   );
 };

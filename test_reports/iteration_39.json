@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 39 — Frontend e2e validation of /licences, /support (farmer), /support detail (reply), /admin-support, and PurchaseConfirmDialog wired into /marketplace. GuidedTour fix VERIFIED — tour no longer renders on /licences or /support (only /dashboard). 4/5 flows fully PASS. Marketplace dialog renders correctly and validates phone, but /api/marketplace-v2/purchase/initiate returns 404 'Produit introuvable' for legacy products → confirm step never reachable from UI (same backend issue flagged in iter 38, still not fixed).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/marketplace-v2/purchase/initiate", "issue": "Returns 404 'Produit introuvable' when called with product_id='prod_1' (the ID exposed by legacy GET /api/marketplace/products that the frontend Marketplace page uses). Verified live: clicking Acheter on 'Semences de Maïs Hybride' → fills phone 237670000000 → click Continuer → backend 404 logged in browser console. Dialog displays the error and the user cannot reach the 'Confirmer et payer' step. Iter 38 already flagged this; the fix described in 'other_misc_info' (price_per_unit fallback) does not address product LOOKUP — products from legacy in-code list are not seeded into MongoDB. Fix path: on backend startup, upsert the hardcoded product list into db.marketplace_products with normalized 'price' field, OR have marketplace_v2.initiate_purchase fall back to look up products from the same source that powers /api/marketplace/products.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "AdminSupport ticket detail dialog", "issue": "Reply textarea and send button are missing data-testid='reply-textarea' and data-testid='send-reply-btn' attributes (they exist on /support farmer page but not on /admin-support). Tests have to fall back to generic selectors. Add the same testids for parity and to allow shared regression scripts.", "selector": "[role='dialog'] textarea (no data-testid)", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Marketplace Acheter → PurchaseConfirmDialog confirm step", "issue": "Initiate POST returns 404; confirm step never displays the 'Confirmer et payer' button. Cancel + close work fine. End-to-end purchase flow is unreachable until backend product lookup is fixed.", "affected_selectors": ["[data-testid='purchase-confirm-btn']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_39.json"],
+  "action_items": [
+    "MUST FIX (CRITICAL): Marketplace V2 product lookup. /api/marketplace-v2/purchase/initiate must resolve product_id='prod_1' (and prod_2..prod_8 served by /api/marketplace/products). Either (a) seed the hardcoded list into MongoDB on startup, or (b) make initiate_purchase delegate lookup to the in-memory list of /api/marketplace/products. This is the SAME bug from iter 38 — it blocks the entire marketplace purchase UX.",
+    "SHOULD FIX (MEDIUM): Add data-testid='reply-textarea' and data-testid='send-reply-btn' to the AdminSupport ticket-detail dialog reply controls (parity with /support page).",
+    "VERIFIED FIXED: GuidedTour is now correctly gated on location.pathname === '/dashboard' in Layout.jsx — no longer blocks /licences or /support CTAs."
+  ],
+  "critical_code_review_comments": [
+    "Layout.jsx GuidedTour gating (line 541-543) is correct — re-checks pathname and returns early. Good fix.",
+    "PurchaseConfirmDialog correctly surfaces backend error message ('Produit introuvable') to the user — UX is acceptable, but the underlying product-lookup gap makes the whole feature unusable from this UI.",
+    "AdminSupport.jsx reply controls lack data-testid attributes — add them for testability parity.",
+    "MarketplaceEnhanced.jsx correctly wires product object (with image, price_per_unit) into PurchaseConfirmDialog — frontend-side integration is solid."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "not retested this iteration (frontend-only mandate); iter 38 had 22/22 backend pass",
+    "frontend": "80% (4/5 flows pass: /licences ✓, /support farmer ✓, /support detail reply ✓, /admin-support stats+detail+reply ✓; /marketplace dialog opens & validates but confirm step blocked by backend 404)"
+  },
+  "test_credentials": {
+    "admin": "admin@agricam.ai / Admin@2026 — verified working (lands on /admin not /dashboard)",
+    "farmer": "agriculteur@agricam.ai / Farmer@2026 — verified working"
+  },
+  "seed_data_creation": "None this iteration. Created live ticket TK-260508-CDA809 'Bug paiement Mobile Money E2E' via UI; admin reply visible; status auto-flipped to in_progress (verified in admin stats: Ouverts went 28→27, En cours went 3→4).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "GuidedTour fix is VERIFIED. /licences, /support, /admin-support flows all green end-to-end. The ONLY remaining bug is the marketplace_v2 product lookup 404 — same root cause as iter 38: legacy /api/marketplace/products serves hardcoded mocks (prod_1..prod_8) NEVER persisted to MongoDB, so /api/marketplace-v2/purchase/initiate cannot find them. Main agent should either seed marketplace_products on startup or refactor initiate to share the legacy product source. After that fix, retest /marketplace flow only — everything else is clean.",
+  "rca of the issue": "Marketplace 'Produit introuvable' RCA: Browser console + network tab confirm POST /api/marketplace-v2/purchase/initiate {product_id:'prod_1', quantity:1, ...} returns HTTP 404. Backend marketplace_v2.initiate_purchase reads via db.marketplace_products.find_one({'id': product_id}) and falls back to db.products.find_one(...) — both miss because /api/marketplace/products serves an in-code Python list that is never inserted into MongoDB. The IDs 'prod_1'..'prod_8' exist only in the legacy endpoint's response. Fix: insert the hardcoded list into db.marketplace_products on backend startup (idempotent upsert with normalized 'price' field), OR pass product objects via session/cache rather than re-resolving by id."
+}
