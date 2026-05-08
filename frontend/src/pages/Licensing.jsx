@@ -150,7 +150,7 @@ const Licensing = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {plans.map((plan) => {
               const Icon = PLAN_ICONS[plan.id] || Sparkles;
-              const isCurrent = myLicense?.plan?.id === plan.id;
+              const isCurrent = myLicense?.plan?.id === plan.id && myLicense?.status === "active";
               const price = billingCycle === "annual" ? plan.price_annual_xaf : plan.price_monthly_xaf;
               return (
                 <Card

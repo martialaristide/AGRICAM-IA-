@@ -73,7 +73,7 @@ async def initiate_purchase(req: PurchaseInitiate, request: Request):
     if not product:
         raise HTTPException(404, "Produit introuvable")
 
-    unit_price = float(product.get("price", 0) or product.get("unit_price", 0))
+    unit_price = float(product.get("price", 0) or product.get("unit_price", 0) or product.get("price_per_unit", 0))
     if unit_price <= 0:
         raise HTTPException(400, "Prix produit invalide")
 
@@ -89,7 +89,7 @@ async def initiate_purchase(req: PurchaseInitiate, request: Request):
         "seller_id": product.get("seller_id") or product.get("user_id"),
         "seller_name": product.get("seller_name") or product.get("supplier_name"),
         "product_id": req.product_id,
-        "product_name": product.get("name") or product.get("product_name"),
+        "product_name": product.get("name") or product.get("product_name") or product.get("title"),
         "product_image": product.get("image") or product.get("image_url"),
         "unit_price": unit_price,
         "quantity": req.quantity,

@@ -533,12 +533,12 @@ const Layout = () => {
     });
   };
   
-  // Guided Tour — skip on analytics/presentation routes to keep KPIs unobstructed
+  // Guided Tour — only on dashboard route to avoid blocking other pages' CTAs
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
     const done = localStorage.getItem("agricam_tour_done");
-    const skipRoutes = ["/admin-analytics", "/admin"];
-    if (skipRoutes.includes(location.pathname)) return;
+    // Only show on the main dashboard, never on feature pages where it covers buttons
+    if (location.pathname !== "/dashboard") return;
     if (!done) { const timer = setTimeout(() => setShowTour(true), 2000); return () => clearTimeout(timer); }
   }, [location.pathname]);
   

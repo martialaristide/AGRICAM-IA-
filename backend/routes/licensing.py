@@ -238,14 +238,14 @@ async def subscribe(req: SubscribeRequest, request: Request):
 
 @router.post("/activate/{license_id}")
 async def activate_license(license_id: str, request: Request):
-    """Activate a pending license after successful payment confirmation.
-    Called internally by the payment webhook OR manually by admin."""
+    """Activate a pending license. Restricted to admin role or internal webhook
+    (regular users CANNOT self-activate without going through payment webhook)."""
     u = await _user_from_request(request)
+    if u.get("role") != "admin":
+        raise HTTPException(403, "Activation manuelle réservée à l'administrateur. Le paiement déclenche l'activation automatiquement via webhook.")
     lic = await _db.licenses.find_one({"id": license_id}, {"_id": 0})
     if not lic:
         raise HTTPException(404, "Licence introuvable")
-    if lic["user_id"] != u["id"] and u.get("role") != "admin":
-        raise HTTPException(403, "Accès refusé")
     if lic["status"] == "active":
         return {"success": True, "message": "Licence déjà active", "license": lic}
 
