@@ -59,6 +59,7 @@ import {
 import { Badge } from "./ui/badge";
 import LanguageSelector from "./LanguageSelector";
 import GuidedTour from "./GuidedTour";
+import DemoTour from "./DemoTour";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -495,6 +496,7 @@ const getRoleBadge = (role) => {
 const Layout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [demoTourOpen, setDemoTourOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -878,7 +880,22 @@ const Layout = () => {
           <div className="flex items-center justify-between">
             <div className="lg:hidden w-10"></div>
             
-            <div className="flex-1 flex items-center justify-end gap-4">
+            <div className="flex-1 flex items-center justify-end gap-2 sm:gap-4">
+              {/* Demo Tour launcher — admins only, optimized for investor pitch */}
+              {user?.role === "admin" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDemoTourOpen(true)}
+                  className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 to-lime-500/10 hover:from-amber-500/20 hover:to-lime-500/20 text-amber-400 hover:text-amber-300 ring-1 ring-amber-500/30 h-9 px-3"
+                  title="Lancer le mode Demo Pitch (2 minutes auto)"
+                  data-testid="launch-demo-tour-btn"
+                >
+                  <span aria-hidden>🎬</span>
+                  <span className="text-xs font-semibold">Mode Demo</span>
+                </Button>
+              )}
+
               {/* Language Selector */}
               <LanguageSelector variant="ghost" showLabel={true} />
 
@@ -936,6 +953,7 @@ const Layout = () => {
       </main>
       <ExitIntentModal isOpen={showExitModal} onClose={() => setShowExitModal(false)} />
       {showTour && <GuidedTour onComplete={() => setShowTour(false)} />}
+      <DemoTour open={demoTourOpen} onClose={() => setDemoTourOpen(false)} />
     </div>
   );
 };

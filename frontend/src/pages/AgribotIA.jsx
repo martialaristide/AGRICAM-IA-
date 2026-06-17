@@ -66,6 +66,10 @@ const AgribotIA = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [voiceGender, setVoiceGender] = useState(() => localStorage.getItem("agricam_voice_gender") || "female");
+  const [availableVoices, setAvailableVoices] = useState([]);
+  // Demo Tour state
+  const [demoTourActive, setDemoTourActive] = useState(false);
 
   const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);

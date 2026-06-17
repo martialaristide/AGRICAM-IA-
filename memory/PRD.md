@@ -25,7 +25,19 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
 ## Recent Changes (Feb 2026)
-### Iteration 40 (current — fork resume)
+### Iteration 42 (current)
+- 🚨 **CRITICAL BUG FIX**: AGRI GENIUS page rendered blank — fixed missing `voiceGender` / `availableVoices` state declarations in `AgribotIA.jsx`
+- 🎬 **Demo Tour Mode**: Created `/app/frontend/src/components/DemoTour.jsx` — auto-piloted 4-step pitch overlay (Voice AI → Drone → Seed → Marketplace), 30s/step, navigation auto, controls (prev/pause/next), minimizable. Launched via "🎬 Mode Demo" button in header (admin only).
+- ✅ Verified: AGRI GENIUS renders fully, voice M/F toggle visible, Demo Tour launches and shows "Etape 1/4 AGRI GENIUS"
+
+### Iteration 41
+- Fixed `tml>` HTML overflow at page load (rogue text in `index.html`)
+- Dashboard mobile responsive (tabs scroll, padding p-4 sm:p-6, text-xs sm:text-sm)
+- Voice gender toggle ♀/♂ in AGRI GENIUS with persistence (localStorage)
+- More human voice tuning: rate 0.88, pitch 0.92/1.05 by gender, prefer premium FR voices (Amélie, Thomas, Google FR, Microsoft)
+- Auto-detect African voices when available (CM, SN, MA, TN, DZ)
+
+### Iteration 40
 - ✅ Added `licensing`, `support`, `marketplaceV2` translation keys to FR + EN (21-lang fallback to FR)
 - ✅ Refactored `Licensing.jsx` and `SupportCenter.jsx` to use `useLanguage().t()` for all visible labels
 - ✅ Improved mobile responsiveness: `max-w-full overflow-x-hidden`, `sm:` breakpoints for headings/grids, `flex-wrap` on metadata rows
