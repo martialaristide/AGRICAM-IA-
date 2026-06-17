@@ -71,15 +71,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 animate-slide-in" data-testid="dashboard-page">
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 gradient-dashboard rounded-2xl p-8">
-          <h1 className="text-3xl font-bold font-[Manrope] text-white mb-2">
+    <div className="space-y-6 animate-slide-in max-w-full overflow-x-hidden" data-testid="dashboard-page">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 gradient-dashboard rounded-2xl p-4 sm:p-6 lg:p-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold font-[Manrope] text-white mb-2 break-words">
             {t("pages.dashboard.welcome")} <span className="text-emerald-400">IA</span>
           </h1>
-          <p className="text-slate-400 text-lg">{t("roles.farmer.subtitle")}</p>
-          <div className="flex items-center gap-2 mt-4 text-sm text-emerald-400/80">
-            <Zap className="h-4 w-4" />
+          <p className="text-slate-400 text-sm sm:text-base lg:text-lg">{t("roles.farmer.subtitle")}</p>
+          <div className="flex items-center gap-2 mt-3 sm:mt-4 text-xs sm:text-sm text-emerald-400/80 flex-wrap">
+            <Zap className="h-4 w-4 flex-shrink-0" />
             <span>{t("pages.dashboard.systemOperational")} - {stats?.active_sensors || 0} {t("pages.dashboard.activeSensors")}</span>
           </div>
         </div>
@@ -87,7 +87,7 @@ const Dashboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
         {[
           { id: "overview", label: t("pages.dashboard.overview"), icon: BarChart3 },
           { id: "health", label: t("roles.farmer.cropHealth"), icon: Leaf },
@@ -96,9 +96,9 @@ const Dashboard = () => {
           { id: "blockchain", label: t("roles.farmer.blockchainTrace"), icon: ShieldCheck },
         ].map(tab => (
           <Button key={tab.id} size="sm"
-            className={cn("gap-2 whitespace-nowrap", activeTab === tab.id ? "bg-emerald-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700")}
+            className={cn("gap-1.5 whitespace-nowrap text-xs sm:text-sm flex-shrink-0", activeTab === tab.id ? "bg-emerald-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700")}
             onClick={() => setActiveTab(tab.id)} data-testid={`tab-${tab.id}`}>
-            <tab.icon className="h-4 w-4" /> {tab.label}
+            <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {tab.label}
           </Button>
         ))}
       </div>

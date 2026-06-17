@@ -152,10 +152,50 @@ const AgribotIA = () => {
   // Text-to-Speech - load voices
   useEffect(() => {
     if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices(); // Trigger voice loading
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        setAvailableVoices(voices);
+      };
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
     }
   }, []);
+
+  // Persist voice gender preference
+  useEffect(() => {
+    localStorage.setItem("agricam_voice_gender", voiceGender);
+  }, [voiceGender]);
+
+  // Pick best human-sounding voice for the language and gender
+  // Preference order: African French → Premium FR voices (Google/Microsoft) → any FR voice
+  const pickBestVoice = useCallback((langCode, gender) => {
+    if (!availableVoices.length) return null;
+    const base = langCode.split("-")[0]; // 'fr' from 'fr-FR'
+    const langVoices = availableVoices.filter(v => v.lang.toLowerCase().startsWith(base));
+    if (!langVoices.length) return null;
+
+    const isFemale = (v) => /female|femme|f[eé]minine|woman|amelie|amélie|audrey|julie|virginie|aurelie|aurélie|celine|céline|marie|sophie|chantal|samantha|zira|hortense|gabrielle/i.test(v.name);
+    const isMale = (v) => /male|homme|masculin|man|thomas|paul|antoine|guillaume|nicolas|henri|david|jean|pierre|alex|daniel|fred/i.test(v.name);
+
+    // Step 1: Try African / Cameroon specific voices first (rare but check)
+    const african = langVoices.find(v => /africa|cameroon|cm|sn|ma|tn|dz/i.test(v.name + " " + v.lang));
+    if (african) return african;
+
+    // Step 2: Match gender among premium voices (Google, Microsoft, Apple)
+    const premium = langVoices.filter(v => /google|microsoft|amelie|amélie|thomas|samantha|alex|daniel/i.test(v.name));
+    const premiumByGender = premium.find(v => gender === "female" ? isFemale(v) : isMale(v));
+    if (premiumByGender) return premiumByGender;
+
+    // Step 3: Any voice matching gender
+    const byGender = langVoices.find(v => gender === "female" ? isFemale(v) : isMale(v));
+    if (byGender) return byGender;
+
+    // Step 4: Premium voice (default = female on most systems)
+    if (premium.length) return premium[0];
+
+    // Step 5: Any voice
+    return langVoices[0];
+  }, [availableVoices]);
 
   // Text-to-Speech
   const speakText = useCallback((text) => {
@@ -165,17 +205,18 @@ const AgribotIA = () => {
     const clean = text.replace(/\*\*/g, "").replace(/```[\s\S]*?```/g, "").replace(/#+\s/g, "").replace(/\n+/g, ". ").substring(0, 1000);
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = getSpeechLang(language);
-    utterance.rate = 0.95;
+    // More human pacing — slower, lower pitch for warmth, slight pitch shift for African accent feel
+    utterance.rate = 0.88;
+    utterance.pitch = voiceGender === "male" ? 0.92 : 1.05;
+    utterance.volume = 1.0;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
-    // Try to find a voice matching the language
-    const voices = window.speechSynthesis.getVoices();
-    const langCode = getSpeechLang(language);
-    const voice = voices.find(v => v.lang.startsWith(langCode.split("-")[0]));
+    // Try to find a voice matching the language + gender
+    const voice = pickBestVoice(getSpeechLang(language), voiceGender);
     if (voice) utterance.voice = voice;
     window.speechSynthesis.speak(utterance);
-  }, [language]);
+  }, [language, voiceGender, pickBestVoice]);
 
   const stopSpeaking = () => { window.speechSynthesis?.cancel(); setIsSpeaking(false); };
 
@@ -412,6 +453,22 @@ const AgribotIA = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Voice gender selector — M/F toggle for AGRI GENIUS speech */}
+            <button
+              type="button"
+              onClick={() => setVoiceGender(voiceGender === "female" ? "male" : "female")}
+              className={cn(
+                "h-8 px-2.5 rounded-lg text-xs font-semibold transition-colors ring-1 flex items-center gap-1",
+                voiceGender === "female"
+                  ? "text-pink-400 bg-pink-900/20 ring-pink-500/30"
+                  : "text-blue-400 bg-blue-900/20 ring-blue-500/30"
+              )}
+              title={voiceGender === "female" ? "Voix feminine — clic pour passer en masculine" : "Voix masculine — clic pour passer en feminine"}
+              data-testid="voice-gender-toggle"
+            >
+              <span aria-hidden>{voiceGender === "female" ? "♀" : "♂"}</span>
+              <span className="hidden sm:inline">{voiceGender === "female" ? "Femme" : "Homme"}</span>
+            </button>
             <Button variant="ghost" size="icon"
               className={cn("h-8 w-8 rounded-lg transition-colors", autoSpeak ? "text-emerald-400 bg-emerald-900/20" : "text-slate-500")}
               onClick={() => { setAutoSpeak(!autoSpeak); if (isSpeaking) stopSpeaking(); }}
