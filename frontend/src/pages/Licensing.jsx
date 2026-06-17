@@ -6,6 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Check, X, Crown, Users, Building2, Sparkles, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const formatXAF = (n) => new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
 
@@ -23,32 +24,21 @@ const PLAN_COLORS = {
   enterprise: "from-amber-500 to-rose-500",
 };
 
-const FEATURE_LABELS = {
-  ai_analyses_per_month: "Analyses IA par mois",
-  history_days: "Historique (jours)",
-  max_parcels: "Nombre de parcelles",
-  drone_missions: "Missions drone",
-  api_access: "Accès API",
-  priority_support: "Support prioritaire",
-  multi_user: "Multi-utilisateurs",
-  max_members: "Nombre de membres",
-  white_label: "White label",
-};
-
-const formatFeature = (key, value) => {
-  if (value === -1) return "Illimité";
-  if (value === true) return "Inclus";
-  if (value === false) return "Non inclus";
-  return value;
-};
-
 const Licensing = () => {
+  const { t } = useLanguage();
   const [plans, setPlans] = useState([]);
   const [myLicense, setMyLicense] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [subscribing, setSubscribing] = useState(null);
+
+  const formatFeature = (value) => {
+    if (value === -1) return t("licensing.featureUnlimited");
+    if (value === true) return t("licensing.featureIncluded");
+    if (value === false) return t("licensing.featureExcluded");
+    return value;
+  };
 
   useEffect(() => {
     fetchAll();
@@ -66,7 +56,7 @@ const Licensing = () => {
       setMyLicense(myRes.data);
       setHistory(histRes.data.licenses);
     } catch (err) {
-      toast.error("Erreur de chargement");
+      toast.error(t("licensing.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -80,18 +70,17 @@ const Licensing = () => {
         billing_cycle: billingCycle,
       });
       if (planId === "free") {
-        toast.success("Plan Gratuit activé !");
+        toast.success(t("licensing.freeActivated"));
         fetchAll();
       } else {
         toast.success(`${res.data.plan_name} - ${formatXAF(res.data.amount_xaf)}`, {
-          description: "Rendez-vous sur la page Paiements pour finaliser via Mobile Money.",
+          description: t("licensing.gotoPay"),
           duration: 6000,
         });
-        // Optionally redirect to /paiements
         setTimeout(() => { window.location.href = "/paiements"; }, 2000);
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Erreur lors de l'abonnement");
+      toast.error(err?.response?.data?.detail || t("licensing.errorSubscribe"));
     } finally {
       setSubscribing(null);
     }
@@ -106,13 +95,13 @@ const Licensing = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 lg:p-6" data-testid="licensing-page">
+    <div className="space-y-6 p-4 lg:p-6 max-w-full overflow-x-hidden" data-testid="licensing-page">
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Crown className="h-8 w-8 text-amber-500" />
-          Plans & Licences
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 flex-wrap">
+          <Crown className="h-7 w-7 sm:h-8 sm:w-8 text-amber-500" />
+          {t("licensing.title")}
         </h1>
-        <p className="text-slate-500 mt-1">Choisissez le plan qui correspond à votre activité agricole</p>
+        <p className="text-slate-500 mt-1 text-sm sm:text-base">{t("licensing.subtitle")}</p>
       </div>
 
       {/* Current license badge */}
@@ -120,18 +109,18 @@ const Licensing = () => {
         <Card className="bg-gradient-to-r from-lime-500/10 to-amber-500/10 border-lime-500/30">
           <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
             <div>
-              <p className="text-sm text-slate-500">Votre plan actuel</p>
+              <p className="text-sm text-slate-500">{t("licensing.currentPlan")}</p>
               <p className="text-xl font-bold text-lime-600 dark:text-lime-400" data-testid="current-plan-name">
-                {myLicense.plan?.name || "Gratuit"}
+                {myLicense.plan?.name || t("licensing.free")}
               </p>
             </div>
             <Badge className="text-base px-3 py-1" data-testid="current-plan-status">
-              {myLicense.status === "active" ? "✓ Actif" : myLicense.status}
+              {myLicense.status === "active" ? `✓ ${t("licensing.active")}` : myLicense.status}
             </Badge>
             {myLicense.license?.end_date && (
               <div className="text-sm text-slate-500 flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Expire le {new Date(myLicense.license.end_date).toLocaleDateString("fr-FR")}
+                {t("licensing.expiresOn")} {new Date(myLicense.license.end_date).toLocaleDateString()}
               </div>
             )}
           </CardContent>
@@ -140,14 +129,14 @@ const Licensing = () => {
 
       <Tabs value={billingCycle} onValueChange={setBillingCycle}>
         <TabsList>
-          <TabsTrigger value="monthly" data-testid="cycle-monthly">Mensuel</TabsTrigger>
+          <TabsTrigger value="monthly" data-testid="cycle-monthly">{t("licensing.monthly")}</TabsTrigger>
           <TabsTrigger value="annual" data-testid="cycle-annual">
-            Annuel <Badge className="ml-2 bg-amber-500 text-xs">-30%</Badge>
+            {t("licensing.annual")} <Badge className="ml-2 bg-amber-500 text-xs">{t("licensing.save30")}</Badge>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value={billingCycle} className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {plans.map((plan) => {
               const Icon = PLAN_ICONS[plan.id] || Sparkles;
               const isCurrent = myLicense?.plan?.id === plan.id && myLicense?.status === "active";
@@ -162,15 +151,15 @@ const Licensing = () => {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <Icon className="h-8 w-8 text-amber-500" />
-                      {isCurrent && <Badge className="bg-lime-500">Actuel</Badge>}
+                      {isCurrent && <Badge className="bg-lime-500">{t("licensing.current")}</Badge>}
                     </div>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <p className="text-3xl font-bold mt-2">
-                      {price === 0 ? "Gratuit" : formatXAF(price)}
+                    <CardTitle className="text-lg">{plan.name}</CardTitle>
+                    <p className="text-2xl sm:text-3xl font-bold mt-2">
+                      {price === 0 ? t("licensing.free") : formatXAF(price)}
                     </p>
                     {price > 0 && (
                       <p className="text-xs text-slate-500">
-                        / {billingCycle === "annual" ? "an" : "mois"}
+                        / {billingCycle === "annual" ? t("licensing.perYear") : t("licensing.perMonth")}
                       </p>
                     )}
                     <p className="text-sm text-slate-500 mt-2">{plan.description}</p>
@@ -185,9 +174,9 @@ const Licensing = () => {
                             <Check className="h-4 w-4 text-lime-500 flex-shrink-0 mt-0.5" />
                           )}
                           <span className="text-slate-600 dark:text-slate-300">
-                            <span className="font-medium">{FEATURE_LABELS[k] || k}</span>
+                            <span className="font-medium">{t(`licensing.features.${k}`) !== `licensing.features.${k}` ? t(`licensing.features.${k}`) : k}</span>
                             {v !== false && v !== true && (
-                              <span className="text-slate-400"> · {formatFeature(k, v)}</span>
+                              <span className="text-slate-400"> · {formatFeature(v)}</span>
                             )}
                           </span>
                         </li>
@@ -201,13 +190,13 @@ const Licensing = () => {
                       data-testid={`subscribe-${plan.id}`}
                     >
                       {subscribing === plan.id ? (
-                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Traitement...</>
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("licensing.processing")}</>
                       ) : isCurrent ? (
-                        "Plan actuel"
+                        t("licensing.planCurrent")
                       ) : plan.id === "free" ? (
-                        "Activer"
+                        t("licensing.activate")
                       ) : (
-                        "S'abonner"
+                        t("licensing.subscribe")
                       )}
                     </Button>
                   </CardContent>
@@ -222,15 +211,15 @@ const Licensing = () => {
       {history.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Historique des abonnements</CardTitle>
+            <CardTitle>{t("licensing.historyTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {history.slice(0, 10).map((lic) => (
-                <div key={lic.id} className="flex items-center justify-between p-3 border rounded-md">
+                <div key={lic.id} className="flex items-center justify-between p-3 border rounded-md flex-wrap gap-2">
                   <div>
                     <p className="font-medium">{lic.plan_id}</p>
-                    <p className="text-xs text-slate-500">{new Date(lic.created_at).toLocaleString("fr-FR")}</p>
+                    <p className="text-xs text-slate-500">{new Date(lic.created_at).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
                     <Badge variant="outline">{lic.status}</Badge>

@@ -54,15 +54,21 @@ const MobileMoneyPayment = () => {
   ];
 
   const handlePay = async () => {
-    if (!phone || phone.length < 9) { toast.error("Numero de telephone invalide"); return; }
-    if (!selectedPkg) { toast.error("Selectionnez un forfait"); return; }
+    // Validate Cameroonian MTN/Orange phone format: 6XXXXXXXX (9 digits) or 2376XXXXXXXX (12 digits)
+    const phoneTrim = phone.replace(/\s|\+|-/g, "");
+    const phoneOk = /^(237)?6[5-9]\d{7}$/.test(phoneTrim);
+    if (!phoneOk) {
+      toast.error("Numéro invalide. Format attendu : 6XXXXXXXX (MTN/Orange Cameroun)");
+      return;
+    }
+    if (!selectedPkg) { toast.error("Sélectionnez un forfait"); return; }
     setLoading(true);
     setStep("processing");
     try {
       const methodType = provider === "orange_cm" ? "ORANGE_MONEY" : "MOMO";
       const res = await api.post("/payments/request-payment", {
         amount: selectedPkg.amount,
-        phone_number: phone,
+        phone_number: phoneTrim,
         method: "MOBILE_MONEY",
         method_type: methodType,
         provider,
@@ -70,16 +76,25 @@ const MobileMoneyPayment = () => {
       });
       if (res.data.success) {
         setOrderId(res.data.order_id);
-        toast.info("Validez le paiement sur votre telephone");
-        // Poll for status
+        toast.info("Validez le paiement sur votre téléphone");
         setTimeout(() => checkStatus(res.data.order_id), 5000);
       } else {
-        navigate(`/paiement-echec?reason=unknown`);
-        toast.error("Echec de l'initiation du paiement");
+        const reason = res.data.message || res.data.error || "unknown";
+        navigate(`/paiement-echec?reason=${encodeURIComponent(reason)}`);
+        toast.error(reason);
       }
     } catch (e) {
-      navigate(`/paiement-echec?reason=network`);
-      toast.error("Erreur de paiement");
+      // Surface backend error message to user
+      const backendDetail =
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        (e?.response?.status === 400 ? "Numéro de téléphone invalide ou opérateur indisponible" : null) ||
+        (e?.response?.status === 401 ? "Authentification requise" : null) ||
+        (e?.response?.status === 429 ? "Trop de tentatives — patientez quelques instants" : null) ||
+        "Erreur réseau. Vérifiez votre connexion et réessayez";
+      toast.error(backendDetail, { duration: 6000 });
+      navigate(`/paiement-echec?reason=${encodeURIComponent(backendDetail)}`);
     } finally {
       setLoading(false);
     }

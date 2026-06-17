@@ -247,14 +247,23 @@ async def request_payment(req: PaymentRequest, request: Request):
     if not pkg:
         raise HTTPException(400, "Package invalide")
 
-    # Validate phone (must include country code 237 for Cameroon)
-    phone = req.phone_number.strip().replace(" ", "").replace("+", "")
+    # Normalize phone: accept "+237...", "00237...", "237...", "6XXXXXXXX", or "06XXXXXXXX"
+    phone = req.phone_number.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
     if phone.startswith("00237"):
         phone = phone[2:]
-    elif not phone.startswith("237") and len(phone) == 9:
+    elif phone.startswith("00"):
+        phone = phone[2:]
+    # Cameroon: local format is 9 digits starting with 6 (mobile)
+    if len(phone) == 9 and phone.startswith("6"):
         phone = "237" + phone
+    elif len(phone) == 10 and phone.startswith("06"):
+        phone = "237" + phone[1:]
     if not (phone.startswith("237") and len(phone) == 12):
-        raise HTTPException(400, "Numéro de téléphone invalide. Format attendu: 237XXXXXXXXX")
+        raise HTTPException(
+            400,
+            "Numéro de téléphone invalide. Formats acceptés : 6XXXXXXXX, 237 6XX XX XX XX, ou +237 6XX XX XX XX. "
+            "Le numéro doit être un Mobile Money MTN (650-654, 670-689) ou Orange (655-659, 690-699) actif et enregistré."
+        )
 
     order_id = f"AGRICAM{uuid.uuid4().hex[:12].upper()}"
     description = req.description or f"AGRICAM IA - {pkg['label']}"
@@ -327,15 +336,27 @@ async def request_payment(req: PaymentRequest, request: Request):
                     "currency": "XAF",
                     "message": "Paiement initié. Validez la transaction sur votre téléphone.",
                 }
-            # Error from NetWalletPay
-            err_msg = data.get("message", resp.text[:300]) if data else resp.text[:300]
+            # Error from NetWalletPay — surface clear user-facing message
+            err_msg_raw = (data.get("message") if data else "") or resp.text[:300]
             err_code = data.get("errorCode") if data else None
-            logger.error(f"NWP payment failed [{resp.status_code}/{err_code}]: {err_msg} | payload={payload}")
+            err_lower = (err_msg_raw or "").lower()
+            if "phone" in err_lower and ("invalid" in err_lower or "format" in err_lower):
+                user_msg = ("Ce numéro Mobile Money n'est pas valide ou pas enregistré chez l'opérateur. "
+                            "Vérifiez que c'est bien votre numéro MTN MoMo ou Orange Money actif (ex: 6 96 58 74 12).")
+            elif err_code == 4007 or "order" in err_lower:
+                user_msg = "Information de commande invalide. Réessayez ou contactez le support."
+            elif "insufficient" in err_lower or "balance" in err_lower:
+                user_msg = "Solde Mobile Money insuffisant sur ce numéro."
+            elif "limit" in err_lower:
+                user_msg = "Limite de transaction Mobile Money atteinte pour aujourd'hui."
+            else:
+                user_msg = f"Échec du paiement: {err_msg_raw}"
+            logger.error(f"NWP payment failed [{resp.status_code}/{err_code}]: {err_msg_raw} | payload={payload}")
             await _db.payments.update_one(
                 {"id": order_id},
-                {"$set": {"status": "failed", "error": err_msg, "error_code": err_code}},
+                {"$set": {"status": "failed", "error": err_msg_raw, "error_code": err_code}},
             )
-            raise HTTPException(400, f"Échec paiement: {err_msg}")
+            raise HTTPException(400, user_msg)
     except httpx.RequestError as e:
         logger.error(f"NWP network error: {e}")
         await _db.payments.update_one({"id": order_id}, {"$set": {"status": "failed", "error": str(e)}})

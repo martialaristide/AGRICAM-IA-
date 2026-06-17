@@ -194,6 +194,25 @@ function App() {
     }
   }, []);
 
+  // Apply persisted theme on app boot — ensures coherence across all pages
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("agricam_theme") || "dark";
+    const THEMES_DATA = {
+      dark:   { accent: "#10b981", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+      light:  { accent: "#059669", bg: "#ffffff", card: "#ffffff", text: "#1e293b" },
+      lime:   { accent: "#84cc16", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+      ocean:  { accent: "#06b6d4", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+      sunset: { accent: "#f59e0b", bg: "#0a0f1a", card: "#111827", text: "#e2e8f0" },
+    };
+    const td = THEMES_DATA[savedTheme] || THEMES_DATA.dark;
+    const root = document.documentElement;
+    root.setAttribute("data-theme", savedTheme);
+    root.style.setProperty("--theme-accent", td.accent);
+    root.style.setProperty("--theme-bg", td.bg);
+    root.style.setProperty("--theme-card", td.card);
+    root.style.setProperty("--theme-text", td.text);
+  }, []);
+
   // Close lead capture modal when user logs in
   useEffect(() => {
     const handleStorageChange = () => {

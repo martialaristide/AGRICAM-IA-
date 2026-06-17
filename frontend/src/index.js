@@ -3,6 +3,18 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
+// === Apply persisted theme BEFORE React renders to avoid flicker (FOUC) ===
+try {
+  const savedTheme = localStorage.getItem("agricam_theme") || "dark";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  if (savedTheme === "light") {
+    document.documentElement.style.colorScheme = "light";
+    document.body && (document.body.style.backgroundColor = "#ffffff");
+  } else {
+    document.documentElement.style.colorScheme = "dark";
+  }
+} catch (e) { /* localStorage unavailable */ }
+
 // Register Service Worker for PWA / Offline mode
 // IMPORTANT: We auto-update + claim clients, and unregister stale SWs to avoid splash/cache lock
 if ("serviceWorker" in navigator) {
