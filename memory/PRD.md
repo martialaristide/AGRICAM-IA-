@@ -25,7 +25,13 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
 ## Recent Changes (2026)
-### Iteration 43 (June 2026 — current)
+### Iteration 44 (June 2026 — current)
+- 📲 **WhatsApp Business ready-to-plug**: `_send_whatsapp()` in elevage.py supports Meta Cloud API (WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID) & Twilio (TWILIO_ACCOUNT_SID/AUTH_TOKEN/WHATSAPP_FROM) via env; automatic fallback to SIMULATION when keys absent. `GET /api/elevage/whatsapp/config` + frontend banner shows mode. Alerts carry `whatsapp_status` (envoyé/simulé)
+- 🛰️ **GPS Collars + Geofencing map**: `GET /api/elevage/farms/{id}/collars` (simulated LoRaWAN collars, 300m geofence, auto 'evasion' alert), new tab « Carte GPS » (`ElevageMap.jsx`, react-leaflet, red markers outside fence)
+- 🏢 **Cooperative multi-farm dashboard**: `GET /api/elevage/cooperative/dashboard` (aggregated farms/members/species/health/alerts), new tab « Coopérative » (`CooperativeView.jsx`)
+- ✅ **TESTED by testing_agent (iteration_40.json): 100% backend (7/7 pytest), 100% frontend (all 8 tabs, mobile 390x844 no overflow, regressions /dashboard & /marketplace OK)**
+
+### Iteration 43
 - 🐄 **NEW MODULE: AgriCam Élevage IA** (additive, per spec doc) — namespace `/api/elevage/`
   - Backend `/app/backend/routes/elevage.py`: seed/census (4 filières: bovins/porcins/ovins/volailles), farms, animals (fiches + carnet sanitaire + weight history), dashboard aggregates, simulated camera scan + env sensors (temp/NH₃/CO₂/water/feed), health & security event simulation, WhatsApp alert previews (channel=whatsapp_sim, ready for real WhatsApp Business API), feed recommendations (marketplace-linked), price predictions (seasonal), Gemini Vision animal photo diagnosis (`POST /api/elevage/diagnose`)
   - Frontend: `/elevage` route, "Mon Élevage" sidebar tab (admin/farmer/agronomist), page `MonElevage.jsx` + 6 components in `components/elevage/` (Cheptel, Animaux, Alertes+WhatsApp preview, Environnement, Diagnostic IA, Économie)
@@ -67,10 +73,10 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - NetWalletPay live integration + webhooks
 
 ## Pending / Backlog
-- **P1**: Real WhatsApp Business API integration for Élevage alerts (currently SIMULATED)
+- **P1**: User provides WhatsApp keys (Meta or Twilio) → real sending activates automatically (code ready, no dev needed). Farmers' `phone` field on user doc is used as recipient
 - **P1**: WebSocket real-time notifications
 - **P1**: Supplier auto-registration on interactive map
-- **P2**: Élevage: GPS collars/geofencing map, cooperative multi-farm dashboard, epidemiology alerts
+- **P2**: Élevage: epidemiology regional alerts, genetic lineage tracking
 - **P1**: AdminSupport.jsx & MarketplaceEnhanced.jsx hardcoded FR text → use `t()` (low impact since FR is default)
 - **P1**: PurchaseConfirmDialog.jsx → use `t()` for translations
 - **P2**: Seed Analysis radar/visual comparison mode
