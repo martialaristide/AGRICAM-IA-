@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { PawPrint, Camera, Loader2, Radio, LayoutGrid, HeartPulse, Bell, Thermometer, ScanSearch, TrendingUp } from "lucide-react";
+import { PawPrint, Camera, Loader2, Radio, LayoutGrid, HeartPulse, Bell, Thermometer, ScanSearch, TrendingUp, MapPin, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import CheptelOverview from "../components/elevage/CheptelOverview";
 import AnimalsPanel from "../components/elevage/AnimalsPanel";
@@ -10,6 +10,8 @@ import ElevageAlerts from "../components/elevage/ElevageAlerts";
 import ElevageEnvironment from "../components/elevage/ElevageEnvironment";
 import AnimalDiagnostic from "../components/elevage/AnimalDiagnostic";
 import ElevageEconomie from "../components/elevage/ElevageEconomie";
+import ElevageMap from "../components/elevage/ElevageMap";
+import CooperativeView from "../components/elevage/CooperativeView";
 
 export default function MonElevage() {
   const [status, setStatus] = useState(null);
@@ -115,22 +117,26 @@ export default function MonElevage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="w-max sm:w-full flex sm:grid sm:grid-cols-6">
+          <TabsList className="w-max flex">
             <TabsTrigger value="overview" data-testid="elevage-tab-overview"><LayoutGrid className="h-4 w-4 mr-1.5" />Cheptel</TabsTrigger>
             <TabsTrigger value="animals" data-testid="elevage-tab-animals"><HeartPulse className="h-4 w-4 mr-1.5" />Animaux</TabsTrigger>
+            <TabsTrigger value="map" data-testid="elevage-tab-map"><MapPin className="h-4 w-4 mr-1.5" />Carte GPS</TabsTrigger>
             <TabsTrigger value="alerts" data-testid="elevage-tab-alerts"><Bell className="h-4 w-4 mr-1.5" />Alertes</TabsTrigger>
             <TabsTrigger value="environment" data-testid="elevage-tab-environment"><Thermometer className="h-4 w-4 mr-1.5" />Environnement</TabsTrigger>
             <TabsTrigger value="diagnostic" data-testid="elevage-tab-diagnostic"><ScanSearch className="h-4 w-4 mr-1.5" />Diagnostic IA</TabsTrigger>
             <TabsTrigger value="economy" data-testid="elevage-tab-economy"><TrendingUp className="h-4 w-4 mr-1.5" />Économie</TabsTrigger>
+            <TabsTrigger value="cooperative" data-testid="elevage-tab-cooperative"><Building2 className="h-4 w-4 mr-1.5" />Coopérative</TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="overview"><CheptelOverview refreshKey={refreshKey} onAlert={() => setRefreshKey((k) => k + 1)} /></TabsContent>
         <TabsContent value="animals"><AnimalsPanel refreshKey={refreshKey} /></TabsContent>
+        <TabsContent value="map"><ElevageMap refreshKey={refreshKey} onAlert={() => setRefreshKey((k) => k + 1)} /></TabsContent>
         <TabsContent value="alerts"><ElevageAlerts refreshKey={refreshKey} /></TabsContent>
         <TabsContent value="environment"><ElevageEnvironment refreshKey={refreshKey} /></TabsContent>
         <TabsContent value="diagnostic"><AnimalDiagnostic /></TabsContent>
         <TabsContent value="economy"><ElevageEconomie refreshKey={refreshKey} /></TabsContent>
+        <TabsContent value="cooperative"><CooperativeView refreshKey={refreshKey} /></TabsContent>
       </Tabs>
     </div>
   );

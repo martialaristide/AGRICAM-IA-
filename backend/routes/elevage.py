@@ -14,6 +14,7 @@ import json
 import random
 import logging
 import jwt as pyjwt
+import httpx
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/elevage", tags=["elevage"])
@@ -120,6 +121,10 @@ def _whatsapp_preview(severity: str, farm_name: str, species: str, message: str,
 
 
 async def _make_alert(user_id: str, farm: dict, severity: str, title: str, message: str, action: str, source_type: str, image_ref: Optional[str] = None):
+    wa_text = _whatsapp_preview(severity, farm["name"], farm["species"], message, action)
+    user = await _db.users.find_one({"id": user_id}, {"_id": 0, "phone": 1, "phone_number": 1})
+    phone = (user or {}).get("phone") or (user or {}).get("phone_number")
+    wa_result = await _send_whatsapp(phone, wa_text) if phone else {"sent": False, "mode": "simulation", "reason": "no_phone"}
     alert = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -131,8 +136,9 @@ async def _make_alert(user_id: str, farm: dict, severity: str, title: str, messa
         "title": title,
         "message": message,
         "action": action,
-        "channel": "whatsapp_sim",
-        "whatsapp_preview": _whatsapp_preview(severity, farm["name"], farm["species"], message, action),
+        "channel": wa_result["mode"],
+        "whatsapp_status": "envoyé" if wa_result["sent"] else "simulé",
+        "whatsapp_preview": wa_text,
         "image_ref": image_ref,
         "acknowledged_at": None,
         "escalation_level": 0,
@@ -141,6 +147,47 @@ async def _make_alert(user_id: str, farm: dict, severity: str, title: str, messa
     await _db.elevage_alerts.insert_one(alert)
     alert.pop("_id", None)
     return alert
+
+
+def _wa_provider() -> Optional[str]:
+    if os.environ.get("WHATSAPP_ACCESS_TOKEN") and os.environ.get("WHATSAPP_PHONE_NUMBER_ID"):
+        return "meta"
+    if os.environ.get("TWILIO_ACCOUNT_SID") and os.environ.get("TWILIO_AUTH_TOKEN") and os.environ.get("TWILIO_WHATSAPP_FROM"):
+        return "twilio"
+    return None
+
+
+async def _send_whatsapp(to_number: str, text: str) -> dict:
+    """Envoie un vrai message WhatsApp (Meta Cloud API ou Twilio). Repli simulation si clés absentes."""
+    provider = _wa_provider()
+    if not provider or not to_number:
+        return {"sent": False, "mode": "whatsapp_sim"}
+    num = re.sub(r"[^\d+]", "", to_number)
+    if not num.startswith("+"):
+        num = "+237" + num.lstrip("0")
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            if provider == "meta":
+                phone_id = os.environ["WHATSAPP_PHONE_NUMBER_ID"]
+                resp = await client.post(
+                    f"https://graph.facebook.com/v21.0/{phone_id}/messages",
+                    headers={"Authorization": f"Bearer {os.environ['WHATSAPP_ACCESS_TOKEN']}"},
+                    json={"messaging_product": "whatsapp", "to": num.lstrip("+"), "type": "text", "text": {"body": text}},
+                )
+            else:
+                sid = os.environ["TWILIO_ACCOUNT_SID"]
+                resp = await client.post(
+                    f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json",
+                    auth=(sid, os.environ["TWILIO_AUTH_TOKEN"]),
+                    data={"From": f"whatsapp:{os.environ['TWILIO_WHATSAPP_FROM']}", "To": f"whatsapp:{num}", "Body": text},
+                )
+        if resp.status_code < 300:
+            return {"sent": True, "mode": f"whatsapp_{provider}"}
+        logger.warning(f"WhatsApp {provider} send failed {resp.status_code}: {resp.text[:200]}")
+        return {"sent": False, "mode": "whatsapp_sim", "error": resp.text[:200]}
+    except Exception as e:
+        logger.warning(f"WhatsApp send error: {e}")
+        return {"sent": False, "mode": "whatsapp_sim", "error": str(e)}
 
 
 def _gen_animal(farm: dict, user_id: str, idx: int) -> dict:
@@ -605,6 +652,125 @@ async def price_prediction(farm_id: str, request: Request):
         "optimal_sale": {"month": best["month"], "price_kg": best["price_kg"], "gain_pct": round((best["price_kg"] / current_price - 1) * 100, 1)},
         "herd_value_fcfa": herd_value,
         "advice": f"Prix actuel : {current_price} FCFA/kg. Vente optimale estimée en {best['month']} ({best['price_kg']} FCFA/kg, +{round((best['price_kg']/current_price-1)*100,1)}%). La demande monte en fin d'année (fêtes).",
+    }
+
+
+@router.get("/whatsapp/config")
+async def whatsapp_config(request: Request):
+    _check_enabled()
+    await _user_from_request(request)
+    provider = _wa_provider()
+    return {
+        "configured": provider is not None,
+        "provider": provider or "simulation",
+        "required_keys": {
+            "meta": ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"],
+            "twilio": ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"],
+        },
+    }
+
+
+GEOFENCE_RADIUS_M = 300
+
+
+@router.get("/farms/{farm_id}/collars")
+async def farm_collars(farm_id: str, request: Request):
+    """Colliers GPS simulés : positions du troupeau + géo-clôture, alerte si évasion."""
+    _check_enabled()
+    user = await _user_from_request(request)
+    farm = await _db.elevage_farms.find_one({"id": farm_id, "user_id": user["id"]}, {"_id": 0})
+    if not farm:
+        raise HTTPException(404, "Installation non trouvée")
+    animals = await _db.elevage_animals.find({"farm_id": farm_id, "is_group": False}, {"_id": 0, "id": 1, "tag": 1, "species": 1, "health_score": 1}).to_list(200)
+    center = farm.get("gps_zone", {"lat": 3.848, "lng": 11.502})
+    deg_radius = GEOFENCE_RADIUS_M / 111000.0
+
+    collars, escaped = [], []
+    for i, a in enumerate(animals):
+        outside = random.random() < 0.06
+        r = deg_radius * (random.uniform(1.1, 1.6) if outside else random.uniform(0.05, 0.9))
+        angle = random.uniform(0, 6.283)
+        import math
+        lat = center["lat"] + r * math.cos(angle)
+        lng = center["lng"] + r * math.sin(angle)
+        collar = {
+            "device_id": f"COL-{a['tag']}",
+            "animal_id": a["id"],
+            "animal_tag": a["tag"],
+            "lat": round(lat, 6),
+            "lng": round(lng, 6),
+            "battery_level": random.randint(35, 100),
+            "inside_fence": not outside,
+            "activity": random.choice(["pâturage", "repos", "déplacement", "rumination"]),
+            "last_sync": _iso(),
+            "health_score": a["health_score"],
+        }
+        collars.append(collar)
+        if outside:
+            escaped.append(collar)
+        await _db.elevage_collars.update_one({"animal_id": a["id"]}, {"$set": dict(collar)}, upsert=True)
+
+    alert = None
+    if escaped:
+        tags = ", ".join(c["animal_tag"] for c in escaped)
+        alert = await _make_alert(user["id"], farm, "urgent", "Géo-clôture franchie",
+                                  f"Collier GPS : {tags} détecté(s) hors de la zone autorisée ({GEOFENCE_RADIUS_M}m) de {farm['name']}.",
+                                  "Localiser sur la carte et ramener l'animal", "geofence")
+    return {"farm": {"id": farm["id"], "name": farm["name"], "species": farm["species"]},
+            "center": center, "geofence_radius_m": GEOFENCE_RADIUS_M, "collars": collars,
+            "escaped_count": len(escaped), "alert": alert}
+
+
+@router.get("/cooperative/dashboard")
+async def cooperative_dashboard(request: Request):
+    """Vue agrégée multi-fermes pour coopératives/admins."""
+    _check_enabled()
+    user = await _user_from_request(request)
+    if user.get("role") not in ("admin", "agronomist", "cooperative", "financial", "farmer"):
+        raise HTTPException(403, "Accès réservé aux coopératives et administrateurs")
+
+    farms = await _db.elevage_farms.find({}, {"_id": 0}).to_list(500)
+    farm_ids = [f["id"] for f in farms]
+    animals = await _db.elevage_animals.find({"farm_id": {"$in": farm_ids}}, {"_id": 0, "farm_id": 1, "species": 1, "group_count": 1, "health_score": 1, "status": 1, "weight_kg": 1}).to_list(5000)
+    owner_ids = list({f["user_id"] for f in farms})
+    owners = await _db.users.find({"id": {"$in": owner_ids}}, {"_id": 0, "id": 1, "full_name": 1, "email": 1}).to_list(200)
+    owner_map = {o["id"]: o.get("full_name") or o.get("email", "Éleveur") for o in owners}
+
+    by_farm = {}
+    for a in animals:
+        d = by_farm.setdefault(a["farm_id"], {"count": 0, "health_sum": 0, "n": 0, "sick": 0})
+        d["count"] += a.get("group_count", 1)
+        d["health_sum"] += a["health_score"]
+        d["n"] += 1
+        if a["status"] == "malade":
+            d["sick"] += 1
+
+    farms_out = []
+    for f in farms:
+        d = by_farm.get(f["id"], {"count": 0, "health_sum": 0, "n": 0, "sick": 0})
+        active = await _db.elevage_alerts.count_documents({"farm_id": f["id"], "acknowledged_at": None})
+        farms_out.append({
+            "id": f["id"], "name": f["name"], "species": f["species"],
+            "species_label": SPECIES[f["species"]]["label"],
+            "owner": owner_map.get(f["user_id"], "Éleveur"),
+            "total": d["count"],
+            "avg_health": round(d["health_sum"] / d["n"], 1) if d["n"] else 0,
+            "sick": d["sick"], "active_alerts": active,
+        })
+    farms_out.sort(key=lambda x: x["active_alerts"], reverse=True)
+
+    by_species = {}
+    for a in animals:
+        by_species[a["species"]] = by_species.get(a["species"], 0) + a.get("group_count", 1)
+    return {
+        "total_farms": len(farms),
+        "total_members": len(owner_ids),
+        "total_animals": sum(a.get("group_count", 1) for a in animals),
+        "by_species": [{"species": k, "label": SPECIES[k]["label"], "count": v} for k, v in by_species.items()],
+        "avg_health": round(sum(a["health_score"] for a in animals) / len(animals), 1) if animals else 0,
+        "total_active_alerts": sum(f["active_alerts"] for f in farms_out),
+        "mortality_rate": round(random.uniform(0.5, 2.0), 1),
+        "farms": farms_out[:50],
     }
 
 

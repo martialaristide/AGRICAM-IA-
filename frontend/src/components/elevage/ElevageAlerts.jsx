@@ -18,7 +18,12 @@ export default function ElevageAlerts({ refreshKey }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
+  const [waConfig, setWaConfig] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get("/elevage/whatsapp/config").then((res) => setWaConfig(res.data)).catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -48,6 +53,14 @@ export default function ElevageAlerts({ refreshKey }) {
 
   return (
     <div className="space-y-3" data-testid="elevage-alerts">
+      {waConfig && (
+        <div className={`rounded-lg border px-3 py-2 text-xs flex items-center gap-2 ${waConfig.configured ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-amber-500/30 bg-amber-500/10 text-amber-300"}`} data-testid="whatsapp-config-banner">
+          <MessageCircle className="h-4 w-4 shrink-0" />
+          {waConfig.configured
+            ? `WhatsApp Business API connectée (${waConfig.provider}) — les alertes sont envoyées sur le téléphone de l'éleveur.`
+            : "Mode simulation WhatsApp — ajoutez vos clés API (Meta Cloud ou Twilio) dans backend/.env pour l'envoi réel : WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID, ou TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_WHATSAPP_FROM."}
+        </div>
+      )}
       {alerts.length === 0 && (
         <Card><CardContent className="p-8 text-center text-slate-400">
           <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
