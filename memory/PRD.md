@@ -24,8 +24,19 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - Routes split: `/app/backend/routes/{licensing,support,marketplace_v2,payments,drone_manager}.py`
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
-## Recent Changes (Feb 2026)
-### Iteration 42 (current)
+## Recent Changes (2026)
+### Iteration 43 (June 2026 — current)
+- 🐄 **NEW MODULE: AgriCam Élevage IA** (additive, per spec doc) — namespace `/api/elevage/`
+  - Backend `/app/backend/routes/elevage.py`: seed/census (4 filières: bovins/porcins/ovins/volailles), farms, animals (fiches + carnet sanitaire + weight history), dashboard aggregates, simulated camera scan + env sensors (temp/NH₃/CO₂/water/feed), health & security event simulation, WhatsApp alert previews (channel=whatsapp_sim, ready for real WhatsApp Business API), feed recommendations (marketplace-linked), price predictions (seasonal), Gemini Vision animal photo diagnosis (`POST /api/elevage/diagnose`)
+  - Frontend: `/elevage` route, "Mon Élevage" sidebar tab (admin/farmer/agronomist), page `MonElevage.jsx` + 6 components in `components/elevage/` (Cheptel, Animaux, Alertes+WhatsApp preview, Environnement, Diagnostic IA, Économie)
+  - Feature flag: `ELEVAGE_IA_ENABLED` (env, default true)
+  - Collections: `elevage_farms`, `elevage_animals`, `elevage_health_events`, `elevage_security_events`, `elevage_env_readings`, `elevage_alerts`, `elevage_feed_recommendations`
+  - ✅ Tested: all endpoints via curl E2E (seed 519 animals, scan, env, simulate, price, feed, alerts), Gemini diagnose pipeline OK, UI verified via screenshots (overview + alerts/WhatsApp)
+- 📞 **Contact info updated everywhere**: +237 652 686 424, Yaoundé Fouda face Hôtel Mansel (ContactPage, PrivacyPolicy, WebsiteFooter, SEOHead)
+- 📱 **Capacitor configured** for native APK/iOS: `@capacitor/core|android|ios|cli` installed, `frontend/capacitor.config.json` (appId `com.africanaisolutions.agricam`), `viewport-fit=cover`, full French build guide at `/app/GUIDE_APK.md` for the friend with the Google Dev account
+- WHATSAPP ALERTS ARE SIMULATED (in-app preview) — real WhatsApp Business API keys needed to go live
+
+### Iteration 42
 - 🚨 **CRITICAL BUG FIX**: AGRI GENIUS page rendered blank — fixed missing `voiceGender` / `availableVoices` state declarations in `AgribotIA.jsx`
 - 🎬 **Demo Tour Mode**: Created `/app/frontend/src/components/DemoTour.jsx` — auto-piloted 4-step pitch overlay (Voice AI → Drone → Seed → Marketplace), 30s/step, navigation auto, controls (prev/pause/next), minimizable. Launched via "🎬 Mode Demo" button in header (admin only).
 - ✅ Verified: AGRI GENIUS renders fully, voice M/F toggle visible, Demo Tour launches and shows "Etape 1/4 AGRI GENIUS"
@@ -56,8 +67,10 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - NetWalletPay live integration + webhooks
 
 ## Pending / Backlog
+- **P1**: Real WhatsApp Business API integration for Élevage alerts (currently SIMULATED)
 - **P1**: WebSocket real-time notifications
 - **P1**: Supplier auto-registration on interactive map
+- **P2**: Élevage: GPS collars/geofencing map, cooperative multi-farm dashboard, epidemiology alerts
 - **P1**: AdminSupport.jsx & MarketplaceEnhanced.jsx hardcoded FR text → use `t()` (low impact since FR is default)
 - **P1**: PurchaseConfirmDialog.jsx → use `t()` for translations
 - **P2**: Seed Analysis radar/visual comparison mode

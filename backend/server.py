@@ -4912,6 +4912,11 @@ try:
     mkt_v2_init(db, get_current_user)
     app.include_router(mkt_v2_router)
     logger.info("Marketplace V2 (secure purchase flow) loaded successfully")
+
+    from routes.elevage import router as elevage_router, init_db as elevage_init
+    elevage_init(db, get_current_user)
+    app.include_router(elevage_router)
+    logger.info("Elevage IA module loaded successfully")
 except ImportError as e:
     logger.warning(f"Payment routes not loaded: {e}")
 

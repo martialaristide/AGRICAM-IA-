@@ -33,7 +33,7 @@ const PrivacyPolicyPage = () => {
         **African AI Solutions**
         Adresse : Quartier Fouda, en face du Mansel Hotel
         Yaoundé, Cameroun
-        Téléphone : +237 652 646 824
+        Téléphone : +237 652 686 424
         Email : contact@agricam-ia.com
         LinkedIn : linkedin.com/company/african-ai-solutions
         
@@ -231,7 +231,7 @@ const PrivacyPolicyPage = () => {
         Yaoundé, Cameroun
         
         Email : privacy@agricam-ia.com
-        Téléphone : +237 652 646 824
+        Téléphone : +237 652 686 424
         
         Délégué à la Protection des Données (DPO) : dpo@agricam-ia.com
       `

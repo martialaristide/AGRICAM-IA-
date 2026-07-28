@@ -36,7 +36,7 @@ const ContactPage = () => {
     {
       icon: Phone,
       title: "Téléphone",
-      lines: ["+237 652 646 824"]
+      lines: ["+237 652 686 424"]
     },
     {
       icon: Mail,
@@ -198,7 +198,7 @@ const ContactPage = () => {
                   </div>
                 </a>
                 <a 
-                  href="tel:+237600000000"
+                  href="tel:+237652686424"
                   className="flex items-center gap-4 p-4 bg-violet-50 rounded-xl hover:bg-violet-100 transition-colors"
                 >
                   <div className="w-12 h-12 rounded-full bg-violet-500 flex items-center justify-center">
@@ -206,7 +206,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">Appeler maintenant</p>
-                    <p className="text-sm text-slate-500">+237 6XX XXX XXX</p>
+                    <p className="text-sm text-slate-500">+237 652 686 424</p>
                   </div>
                 </a>
                 <a 
@@ -284,7 +284,7 @@ const ContactPage = () => {
               className="bg-white text-emerald-700 hover:bg-emerald-50"
             >
               <Phone className="mr-2 h-5 w-5" />
-              +237 6XX XXX XXX
+              +237 652 686 424
             </Button>
             <Button 
               size="lg"

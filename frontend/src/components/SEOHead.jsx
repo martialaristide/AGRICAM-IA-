@@ -36,7 +36,7 @@ const SEOHead = ({
         "addressCountry": "CM",
         "streetAddress": "Quartier Fouda, en face du Mansel Hotel"
       },
-      "telephone": "+237652646824",
+      "telephone": "+237652686424",
       "founders": [
         {
           "@type": "Person",

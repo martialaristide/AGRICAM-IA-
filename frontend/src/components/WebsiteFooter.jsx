@@ -88,11 +88,11 @@ const WebsiteFooter = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-emerald-500 mt-0.5" />
-                <span className="text-slate-400">Douala, Cameroun<br />Akwa, Rue de la Joie</span>
+                <span className="text-slate-400">Yaoundé, Cameroun<br />Fouda, face Hôtel Mansel</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-emerald-500" />
-                <span className="text-slate-400">+237 6XX XXX XXX</span>
+                <span className="text-slate-400">+237 652 686 424</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-emerald-500" />

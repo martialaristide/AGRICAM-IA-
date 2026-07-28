@@ -51,6 +51,7 @@ import AgronomistDashboard from "./pages/AgronomistDashboard";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import CarteAgricole from "./pages/CarteAgricole";
 import Documentation from "./pages/Documentation";
+import MonElevage from "./pages/MonElevage";
 import SecurityDashboard from "./pages/SecurityDashboard";
 import SubscriptionGate from "./components/SubscriptionGate";
 import { Toaster } from "./components/ui/sonner";
@@ -307,6 +308,7 @@ function App() {
               <Route path="irrigation" element={<SubscriptionGate><IrrigationAuto /></SubscriptionGate>} />
               <Route path="recommandations" element={<SubscriptionGate><RecommandationsIA /></SubscriptionGate>} />
               <Route path="marketplace" element={<MarketplaceEnhanced />} />
+              <Route path="elevage" element={<MonElevage />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="alertes" element={<Alertes />} />
               <Route path="financial" element={<Financial />} />

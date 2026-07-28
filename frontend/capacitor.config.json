@@ -1,0 +1,23 @@
+{
+  "appId": "com.africanaisolutions.agricam",
+  "appName": "AGRICAM IA",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0a0f1a"
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0a0f1a"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0a0f1a",
+      "showSpinner": false
+    }
+  }
+}
