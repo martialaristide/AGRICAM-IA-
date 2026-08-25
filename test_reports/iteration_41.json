@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 41 — Test ciblé des nouveautés Élevage IA (caméras/YOLO, VitaBif LoRa, épidémiologie, alertes multilingues, surveillance continue, dataset YOLO). Backend: 30/30 tests pytest OK (nouveau fichier test_iteration41_elevage_vision.py). Détection YOLO réelle validée sur bus.jpg (4 personnes, human_detected=true, image annotée base64 renvoyée, alerte sécurité 'Présence humaine détectée' créée). VitaBif: clé passerelle idempotente, ingestion authentifiée (401 sans/avec mauvaise clé), 40.5°C + perimeter 'outside' => 2 anomalies + 2 alertes, readings persistés. Épidémio: scan OK + alertes bovins 'transmise_aux_autorites' (>=3 fermes). Multilingue: pidgin=>whatsapp_preview 'ALARM', fulfulde=>'TINNDINOL', langue invalide=>422, remis à 'fr'. Monitoring: activé 5 min puis DÉSACTIVÉ à la fin (vérifié via API), interval 1 min => 422. Dataset: ajout porcin + stats OK, espèce invalide => 422. Frontend (1 passage): bannière YOLO, carte monitoring (toggle + intervalle), carte dataset, dialogue caméra, sélecteur de langue avec toast, onglet Cheptel sans régression, mobile 390x844 sans débordement.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/elevage/cameras/{id}/detect", "issue": "Pas de timeout sur _grab_frame (cv2.VideoCapture) contrairement au scan auto (asyncio.wait_for 25s) : une caméra RTSP injoignable peut bloquer un thread du pool longtemps (test caméra fictive non exécuté par consigne, risque théorique en campagne terrain avec 20+ caméras)."},
+      {"endpoint": "POST /api/elevage/vitabif/ingest", "issue": "anomalies_detected peut dépasser alerts_created (anomalies[:10]) sans indicateur de troncature dans la réponse — à documenter côté passerelle."},
+      {"endpoint": "POST /api/elevage/vision/dataset", "issue": "Les photos sont écrites sur le disque du conteneur (/app/backend/dataset) : risque de perte au redéploiement; envisager GridFS/S3 pour la campagne 200 fermiers."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Élevage > Alertes", "issues": ["alert-language-select est un <select> HTML natif avec bg-transparent alors que le reste de l'app utilise le composant shadcn Select : rendu de la liste d'options en style natif (contraste variable selon OS/navigateur) et incohérence visuelle."]},
+      {"screen": "Login", "issues": ["Le champ email perd sa valeur si elle est saisie très tôt après le premier rendu (fill immédiat) — reproduit 1 fois; contourné dans le test par une saisie caractère par caractère après hydratation. À surveiller (possible remount du formulaire au montage)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration41_elevage_vision.py",
+    "/app/test_reports/pytest/iteration41_results.xml"
+  ],
+  "action_items": [
+    "Ajouter un timeout (asyncio.wait_for) sur la capture RTSP dans /cameras/{id}/detect comme dans le scan auto",
+    "Optionnel: remplacer le <select> natif de la langue d'alerte par le composant Select shadcn",
+    "Optionnel: persister les photos du dataset hors du filesystem du conteneur"
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/routes/elevage.py fait 916 lignes (>700) : envisager un découpage (alertes/WA l10n, animaux, économie).",
+    "_scan_user_cameras scanne les caméras séquentiellement (jusqu'à 25s chacune) : avec 20+ caméras un cycle peut dépasser l'intervalle configuré — envisager un asyncio.gather borné.",
+    "Bon point: tous les endpoints testés excluent _id et valident les entrées via Pydantic (422 corrects sur langue/espèce/intervalle)."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration41_elevage_vision.py", "/app/test_reports/iteration_41.json"],
+  "success_rate": {"backend": "100% (30/30)", "frontend": "100% des éléments/flux demandés"},
+  "seed_data_creation": "Données de test laissées en base (non destructives) : 1 lecture/collier VitaBif TEST_VB-900 (fièvre 40.5°C + hors périmètre) + 2 alertes VitaBif, 1 alerte 'Présence humaine détectée' (détection image), 1 photo dataset porcin (TEST_iteration41). Caméra TEST_Cam_Etable créée puis supprimée. État final vérifié : alert_language='fr', monitoring enabled=false.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@agricam.ai / Admin@2026 (depuis /app/memory/test_credentials.md)",
+  "context_for_next_testing_agent": "Les nouveautés (YOLO/caméras, VitaBif, épidémio, multilingue, monitoring, dataset) sont couvertes par /app/backend/tests/test_iteration41_elevage_vision.py — lancer avec '-p no:randomly' (l'ordre des tests importe : caméra créée puis supprimée, clé passerelle réutilisée). Attention au login frontend : remplir l'email avec press_sequentially après ~2.5s d'attente, sinon la valeur est perdue. Le sélecteur de langue est un <select> natif : utiliser select_option(), pas get_by_role('option').click(). Non testé volontairement : /api/elevage/diagnose et les flux RTSP réels.",
+  "rca_of_the_issue": "Aucun défaut fonctionnel bloquant trouvé. Deux échecs initiaux étaient des artefacts de test : (1) login échouait car page.fill sur l'email avant hydratation React laissait le champ vide (corrigé par press_sequentially après attente), (2) le changement de langue échouait car le sélecteur est un <select> natif dont les <option> ne sont pas cliquables par Playwright (corrigé par select_option)."
+}

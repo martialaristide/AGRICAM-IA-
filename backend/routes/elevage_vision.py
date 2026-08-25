@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 import uuid
+import os
 import re
 import json
 import base64
@@ -29,6 +30,8 @@ YOLO_CLASS_MAP = {
     "horse": ("equin", "Équin"),
     "dog": ("chien", "Chien"),
     "person": ("humain", "Personne"),
+    "pig": ("porcin", "Porcin"),
+    "goat": ("caprin", "Caprin"),
 }
 
 VITABIF_THRESHOLDS = {
@@ -45,8 +48,13 @@ def _get_yolo():
         _yolo_checked = True
         try:
             from ultralytics import YOLO
-            _yolo_model = YOLO("yolov8n.pt")
-            logger.info("YOLOv8n loaded for livestock detection")
+            custom = os.environ.get("YOLO_CUSTOM_MODEL", "/app/backend/models/agricam_livestock.pt")
+            if os.path.exists(custom):
+                _yolo_model = YOLO(custom)
+                logger.info(f"Custom YOLO model loaded: {custom} (porcins inclus)")
+            else:
+                _yolo_model = YOLO("yolov8n.pt")
+                logger.info("YOLOv8n (COCO) loaded for livestock detection")
         except Exception as e:
             logger.warning(f"YOLO unavailable, Gemini fallback will be used: {e}")
     return _yolo_model
@@ -78,7 +86,7 @@ def _run_yolo(img_bytes: bytes):
         "engine": "yolov8n",
         "detections": detections,
         "counts": counts,
-        "total_animals": sum(v for k, v in counts.items() if k in ("bovin", "ovin", "porcin", "volaille", "equin")),
+        "total_animals": sum(v for k, v in counts.items() if k in ("bovin", "ovin", "porcin", "volaille", "equin", "caprin")),
         "human_detected": counts.get("humain", 0) > 0,
         "annotated_image": "data:image/jpeg;base64," + base64.b64encode(buf.tobytes()).decode() if ok else None,
     }
@@ -233,7 +241,10 @@ async def camera_detect(camera_id: str, request: Request):
     farm = await core._db.elevage_farms.find_one({"id": cam["farm_id"]}, {"_id": 0})
     loop = asyncio.get_event_loop()
     try:
-        img_bytes = await loop.run_in_executor(None, _grab_frame, cam["stream_url"])
+        img_bytes = await asyncio.wait_for(loop.run_in_executor(None, _grab_frame, cam["stream_url"]), timeout=25)
+    except asyncio.TimeoutError:
+        await core._db.elevage_cameras.update_one({"id": camera_id}, {"$set": {"status": "offline"}})
+        raise HTTPException(504, f"Caméra {cam['name']} injoignable (délai dépassé 25s) — vérifiez le réseau et l'URL RTSP.")
     except HTTPException:
         await core._db.elevage_cameras.update_one({"id": camera_id}, {"$set": {"status": "offline"}})
         raise
@@ -425,3 +436,150 @@ async def epidemiology_alerts(request: Request):
     await core._user_from_request(request)
     alerts = await core._db.elevage_epidemio_alerts.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
     return {"alerts": alerts}
+
+
+# === Détection continue (scan automatique des caméras) ===
+_monitor_task = None
+
+
+class MonitoringConfig(BaseModel):
+    enabled: bool
+    interval_minutes: int = Field(default=15, ge=2, le=120)
+
+
+@router.get("/cameras/monitoring")
+async def get_monitoring(request: Request):
+    core._check_enabled()
+    user = await core._user_from_request(request)
+    cfg = await core._db.elevage_monitoring.find_one({"user_id": user["id"]}, {"_id": 0})
+    return cfg or {"user_id": user["id"], "enabled": False, "interval_minutes": 15, "last_run": None, "last_result": None}
+
+
+@router.post("/cameras/monitoring")
+async def set_monitoring(data: MonitoringConfig, request: Request):
+    core._check_enabled()
+    user = await core._user_from_request(request)
+    await core._db.elevage_monitoring.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"user_id": user["id"], "enabled": data.enabled, "interval_minutes": data.interval_minutes,
+                  "updated_at": core._iso()}},
+        upsert=True)
+    _ensure_monitor_task()
+    return {"success": True, "enabled": data.enabled, "interval_minutes": data.interval_minutes,
+            "message": f"Surveillance continue {'activée' if data.enabled else 'désactivée'} — scan toutes les {data.interval_minutes} min" if data.enabled else "Surveillance continue désactivée"}
+
+
+async def _scan_user_cameras(cfg: dict):
+    cams = await core._db.elevage_cameras.find({"user_id": cfg["user_id"]}, {"_id": 0}).to_list(200)
+    sem = asyncio.Semaphore(4)
+
+    async def scan_one(cam):
+        async with sem:
+            try:
+                loop = asyncio.get_event_loop()
+                img_bytes = await asyncio.wait_for(loop.run_in_executor(None, _grab_frame, cam["stream_url"]), timeout=25)
+                result = await loop.run_in_executor(None, _run_yolo, img_bytes)
+                if result is None:
+                    result = await _run_gemini_detection(base64.b64encode(img_bytes).decode())
+                farm = await core._db.elevage_farms.find_one({"id": cam["farm_id"]}, {"_id": 0})
+                await core._db.elevage_cameras.update_one({"id": cam["id"]}, {"$set": {"status": "online", "last_detection_at": core._iso(), "last_counts": result["counts"]}})
+                await _process_detection(cfg["user_id"], farm, result, f"caméra {cam['name']} (scan auto)")
+                return result.get("total_animals", 0)
+            except Exception as e:
+                await core._db.elevage_cameras.update_one({"id": cam["id"]}, {"$set": {"status": "offline"}})
+                logger.warning(f"Auto-scan camera {cam.get('name')} failed: {e}")
+                return None
+
+    results = await asyncio.gather(*[scan_one(c) for c in cams])
+    ok = sum(1 for r in results if r is not None)
+    failed = len(results) - ok
+    total = sum(r for r in results if r is not None)
+    await core._db.elevage_monitoring.update_one(
+        {"user_id": cfg["user_id"]},
+        {"$set": {"last_run": core._iso(), "last_result": {"cameras_ok": ok, "cameras_failed": failed, "animals_detected": total}}})
+
+
+async def _monitor_loop():
+    logger.info("Elevage continuous monitoring loop started")
+    while True:
+        try:
+            await asyncio.sleep(60)
+            if core._db is None:
+                continue
+            configs = await core._db.elevage_monitoring.find({"enabled": True}, {"_id": 0}).to_list(200)
+            now = datetime.now(timezone.utc)
+            for cfg in configs:
+                last = cfg.get("last_run")
+                due = True
+                if last:
+                    try:
+                        due = (now - datetime.fromisoformat(last)) >= timedelta(minutes=cfg.get("interval_minutes", 15))
+                    except Exception:
+                        due = True
+                if due:
+                    await _scan_user_cameras(cfg)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.warning(f"Monitor loop error: {e}")
+
+
+def _ensure_monitor_task():
+    global _monitor_task
+    if _monitor_task is None or _monitor_task.done():
+        try:
+            _monitor_task = asyncio.get_event_loop().create_task(_monitor_loop())
+        except RuntimeError:
+            pass
+
+
+@router.on_event("startup")
+async def _start_monitoring():
+    _ensure_monitor_task()
+
+
+# === Dataset d'entraînement YOLO (fermes pilotes — porcins & races locales) ===
+DATASET_DIR = "/app/backend/dataset"
+
+
+class DatasetPhoto(BaseModel):
+    image_base64: str
+    species: str = Field(..., pattern="^(bovin|porcin|ovin|volaille)$")
+    note: Optional[str] = None
+
+
+@router.post("/vision/dataset")
+async def add_dataset_photo(data: DatasetPhoto, request: Request):
+    """Collecte de photos des fermes pilotes pour le futur modèle YOLO fine-tuné (porcins + races locales)."""
+    core._check_enabled()
+    user = await core._user_from_request(request)
+    b64 = data.image_base64.split(",", 1)[1] if data.image_base64.startswith("data:") else data.image_base64
+    img_bytes = base64.b64decode(b64)
+    if len(img_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(400, "Image trop lourde (max 10 Mo)")
+    folder = os.path.join(DATASET_DIR, data.species)
+    os.makedirs(folder, exist_ok=True)
+    fname = f"{data.species}_{uuid.uuid4().hex[:12]}.jpg"
+    with open(os.path.join(folder, fname), "wb") as f:
+        f.write(img_bytes)
+    await core._db.elevage_dataset.insert_one({
+        "id": str(uuid.uuid4()), "user_id": user["id"], "species": data.species,
+        "filename": fname, "note": data.note, "size_kb": round(len(img_bytes) / 1024),
+        "created_at": core._iso()})
+    total = await core._db.elevage_dataset.count_documents({"species": data.species})
+    return {"success": True, "species": data.species, "total_photos_species": total,
+            "message": f"Photo ajoutée au dataset {data.species} ({total} photos). Objectif : 300+ photos par espèce pour l'entraînement."}
+
+
+@router.get("/vision/dataset/stats")
+async def dataset_stats(request: Request):
+    core._check_enabled()
+    await core._user_from_request(request)
+    stats = {}
+    for sp in ("bovin", "porcin", "ovin", "volaille"):
+        stats[sp] = await core._db.elevage_dataset.count_documents({"species": sp})
+    custom = os.environ.get("YOLO_CUSTOM_MODEL", "/app/backend/models/agricam_livestock.pt")
+    return {"photos": stats, "target_per_species": 300,
+            "custom_model_installed": os.path.exists(custom),
+            "custom_model_path": custom,
+            "training_guide": "/app/GUIDE_YOLO_PORCINS.md"}

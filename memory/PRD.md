@@ -25,7 +25,15 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
 ## Recent Changes (2026)
-### Iteration 45 (June 2026 — current)
+### Iteration 46 (June 2026 — current)
+- 🌍 **Multilingual WhatsApp alerts**: fr/pidgin/fulfulde — `WA_L10N` frame + `WA_CATALOG` (titles/actions translated), user pref `alert_language` via GET/POST /api/elevage/settings, language selector in Alerts tab. Verified: pidgin 'ALARM QUICK QUICK', fulfulde 'TINNDINOL'
+- ⏱️ **Continuous camera monitoring**: background asyncio loop (starts on router startup), GET/POST /api/elevage/cameras/monitoring {enabled, interval_minutes 2-120}, parallel scan (Semaphore 4, 25s timeout/cam), auto alerts, last_run/last_result stored. Verified loop ran autonomously. Currently DISABLED (demo camera is fictive)
+- 🐖 **YOLO porcins pipeline**: dataset collection POST /api/elevage/vision/dataset (+stats), photos in /app/backend/dataset/{species}/, custom model auto-load from /app/backend/models/agricam_livestock.pt or YOLO_CUSTOM_MODEL env, pig/goat class mapping added, training guide /app/GUIDE_YOLO_PORCINS.md (Roboflow + Colab)
+- 🔧 Hardening (from test report): 25s timeout on manual camera detect (504), parallel bounded auto-scan
+- ✅ **TESTED by testing_agent (iteration_41.json): 100% backend (30/30), 100% frontend** — YOLO real detection, VitaBif ingest+auth, epidemiology, multilingual, monitoring, dataset, mobile
+- Backlog noted from report: dataset photos on container disk (consider object storage for scale), shadcn Select for language selector (cosmetic)
+
+### Iteration 45
 - 🎥 **Real camera system (20+ per farm)**: `routes/elevage_vision.py` — camera CRUD (RTSP/HTTP IP cameras), `POST /cameras/{id}/detect` grabs a real frame (OpenCV) and runs **YOLOv8n** (ultralytics, torch CPU installed); `POST /vision/detect-frame` for photo upload tests. Real detections verified E2E (3 persons + bus on real photo, annotated image returned). Person detected → automatic security alert. Gemini fallback if YOLO down. Note: pigs not in COCO → Gemini fallback / fine-tuned model roadmap
 - 📡 **VitaBif collars (real ingestion, per user's technical dossier)**: `POST /farms/{id}/gateway` generates gateway API key + payload doc; `POST /vitabif/ingest` (X-Gateway-Key auth) receives real LoRa gateway packets: heart rate (MAX30102), body temp (DS18B20), activity MPU6050 (marche/rumination/immobilité/boiterie), ultrasonic virtual fence (inside/near_limit/outside), water/feed probe (pH/turbidity/conductivity/humidity). Per-species thresholds → auto alerts (tested: 6 anomalies → 6 WhatsApp alerts; bad key → 401)
 - 🦠 **Regional epidemiology network**: `POST /epidemiology/scan` — ≥3 farms same species+symptom in 7 days → anonymized alert 'transmise_aux_autorites' (MINEPIA/PATNUC). Verified with 3-farm cluster. UI section in Coopérative tab (scan button + alert cards)

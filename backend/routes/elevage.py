@@ -73,6 +73,58 @@ SECURITY_EVENT_TYPES = {
 
 SEVERITY_EMOJI = {"info": "🟢", "attention": "🟡", "urgent": "🟠", "critique": "🔴"}
 
+WA_L10N = {
+    "fr": {"brand": "AGRICAM ÉLEVAGE IA", "alerte": "ALERTE", "ferme": "Ferme", "action": "Action recommandée",
+           "reply": "Répondez 1 pour acquitter · 2 pour consulter un vétérinaire",
+           "sev": {"info": "INFO", "attention": "ATTENTION", "urgent": "URGENT", "critique": "CRITIQUE"}},
+    "pidgin": {"brand": "AGRICAM ANIMAL AI", "alerte": "ALARM", "ferme": "Farm", "action": "Wetin you go do",
+               "reply": "Reply 1 say you don see am · 2 for talk with animal doctor",
+               "sev": {"info": "INFO", "attention": "LOOK AM WELL", "urgent": "QUICK QUICK", "critique": "BIG DANGER"}},
+    "fulfulde": {"brand": "AGRICAM DABBAAJI AI", "alerte": "TINNDINOL", "ferme": "Wuro", "action": "Ko haani waɗeede",
+                 "reply": "Jaabu 1 ngam jaɓde · 2 ngam yiilaade cafroowo dabbaaji",
+                 "sev": {"info": "HABARU", "attention": "NDAARU", "urgent": "HEÑƊO", "critique": "BONE MAWNDE"}},
+}
+
+# Traductions du catalogue d'alertes (titres et actions) — pidgin camerounais & fulfuldé
+WA_CATALOG = {
+    "pidgin": {
+        "Suspicion de maladie": "E fit be say di animal don sick",
+        "Boiterie détectée (analyse de démarche)": "Di animal di waka one kind (leg problem)",
+        "Isolement social anormal": "Di animal don comot for group — e fit don sick",
+        "Blessure visible détectée": "Wound dey for di animal body",
+        "Chaleur (œstrus) détectée": "Di animal dey for heat — time for crossing",
+        "Mise-bas imminente": "Di animal wan born now now",
+        "Comportement de soif anormale": "Di animal di find water too much",
+        "Toux détectée (analyse audio)": "Di animal di cough — chest problem fit dey",
+        "Intrusion humaine détectée (vision nocturne)": "Some person don enter di farm for night!",
+        "Animal hors de la zone (franchissement de clôture)": "One animal don comot for di fence",
+        "Mouvement suspect de prédateur détecté": "Some wild animal dey near di farm",
+        "Géo-clôture franchie": "Animal don pass di boundary",
+        "Alerte collier VitaBif": "VitaBif collar don send alarm",
+        "Isoler le sujet et consulter un vétérinaire": "Separate di animal and call animal doctor",
+        "Localiser et ramener l'animal": "Go find di animal and bring am back",
+        "Vérifier immédiatement — sirène locale déclenchée": "Check di farm sharp sharp — siren don sound",
+    },
+    "fulfulde": {
+        "Suspicion de maladie": "Sikke ñawu e dabba ngal",
+        "Boiterie détectée (analyse de démarche)": "Dabba ngal ina laɗɗa (koyngal muusa)",
+        "Isolement social anormal": "Dabba ngal seedi e goomu — maande ñawu",
+        "Blessure visible détectée": "Barme ina yiyee e ɓanndu dabba",
+        "Chaleur (œstrus) détectée": "Dabba ngal ina e nder wela — sahaa ɓesngu",
+        "Mise-bas imminente": "Dabba ngal ina ɓadii jibinde",
+        "Comportement de soif anormale": "Dabba ngal ina ɗomɗa no feewaani",
+        "Toux détectée (analyse audio)": "Dojjo nanaama — ñawu becce ina waawi wonde",
+        "Intrusion humaine détectée (vision nocturne)": "Neɗɗo naati wuro ngo jemma!",
+        "Animal hors de la zone (franchissement de clôture)": "Dabba yalti keerol ngol",
+        "Mouvement suspect de prédateur détecté": "Barogal ina ɓadii wuro ngo",
+        "Géo-clôture franchie": "Dabba ɓenni keerol ngol",
+        "Alerte collier VitaBif": "Kolce VitaBif neldi tinndinol",
+        "Isoler le sujet et consulter un vétérinaire": "Seern dabba ngal, noddu cafroowo dabbaaji",
+        "Localiser et ramener l'animal": "Yiylo dabba ngal, artir ngal",
+        "Vérifier immédiatement — sirène locale déclenchée": "Ƴeewndo jooni — siren huli",
+    },
+}
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -106,23 +158,29 @@ async def _user_from_request(request: Request) -> dict:
     return user
 
 
-def _whatsapp_preview(severity: str, farm_name: str, species: str, message: str, action: str) -> str:
+def _whatsapp_preview(severity: str, farm_name: str, species: str, message: str, action: str, lang: str = "fr", title: str = "") -> str:
     emoji = SEVERITY_EMOJI.get(severity, "🟢")
     label = SPECIES.get(species, {}).get("label", species)
     ts = _now().strftime("%d/%m/%Y %H:%M")
-    return (
-        f"{emoji} *AGRICAM ÉLEVAGE IA* — ALERTE {severity.upper()}\n"
-        f"📍 Ferme : {farm_name} ({label})\n"
-        f"🕐 {ts}\n\n"
-        f"{message}\n\n"
-        f"👉 Action recommandée : {action}\n"
-        f"Répondez 1 pour acquitter · 2 pour consulter un vétérinaire"
-    )
+    L = WA_L10N.get(lang, WA_L10N["fr"])
+    cat = WA_CATALOG.get(lang, {})
+    lines = [
+        f"{emoji} *{L['brand']}* — {L['alerte']} {L['sev'].get(severity, severity.upper())}",
+        f"📍 {L['ferme']} : {farm_name} ({label})",
+        f"🕐 {ts}",
+        "",
+    ]
+    if lang != "fr" and title and cat.get(title):
+        lines.append(f"❗ {cat[title]}")
+    lines.append(message)
+    lines += ["", f"👉 {L['action']} : {cat.get(action, action)}", L["reply"]]
+    return "\n".join(lines)
 
 
 async def _make_alert(user_id: str, farm: dict, severity: str, title: str, message: str, action: str, source_type: str, image_ref: Optional[str] = None):
-    wa_text = _whatsapp_preview(severity, farm["name"], farm["species"], message, action)
-    user = await _db.users.find_one({"id": user_id}, {"_id": 0, "phone": 1, "phone_number": 1})
+    user = await _db.users.find_one({"id": user_id}, {"_id": 0, "phone": 1, "phone_number": 1, "alert_language": 1})
+    lang = (user or {}).get("alert_language", "fr")
+    wa_text = _whatsapp_preview(severity, farm["name"], farm["species"], message, action, lang=lang, title=title)
     phone = (user or {}).get("phone") or (user or {}).get("phone_number")
     wa_result = await _send_whatsapp(phone, wa_text) if phone else {"sent": False, "mode": "simulation", "reason": "no_phone"}
     alert = {
@@ -138,6 +196,7 @@ async def _make_alert(user_id: str, farm: dict, severity: str, title: str, messa
         "action": action,
         "channel": wa_result["mode"],
         "whatsapp_status": "envoyé" if wa_result["sent"] else "simulé",
+        "language": lang,
         "whatsapp_preview": wa_text,
         "image_ref": image_ref,
         "acknowledged_at": None,
@@ -305,6 +364,26 @@ class DiagnoseRequest(BaseModel):
 
 
 # === Endpoints ===
+@router.get("/settings")
+async def get_settings(request: Request):
+    _check_enabled()
+    user = await _user_from_request(request)
+    return {"alert_language": user.get("alert_language", "fr"),
+            "available_languages": [{"code": "fr", "label": "Français"}, {"code": "pidgin", "label": "Pidgin (Cameroun)"}, {"code": "fulfulde", "label": "Fulfuldé"}]}
+
+
+class SettingsUpdate(BaseModel):
+    alert_language: str = Field(..., pattern="^(fr|pidgin|fulfulde)$")
+
+
+@router.post("/settings")
+async def update_settings(data: SettingsUpdate, request: Request):
+    _check_enabled()
+    user = await _user_from_request(request)
+    await _db.users.update_one({"id": user["id"]}, {"$set": {"alert_language": data.alert_language}})
+    return {"success": True, "alert_language": data.alert_language}
+
+
 @router.get("/status")
 async def elevage_status(request: Request):
     _check_enabled()

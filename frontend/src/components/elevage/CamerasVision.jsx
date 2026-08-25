@@ -6,7 +6,8 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Loader2, Video, Plus, ScanSearch, Trash2, Upload, Cpu, KeyRound, Copy } from "lucide-react";
+import { Loader2, Video, Plus, ScanSearch, Trash2, Upload, Cpu, KeyRound, Copy, Timer, Camera } from "lucide-react";
+import { Switch } from "../ui/switch";
 import { toast } from "sonner";
 
 export default function CamerasVision({ refreshKey }) {
@@ -19,7 +20,11 @@ export default function CamerasVision({ refreshKey }) {
   const [result, setResult] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [gateway, setGateway] = useState(null);
+  const [monitoring, setMonitoring] = useState({ enabled: false, interval_minutes: 15, last_run: null, last_result: null });
+  const [datasetStats, setDatasetStats] = useState(null);
+  const [datasetSpecies, setDatasetSpecies] = useState("porcin");
   const fileRef = useRef(null);
+  const datasetRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -32,6 +37,8 @@ export default function CamerasVision({ refreshKey }) {
       setCameras(c.data.cameras);
       setFarms(f.data.farms);
       if (f.data.farms.length && !form.farm_id) setForm((s) => ({ ...s, farm_id: f.data.farms[0].id }));
+      api.get("/elevage/cameras/monitoring").then((m) => setMonitoring(m.data)).catch(() => {});
+      api.get("/elevage/vision/dataset/stats").then((d) => setDatasetStats(d.data)).catch(() => {});
     } catch {
       toast.error("Erreur de chargement des caméras");
     }
@@ -91,6 +98,29 @@ export default function CamerasVision({ refreshKey }) {
     reader.readAsDataURL(file);
   };
 
+  const updateMonitoring = async (patch) => {
+    const next = { enabled: monitoring.enabled, interval_minutes: monitoring.interval_minutes || 15, ...patch };
+    try {
+      const res = await api.post("/elevage/cameras/monitoring", next);
+      setMonitoring((m) => ({ ...m, ...next }));
+      toast.success(res.data.message);
+    } catch { toast.error("Échec de la configuration"); }
+  };
+
+  const handleDatasetPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const res = await api.post("/elevage/vision/dataset", { image_base64: reader.result, species: datasetSpecies });
+        toast.success(res.data.message);
+        api.get("/elevage/vision/dataset/stats").then((d) => setDatasetStats(d.data)).catch(() => {});
+      } catch (err) { toast.error(err.response?.data?.detail || "Échec de l'ajout au dataset"); }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const getGatewayKey = async () => {
     if (!form.farm_id) return;
     try {
@@ -123,6 +153,34 @@ export default function CamerasVision({ refreshKey }) {
           <KeyRound className="h-4 w-4 mr-1.5" />Clé passerelle VitaBif
         </Button>
       </div>
+
+      <Card data-testid="monitoring-card">
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-[220px]">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${monitoring.enabled ? "bg-emerald-500/15 text-emerald-400" : "bg-slate-500/15 text-slate-400"}`}>
+              <Timer className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">Surveillance continue automatique</p>
+              <p className="text-[11px] text-slate-400">
+                {monitoring.enabled
+                  ? `Actif — scan de toutes les caméras toutes les ${monitoring.interval_minutes} min, alertes automatiques`
+                  : "Inactif — activez pour scanner les caméras sans clic manuel"}
+                {monitoring.last_result && ` · Dernier scan : ${monitoring.last_result.cameras_ok} OK / ${monitoring.last_result.cameras_failed} KO, ${monitoring.last_result.animals_detected} animaux`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={String(monitoring.interval_minutes || 15)} onValueChange={(v) => updateMonitoring({ interval_minutes: parseInt(v) })}>
+              <SelectTrigger className="w-32" data-testid="monitoring-interval-select"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2, 5, 10, 15, 30, 60].map((m) => <SelectItem key={m} value={String(m)}>{m} min</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Switch checked={!!monitoring.enabled} onCheckedChange={(v) => updateMonitoring({ enabled: v })} data-testid="monitoring-toggle" />
+          </div>
+        </CardContent>
+      </Card>
 
       {cameras.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-slate-400">
@@ -180,6 +238,39 @@ export default function CamerasVision({ refreshKey }) {
           </CardContent>
         </Card>
       )}
+
+      <Card data-testid="dataset-card">
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-[220px]">
+            <div className="w-10 h-10 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center shrink-0">
+              <Camera className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">Dataset d'entraînement YOLO (porcins & races locales)</p>
+              <p className="text-[11px] text-slate-400">
+                {datasetStats
+                  ? `Photos : ${Object.entries(datasetStats.photos).map(([k, v]) => `${k} ${v}`).join(" · ")} (objectif ${datasetStats.target_per_species}/espèce) ${datasetStats.custom_model_installed ? "· ✓ Modèle personnalisé installé" : "· Guide : GUIDE_YOLO_PORCINS.md"}`
+                  : "Contribuez avec les photos de vos fermes pilotes pour entraîner le modèle qui détectera les porcs"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={datasetSpecies} onValueChange={setDatasetSpecies}>
+              <SelectTrigger className="w-32" data-testid="dataset-species-select"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="porcin">Porcin</SelectItem>
+                <SelectItem value="bovin">Bovin</SelectItem>
+                <SelectItem value="ovin">Ovin</SelectItem>
+                <SelectItem value="volaille">Volaille</SelectItem>
+              </SelectContent>
+            </Select>
+            <input ref={datasetRef} type="file" accept="image/*" className="hidden" onChange={handleDatasetPhoto} data-testid="dataset-file-input" />
+            <Button size="sm" variant="outline" onClick={() => datasetRef.current?.click()} data-testid="dataset-add-btn" className="border-rose-500/40 text-rose-400 hover:bg-rose-500/10">
+              <Plus className="h-3.5 w-3.5 mr-1.5" />Contribuer
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent data-testid="add-camera-dialog">
