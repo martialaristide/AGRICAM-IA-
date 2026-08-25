@@ -4917,6 +4917,10 @@ try:
     elevage_init(db, get_current_user)
     app.include_router(elevage_router)
     logger.info("Elevage IA module loaded successfully")
+
+    from routes.elevage_vision import router as elevage_vision_router
+    app.include_router(elevage_vision_router)
+    logger.info("Elevage Vision (cameras/YOLO/VitaBif/epidemiology) loaded successfully")
 except ImportError as e:
     logger.warning(f"Payment routes not loaded: {e}")
 

@@ -25,7 +25,15 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
 ## Recent Changes (2026)
-### Iteration 44 (June 2026 — current)
+### Iteration 45 (June 2026 — current)
+- 🎥 **Real camera system (20+ per farm)**: `routes/elevage_vision.py` — camera CRUD (RTSP/HTTP IP cameras), `POST /cameras/{id}/detect` grabs a real frame (OpenCV) and runs **YOLOv8n** (ultralytics, torch CPU installed); `POST /vision/detect-frame` for photo upload tests. Real detections verified E2E (3 persons + bus on real photo, annotated image returned). Person detected → automatic security alert. Gemini fallback if YOLO down. Note: pigs not in COCO → Gemini fallback / fine-tuned model roadmap
+- 📡 **VitaBif collars (real ingestion, per user's technical dossier)**: `POST /farms/{id}/gateway` generates gateway API key + payload doc; `POST /vitabif/ingest` (X-Gateway-Key auth) receives real LoRa gateway packets: heart rate (MAX30102), body temp (DS18B20), activity MPU6050 (marche/rumination/immobilité/boiterie), ultrasonic virtual fence (inside/near_limit/outside), water/feed probe (pH/turbidity/conductivity/humidity). Per-species thresholds → auto alerts (tested: 6 anomalies → 6 WhatsApp alerts; bad key → 401)
+- 🦠 **Regional epidemiology network**: `POST /epidemiology/scan` — ≥3 farms same species+symptom in 7 days → anonymized alert 'transmise_aux_autorites' (MINEPIA/PATNUC). Verified with 3-farm cluster. UI section in Coopérative tab (scan button + alert cards)
+- 🗂️ **Two-module sidebar**: new group « AGRICAM IA ÉLEVAGE » (Mon Élevage + Caméras & Détection YOLO via ?tab=cameras) alongside existing AGRICAM IA groups
+- ⚠️ Incident fixed: disk-full during torch install truncated server.py end + duplicated a router include — repaired (syntax OK). Torch CPU-only now installed (nvidia libs removed)
+- Nouveau tab « Caméras » : ajout caméra (nom/URL RTSP/type), détection YOLO par caméra, test photo, dialogue clé passerelle VitaBif
+
+### Iteration 44
 - 📲 **WhatsApp Business ready-to-plug**: `_send_whatsapp()` in elevage.py supports Meta Cloud API (WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID) & Twilio (TWILIO_ACCOUNT_SID/AUTH_TOKEN/WHATSAPP_FROM) via env; automatic fallback to SIMULATION when keys absent. `GET /api/elevage/whatsapp/config` + frontend banner shows mode. Alerts carry `whatsapp_status` (envoyé/simulé)
 - 🛰️ **GPS Collars + Geofencing map**: `GET /api/elevage/farms/{id}/collars` (simulated LoRaWAN collars, 300m geofence, auto 'evasion' alert), new tab « Carte GPS » (`ElevageMap.jsx`, react-leaflet, red markers outside fence)
 - 🏢 **Cooperative multi-farm dashboard**: `GET /api/elevage/cooperative/dashboard` (aggregated farms/members/species/health/alerts), new tab « Coopérative » (`CooperativeView.jsx`)

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { PawPrint, Camera, Loader2, Radio, LayoutGrid, HeartPulse, Bell, Thermometer, ScanSearch, TrendingUp, MapPin, Building2 } from "lucide-react";
+import { PawPrint, Camera, Loader2, Radio, LayoutGrid, HeartPulse, Bell, Thermometer, ScanSearch, TrendingUp, MapPin, Building2, Video } from "lucide-react";
 import { toast } from "sonner";
 import CheptelOverview from "../components/elevage/CheptelOverview";
 import AnimalsPanel from "../components/elevage/AnimalsPanel";
@@ -12,13 +13,20 @@ import AnimalDiagnostic from "../components/elevage/AnimalDiagnostic";
 import ElevageEconomie from "../components/elevage/ElevageEconomie";
 import ElevageMap from "../components/elevage/ElevageMap";
 import CooperativeView from "../components/elevage/CooperativeView";
+import CamerasVision from "../components/elevage/CamerasVision";
 
 export default function MonElevage() {
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState(null);
   const [seeding, setSeeding] = useState(false);
   const [simulating, setSimulating] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -120,6 +128,7 @@ export default function MonElevage() {
           <TabsList className="w-max flex">
             <TabsTrigger value="overview" data-testid="elevage-tab-overview"><LayoutGrid className="h-4 w-4 mr-1.5" />Cheptel</TabsTrigger>
             <TabsTrigger value="animals" data-testid="elevage-tab-animals"><HeartPulse className="h-4 w-4 mr-1.5" />Animaux</TabsTrigger>
+            <TabsTrigger value="cameras" data-testid="elevage-tab-cameras"><Video className="h-4 w-4 mr-1.5" />Caméras</TabsTrigger>
             <TabsTrigger value="map" data-testid="elevage-tab-map"><MapPin className="h-4 w-4 mr-1.5" />Carte GPS</TabsTrigger>
             <TabsTrigger value="alerts" data-testid="elevage-tab-alerts"><Bell className="h-4 w-4 mr-1.5" />Alertes</TabsTrigger>
             <TabsTrigger value="environment" data-testid="elevage-tab-environment"><Thermometer className="h-4 w-4 mr-1.5" />Environnement</TabsTrigger>
@@ -131,6 +140,7 @@ export default function MonElevage() {
 
         <TabsContent value="overview"><CheptelOverview refreshKey={refreshKey} onAlert={() => setRefreshKey((k) => k + 1)} /></TabsContent>
         <TabsContent value="animals"><AnimalsPanel refreshKey={refreshKey} /></TabsContent>
+        <TabsContent value="cameras"><CamerasVision refreshKey={refreshKey} /></TabsContent>
         <TabsContent value="map"><ElevageMap refreshKey={refreshKey} onAlert={() => setRefreshKey((k) => k + 1)} /></TabsContent>
         <TabsContent value="alerts"><ElevageAlerts refreshKey={refreshKey} /></TabsContent>
         <TabsContent value="environment"><ElevageEnvironment refreshKey={refreshKey} /></TabsContent>

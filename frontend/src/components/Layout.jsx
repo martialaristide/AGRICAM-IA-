@@ -184,7 +184,15 @@ const GROUP_DESCRIPTIONS = {
 // === Navigation Groups (replaces flat list) ===
 const getNavGroups = (role, t) => {
   const dashboard = { path: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard"), tooltip: MODULE_DESCRIPTIONS["/dashboard"] };
-  const elevage = { path: "/elevage", icon: PawPrint, label: "Mon Élevage", tooltip: "Élevage IA : surveillance caméra du bétail, alertes santé/sécurité WhatsApp, prédiction de prix" };
+  const groupElevage = {
+    id: "elevage",
+    icon: PawPrint,
+    label: "AGRICAM IA Élevage",
+    items: [
+      { path: "/elevage", icon: PawPrint, label: "Mon Élevage", tooltip: "Cheptel, santé, alertes WhatsApp, carte GPS, économie" },
+      { path: "/elevage?tab=cameras", icon: Camera, label: "Caméras & Détection YOLO", tooltip: "Caméras IP (20+), vision par ordinateur YOLO, colliers VitaBif" },
+    ],
+  };
 
   const groupAnalysis = {
     id: "analysis",
@@ -278,16 +286,16 @@ const getNavGroups = (role, t) => {
 
   if (role === "admin") {
     return {
-      direct: [dashboard, elevage],
-      groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning), enrich(groupAdmin)],
+      direct: [dashboard],
+      groups: [enrich(groupElevage), enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning), enrich(groupAdmin)],
       bottom: [support, alertes, settings],
     };
   }
 
   if (role === "farmer") {
     return {
-      direct: [dashboard, elevage],
-      groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning)],
+      direct: [dashboard],
+      groups: [enrich(groupElevage), enrich(groupAnalysis), enrich(groupField), enrich(groupFleet), enrich(groupMarket), enrich(groupLearning)],
       bottom: [support, alertes, settings],
     };
   }
@@ -318,8 +326,8 @@ const getNavGroups = (role, t) => {
 
   if (role === "agronomist") {
     return {
-      direct: [dashboard, elevage, { path: "/agronomist", icon: Lightbulb, label: t("roles.agronomist.title") || "Mon Espace", tooltip: MODULE_DESCRIPTIONS["/agronomist"] }],
-      groups: [enrich(groupAnalysis), enrich(groupField), enrich(groupMarket), enrich(groupLearning)],
+      direct: [dashboard, { path: "/agronomist", icon: Lightbulb, label: t("roles.agronomist.title") || "Mon Espace", tooltip: MODULE_DESCRIPTIONS["/agronomist"] }],
+      groups: [enrich(groupElevage), enrich(groupAnalysis), enrich(groupField), enrich(groupMarket), enrich(groupLearning)],
       bottom: [support, alertes, settings],
     };
   }
