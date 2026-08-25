@@ -6,12 +6,10 @@ import requests
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://i18n-rtl-stage.preview.emergentagent.com").rstrip("/")
 ENDPOINT = f"{BASE_URL}/api/admin/analytics-presentation"
 
-ADMIN_EMAIL = "admin@agricam.ai"
-ADMIN_PASSWORD = "Admin@2026"
-FARMER_EMAIL = "agriculteur@agricam.ai"
-FARMER_PASSWORD = "Farmer@2026"
-
-
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam.ai")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "Admin@2026")
+FARMER_EMAIL = os.environ.get("TEST_FARMER_EMAIL", "agriculteur@agricam.ai")
+FARMER_PASSWORD = os.environ.get("TEST_FARMER_PASSWORD", "Farmer@2026")
 def _login(email, password):
     r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": email, "password": password}, timeout=30)
     assert r.status_code == 200, f"Login failed for {email}: {r.status_code} {r.text[:300]}"

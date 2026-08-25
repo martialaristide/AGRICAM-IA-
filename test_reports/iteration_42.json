@@ -1,0 +1,46 @@
+{
+  "summary": "Express non-regression test (iteration 42) after structural refactor: env-based TEST_* creds + conftest.py, new /app/backend/dependencies.py get_db (circular import fix), explicit model imports in models/__init__.py + schemas.py, updated farmer credentials. Backend: 9/9 new regression tests pass (admin login, farmer login, bad-password 401, register+persistence, /api/drone-manager/fleet, /api/parcels, /api/elevage/status, /api/elevage/dashboard, ObjectId regression). Existing suite tests/test_agricam_api.py: 20/20 pass. Frontend: admin login -> /admin dashboard renders (580 users, feature adoption), /elevage renders live stats (519 animals, 4 installations, score 83.5/100), 0 console errors, 0 error elements. NO REGRESSION FOUND from the refactor. Two pre-existing bugs were found and fixed in-scope (ObjectId serialization 500 + stale weather route in old test).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/analysis/upload-csv, /api/analysis/upload-image, /api/analysis/upload-video", "issue": "PRE-EXISTING (now fixed by me): motor insert_one() mutated the response dict adding ObjectId _id, causing FastAPI serialization ValueError -> HTTP 500. Was masked because tests/test_agricam_api.py only asserted status != 404. Fixed by popping _id after insert (3 sites in server.py)."},
+      {"endpoint": "tests/test_agricam_api.py::TestWeatherAPI", "issue": "PRE-EXISTING stale test hitting /api/weather/{city}; real route is /api/weather/city/{location}. Test path corrected."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Sidebar / global", "issues": ["Mixed-language labels persist (EN section headers 'ANALYSIS & AI', 'CROPS & FIELD', 'AUTONOMOUS FLEET' next to FR 'AGRICAM IA ELEVAGE', 'Mon Elevage') - cosmetic i18n inconsistency, not a regression"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration42_regression.py",
+    "/app/backend/tests/test_iteration42_objectid_fix.py",
+    "/app/test_reports/pytest/iteration42_regression.xml",
+    "/app/test_reports/pytest/iteration42_agricam.xml"
+  ],
+  "action_items": [
+    "Review the ObjectId fix I applied in server.py (3 x analysis_result.pop('_id', None) after insert_one) - consider a shared helper since this pattern likely exists elsewhere",
+    "Audit other endpoints returning a dict that was just passed to insert_one() (same ObjectId 500 class of bug)",
+    "Optional: harden lenient assertions in tests/test_agricam_api.py (status != 404) that masked the 500"
+  ],
+  "critical_code_review_comments": [
+    "dependencies.py get_db() creates a module-level AsyncIOMotorClient lazily and is fine, but it is a sync function used with Depends - confirm no second Motor client is spawned per-process alongside server.py's own client (two clients = two connection pools). Consider server.py importing get_db from dependencies.py too, for a single client.",
+    "dependencies.py uses os.environ.get('MONGO_URL') with no load_dotenv guarantee; it works because server.py loads .env first, but importing routes/* standalone (e.g. in unit tests) would pass None to AsyncIOMotorClient. Add a fail-fast assert.",
+    "server.py is very large (>4000 lines) - continue splitting into routers as started with routes/."
+  ],
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/test_agricam_api.py",
+    "/app/backend/tests/test_iteration42_regression.py",
+    "/app/backend/tests/test_iteration42_objectid_fix.py"
+  ],
+  "success_rate": {"backend": "100% (29/29: 9 new regression + 20 test_agricam_api)", "frontend": "100% (login + admin dashboard + elevage, 0 console errors)"},
+  "seed_data_creation": "One random registered user per run via POST /api/auth/register (test_reg_<random>@example.com / Test@2026) and TEST_data.csv analysis documents in data_analyses. Low volume, not cleaned up (no delete endpoints exposed).",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@agricam.ai / Admin@2026 (OK), agriculteur@agricam.ai / Farmer@2026 (OK) - /app/memory/test_credentials.md accurate",
+  "context_for_next_testing_agent": "Refactor (dependencies.py, explicit model imports, conftest env creds) verified non-regressive - no need to re-verify. Elevage module untouched and healthy (iter 40/41 remain valid). New reusable regression file: tests/test_iteration42_regression.py. Not tested per instructions: RTSP cameras, photo diagnostic, NetWalletPay. Watch for other insert_one()-then-return ObjectId 500s.",
+  "rca_of_the_issue": "The 500 on /api/analysis/upload-* was unrelated to the refactor: Motor's insert_one() mutates the passed dict in place, injecting a BSON ObjectId into '_id'. The same dict was then returned, so FastAPI's jsonable_encoder raised ValueError(\"'ObjectId' object is not iterable\"). Repro: POST a small CSV to /api/analysis/upload-csv with an admin token -> 500. Mitigation applied: pop '_id' from the dict right after insert_one at the 3 affected sites; verified by tests/test_iteration42_objectid_fix.py (now 200 with no _id)."
+}

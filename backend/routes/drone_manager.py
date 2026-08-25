@@ -58,8 +58,8 @@ class PhotoUpload(BaseModel):
 # ============================================================
 
 def get_db():
-    from server import db
-    return db
+    from dependencies import get_db as _get_db
+    return _get_db()
 
 @router.get("/fleet")
 async def get_fleet():

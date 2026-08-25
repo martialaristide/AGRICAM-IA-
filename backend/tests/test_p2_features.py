@@ -13,12 +13,10 @@ import os
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "admin@agricam-ia.com"
-ADMIN_PASSWORD = "admin123"
-FARMER_EMAIL = "agriculteur@demo.com"
-FARMER_PASSWORD = "farmer123"
-
-
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam-ia.com")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "admin123")
+FARMER_EMAIL = os.environ.get("TEST_FARMER_EMAIL", "agriculteur@demo.com")
+FARMER_PASSWORD = os.environ.get("TEST_FARMER_PASSWORD", "farmer123")
 class TestHealthCheck:
     """Basic health check"""
     

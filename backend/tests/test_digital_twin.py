@@ -10,12 +10,10 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ANALYST_EMAIL = "analyste@agricam.ai"
-ANALYST_PASSWORD = "Analyst@2026"
-ADMIN_EMAIL = "admin@agricam.ai"
-ADMIN_PASSWORD = "Admin@2026"
-
-
+ANALYST_EMAIL = os.environ.get("TEST_ANALYST_EMAIL", "analyste@agricam.ai")
+ANALYST_PASSWORD = os.environ.get("TEST_ANALYST_PASSWORD", "Analyst@2026")
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam.ai")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "Admin@2026")
 @pytest.fixture(scope="module")
 def auth_token():
     """Get authentication token for seed analyst"""

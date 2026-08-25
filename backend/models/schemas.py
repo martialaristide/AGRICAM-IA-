@@ -5,7 +5,23 @@ Request/Response models
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Any, Dict
 from datetime import datetime
-from .enums import *
+from .enums import (
+    AlertPriority,
+    IrrigationStatus,
+    LoanStatus,
+    MissionStatus,
+    OrderStatus,
+    ParcelStatus,
+    PaymentProvider,
+    PaymentStatus,
+    ProductStatus,
+    RecommendationPriority,
+    RecommendationType,
+    SensorStatus,
+    SensorType,
+    SubscriptionType,
+    UserRole,
+)
 
 # =============================================================================
 # AUTH SCHEMAS

@@ -1364,6 +1364,7 @@ async def upload_and_analyze_image(
         
         # Save analysis
         await db.image_analyses.insert_one(analysis_result)
+        analysis_result.pop("_id", None)
         
         # Create alert if disease detected
         diseases = analysis_result.get("results", {}).get("diseases", [])
@@ -1443,6 +1444,7 @@ async def upload_and_analyze_video(
         analysis_result["source"] = "agricam_video_ai"
         
         await db.video_analyses.insert_one(analysis_result)
+        analysis_result.pop("_id", None)
         
         return analysis_result
         
@@ -1549,6 +1551,7 @@ async def upload_and_analyze_csv(
         
         analysis_result["source"] = "agricam_data_ai"
         await db.data_analyses.insert_one(analysis_result)
+        analysis_result.pop("_id", None)
         
         return analysis_result
         

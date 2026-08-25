@@ -25,7 +25,16 @@ A multi-tier precision agriculture SaaS platform for the African market. Pre-pit
 - i18n: 21 languages with FR/EN as primary, auto-fallback to FR
 
 ## Recent Changes (2026)
-### Iteration 46 (June 2026 — current)
+### Iteration 47 (June 2026 — current) — Code Review Fixes
+- 🔐 Test credentials → env-first: all 11 test files use `os.environ.get("TEST_*", fallback)`, `tests/.env.test` (gitignored) + `tests/conftest.py` loads .env.test/backend/frontend envs. Stale farmer creds fixed (agriculteur@agricam.ai/Farmer@2026)
+- 🔄 Circular import broken: new `/app/backend/dependencies.py` (standalone Motor get_db), drone_manager no longer imports server
+- 📦 Wildcard imports removed: models/__init__.py + schemas.py explicit imports + `__all__`; pyflakes: 0 undefined names in server.py + all routes (the reported '21 undefined vars' were wildcard-masking artifacts)
+- 🐛 Testing agent fixed 2 PRE-EXISTING bugs: ObjectId `_id` mutation after insert_one → HTTP 500 on /api/analysis/upload-{csv,image,video} (pop after insert, 3 sites) + stale weather test path
+- ℹ️ False positives dismissed: 'API keys in translations.js' = translation labels ('Mot de passe'); localStorage JWT = deliberate SPA pattern (httpOnly-cookie migration deferred, would require full auth rework pre-deployment)
+- ✅ **TESTED (iteration_42.json): 100% — 29/29 backend, frontend 0 console errors, NO REGRESSION**
+- Deferred (backlog): hook-deps warnings on legacy pages, index-as-key, oversized components split, type hints coverage, audit of other insert_one-return patterns
+
+### Iteration 46
 - 🌍 **Multilingual WhatsApp alerts**: fr/pidgin/fulfulde — `WA_L10N` frame + `WA_CATALOG` (titles/actions translated), user pref `alert_language` via GET/POST /api/elevage/settings, language selector in Alerts tab. Verified: pidgin 'ALARM QUICK QUICK', fulfulde 'TINNDINOL'
 - ⏱️ **Continuous camera monitoring**: background asyncio loop (starts on router startup), GET/POST /api/elevage/cameras/monitoring {enabled, interval_minutes 2-120}, parallel scan (Semaphore 4, 25s timeout/cam), auto alerts, last_run/last_result stored. Verified loop ran autonomously. Currently DISABLED (demo camera is fictive)
 - 🐖 **YOLO porcins pipeline**: dataset collection POST /api/elevage/vision/dataset (+stats), photos in /app/backend/dataset/{species}/, custom model auto-load from /app/backend/models/agricam_livestock.pt or YOLO_CUSTOM_MODEL env, pig/goat class mapping added, training guide /app/GUIDE_YOLO_PORCINS.md (Roboflow + Colab)

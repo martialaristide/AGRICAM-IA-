@@ -11,12 +11,10 @@ from io import BytesIO
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-FARMER_EMAIL = "agriculteur@demo.com"
-FARMER_PASSWORD = "farmer123"
-ADMIN_EMAIL = "admin@agricam-ia.com"
-ADMIN_PASSWORD = "admin123"
-
-
+FARMER_EMAIL = os.environ.get("TEST_FARMER_EMAIL", "agriculteur@demo.com")
+FARMER_PASSWORD = os.environ.get("TEST_FARMER_PASSWORD", "farmer123")
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam-ia.com")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "admin123")
 class TestAuthentication:
     """Authentication endpoint tests"""
     
@@ -385,7 +383,7 @@ class TestWeatherAPI:
     
     def test_get_weather(self):
         """Test getting weather data"""
-        response = requests.get(f"{BASE_URL}/api/weather/Douala")
+        response = requests.get(f"{BASE_URL}/api/weather/city/Douala")
         assert response.status_code == 200, f"Get weather failed: {response.text}"
         data = response.json()
         assert "temperature" in data, "No temperature in weather data"

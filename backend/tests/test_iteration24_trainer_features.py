@@ -16,14 +16,12 @@ import os
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-TRAINER_EMAIL = "formateur@agricam.ai"
-TRAINER_PASSWORD = "Trainer@2026"
-FARMER_EMAIL = "agriculteur@agricam.ai"
-FARMER_PASSWORD = "Farmer@2026"
-ADMIN_EMAIL = "admin@agricam.ai"
-ADMIN_PASSWORD = "Admin@2026"
-
-
+TRAINER_EMAIL = os.environ.get("TEST_TRAINER_EMAIL", "formateur@agricam.ai")
+TRAINER_PASSWORD = os.environ.get("TEST_TRAINER_PASSWORD", "Trainer@2026")
+FARMER_EMAIL = os.environ.get("TEST_FARMER_EMAIL", "agriculteur@agricam.ai")
+FARMER_PASSWORD = os.environ.get("TEST_FARMER_PASSWORD", "Farmer@2026")
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam.ai")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "Admin@2026")
 class TestTrainerAuthentication:
     """Trainer login and role validation"""
     

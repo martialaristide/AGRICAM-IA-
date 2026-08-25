@@ -145,3 +145,4 @@ frontend/node_modules/.cache/default-development/33.pack
 credentials.json
 *.key
 .credentials
+.env.test

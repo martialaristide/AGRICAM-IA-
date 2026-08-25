@@ -35,6 +35,7 @@ export default function MonElevage() {
     } catch (e) {
       toast.error(e.response?.data?.detail || "Erreur de chargement du module Élevage");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadStatus(); }, [loadStatus]);

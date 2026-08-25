@@ -14,10 +14,8 @@ import os
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Admin credentials for testing
-ADMIN_EMAIL = "admin@agricam.ai"
-ADMIN_PASSWORD = "adminpassword"
-
-
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@agricam.ai")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "adminpassword")
 @pytest.fixture(scope="module")
 def admin_token():
     """Get admin authentication token"""
